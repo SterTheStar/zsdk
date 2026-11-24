@@ -250,13 +250,14 @@ public:
 
         LARGE_INTEGER qpcFreq = {};
         ::QueryPerformanceFrequency(&qpcFreq);
+        ::timeBeginPeriod(1);
         app.m_timer.Reset();
+
+        LARGE_INTEGER nextFrameTick = {};
+        ::QueryPerformanceCounter(&nextFrameTick);
 
         MSG msg = {};
         while (!app.IsQuitRequested()) {
-            LARGE_INTEGER frameStart = {};
-            ::QueryPerformanceCounter(&frameStart);
-
             while (::PeekMessageA(&msg, nullptr, 0, 0, PM_REMOVE)) {
                 if (msg.message == WM_QUIT) {
                     app.RequestQuit();
@@ -281,24 +282,32 @@ public:
 
             const uint16_t curTargetFps = app.GetTargetFps();
             if (curTargetFps > 0u && qpcFreq.QuadPart > 0) {
-                const double targetSec = 1.0 / static_cast<double>(curTargetFps);
+                const LONGLONG targetTicks = qpcFreq.QuadPart / static_cast<LONGLONG>(curTargetFps);
+                nextFrameTick.QuadPart += targetTicks;
+
+                LARGE_INTEGER now = {};
+                ::QueryPerformanceCounter(&now);
+                /* If we fell behind by more than 2 frames, resync to avoid catch-up burst */
+                if (now.QuadPart > nextFrameTick.QuadPart + targetTicks * 2) {
+                    nextFrameTick.QuadPart = now.QuadPart;
+                }
+
                 for (;;) {
-                    LARGE_INTEGER now = {};
                     ::QueryPerformanceCounter(&now);
-                    const double elapsedSec = static_cast<double>(now.QuadPart - frameStart.QuadPart) /
-                                              static_cast<double>(qpcFreq.QuadPart);
-                    const double remainMs = (targetSec - elapsedSec) * 1000.0;
-                    if (remainMs <= 0.0) {
+                    const LONGLONG remainTicks = nextFrameTick.QuadPart - now.QuadPart;
+                    if (remainTicks <= 0) {
                         break;
                     }
+                    const double remainMs = (static_cast<double>(remainTicks) * 1000.0) /
+                                            static_cast<double>(qpcFreq.QuadPart);
                     if (remainMs > 2.0) {
                         ::Sleep(static_cast<DWORD>(remainMs - 1.5));
-                    } else {
-                        ::Sleep(0);
                     }
                 }
             }
         }
+
+        ::timeEndPeriod(1);
 
         delegate->OnShutdown();
         debug::DebugOverlay::Shutdown();
@@ -520,9 +529,12 @@ void InputManager::Update(uint32_t deltaTimeMs) {
                 }
             }
 
+            auto negateAxis = [](SHORT v) -> int16_t {
+                return (v <= -32767) ? static_cast<int16_t>(32767) : static_cast<int16_t>(-v);
+            };
             ZeeboInputBridge::SetSticks(m_gamepads[i],
-                                        xs.Gamepad.sThumbLX, xs.Gamepad.sThumbLY,
-                                        xs.Gamepad.sThumbRX, xs.Gamepad.sThumbRY);
+                                        xs.Gamepad.sThumbLX, negateAxis(xs.Gamepad.sThumbLY),
+                                        xs.Gamepad.sThumbRX, negateAxis(xs.Gamepad.sThumbRY));
         }
     }
 

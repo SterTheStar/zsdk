@@ -40,6 +40,9 @@ Result MeshBuffer::Create(BufferType type, BufferUsage usage, uint32_t sizeBytes
     if (m_glId != 0u) {
         Destroy();
     }
+    if (!debug::MemoryTracker::CanAllocateVram(sizeBytes)) {
+        return Result::OutOfMemory;
+    }
 
     GLuint id = 0u;
     glGenBuffers(1, &id);

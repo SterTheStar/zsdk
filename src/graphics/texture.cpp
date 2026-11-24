@@ -58,16 +58,21 @@ Result Texture::Create(uint16_t width, uint16_t height, TextureFormat format,
         Destroy();
     }
 
+    GLenum glFmt = GL_RGBA;
+    GLenum glType = GL_UNSIGNED_BYTE;
+    uint32_t bpp = 4u;
+    MapFormat(format, glFmt, glType, bpp);
+
+    const uint32_t vramBytes = static_cast<uint32_t>(width) * static_cast<uint32_t>(height) * bpp;
+    if (!debug::MemoryTracker::CanAllocateVram(vramBytes)) {
+        return Result::OutOfMemory;
+    }
+
     GLuint id = 0u;
     glGenTextures(1, &id);
     if (id == 0u) {
         return Result::GraphicsError;
     }
-
-    GLenum glFmt = GL_RGBA;
-    GLenum glType = GL_UNSIGNED_BYTE;
-    uint32_t bpp = 4u;
-    MapFormat(format, glFmt, glType, bpp);
 
     const GLint glFilter = (filter == TextureFilter::Nearest) ? GL_NEAREST : GL_LINEAR;
 
@@ -103,6 +108,9 @@ Result Texture::CreateCompressed(uint16_t width, uint16_t height, uint32_t glInt
     }
     if (m_glId != 0u) {
         Destroy();
+    }
+    if (!debug::MemoryTracker::CanAllocateVram(imageSize)) {
+        return Result::OutOfMemory;
     }
 
     GLuint id = 0u;

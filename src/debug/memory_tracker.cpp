@@ -33,6 +33,24 @@ MemorySnapshot g_snapshot = {
     0, 0, 0, 0, ZSDK_DEFAULT_MEMORY_LIMIT_BYTES, {}
 };
 
+#if ZSDK_PLATFORM_WINDOWS
+bool g_strictBudget = true;
+#endif
+
+bool WouldExceedStrictBudget(uint64_t additionalBytes) {
+#if ZSDK_PLATFORM_WINDOWS
+    if (!g_strictBudget) {
+        return false;
+    }
+    const uint64_t used = static_cast<uint64_t>(g_snapshot.totalRamBytes) +
+                          static_cast<uint64_t>(g_snapshot.totalVramBytes);
+    return (used + additionalBytes) > static_cast<uint64_t>(g_snapshot.budgetBytes);
+#else
+    ZSDK_UNUSED(additionalBytes);
+    return false;
+#endif
+}
+
 } // namespace
 
 void MemoryTracker::SetBudgetBytes(uint32_t budgetBytes) {
@@ -43,12 +61,35 @@ uint32_t MemoryTracker::GetBudgetBytes() {
     return g_snapshot.budgetBytes;
 }
 
+void MemoryTracker::SetStrictBudget(bool enabled) {
+#if ZSDK_PLATFORM_WINDOWS
+    g_strictBudget = enabled;
+#else
+    ZSDK_UNUSED(enabled);
+#endif
+}
+
+bool MemoryTracker::IsStrictBudget() {
+#if ZSDK_PLATFORM_WINDOWS
+    return g_strictBudget;
+#else
+    return false;
+#endif
+}
+
+bool MemoryTracker::CanAllocateVram(uint32_t bytes) {
+    return !WouldExceedStrictBudget(static_cast<uint64_t>(bytes));
+}
+
 void* MemoryTracker::Alloc(MemorySubsystem subsystem, size_t size) {
     if (size == 0) {
         return nullptr;
     }
 
 #if ZSDK_ENABLE_MEMORY_TRACKING
+    if (WouldExceedStrictBudget(static_cast<uint64_t>(size))) {
+        return nullptr;
+    }
     const size_t totalSize = sizeof(AllocHeader) + size;
     AllocHeader* hdr = static_cast<AllocHeader*>(ZSDK_RAW_MALLOC(totalSize));
     if (!hdr) {
@@ -93,6 +134,11 @@ void* MemoryTracker::Realloc(MemorySubsystem subsystem, void* ptr, size_t newSiz
     AllocHeader* oldHdr = static_cast<AllocHeader*>(ptr) - 1;
     const uint32_t oldSize = oldHdr->size;
     const uint8_t idx = oldHdr->subsystem;
+
+    const uint64_t extraBytes = (newSize > oldSize) ? static_cast<uint64_t>(newSize - oldSize) : 0ULL;
+    if (WouldExceedStrictBudget(extraBytes)) {
+        return nullptr;
+    }
 
     AllocHeader* newHdr = static_cast<AllocHeader*>(
         ZSDK_RAW_REALLOC(oldHdr, sizeof(AllocHeader) + newSize));

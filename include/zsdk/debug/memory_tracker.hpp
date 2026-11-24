@@ -60,6 +60,18 @@ public:
     /** @brief Returns the configured memory budget in bytes. */
     static uint32_t GetBudgetBytes();
 
+    /**
+     * @brief Enables or disables hard 32 MB RAM+VRAM enforcement (Windows only; no-op on Zeebo).
+     * Enabled by default on Windows so out-of-memory conditions are caught on PC.
+     */
+    static void SetStrictBudget(bool enabled);
+
+    /** @brief Returns true if hard budget enforcement is active (always false on Zeebo). */
+    static bool IsStrictBudget();
+
+    /** @brief Returns true if allocating @p bytes of VRAM fits within the active strict budget. */
+    static bool CanAllocateVram(uint32_t bytes);
+
     /** @brief Allocates @p size bytes via BREW heap and records it under @p subsystem. */
     static void* Alloc(MemorySubsystem subsystem, size_t size);
 
