@@ -6,7 +6,7 @@ Headers incluídos: `audio/audio.hpp`, `audio/audio_engine.hpp`, `net/socket.hpp
 
 ## 1. Áudio & Streaming (`MediaStream`, `SoundEffect`, `AudioEngine`)
 
-* **Zeebo:** Encapsula `IMedia` (`AEEMediaUtil_CreateMedia` com `IMEDIA_EnableChannelShare(TRUE)` obrigatório para *multisequencing* — Developer Guide 9.5.1.1) e `ISoundPlayer` (`AEECLSID_SOUNDPLAYER`).
+* **Zeebo:** Tanto `MediaStream` quanto `SoundEffect` encapsulam `IMedia` (`AEEMediaUtil_CreateMedia` com `IMEDIA_EnableChannelShare(TRUE)` obrigatório para *multisequencing* — Developer Guide 9.5.1.1), evitando `AEECLSID_SOUNDPLAYER` (`0x01002000`) que falha em múltiplas instâncias no console.
 * **Windows:** Implementado com `winmm` (`mciSendStringA` para `MediaStream` MP3/WAV/MIDI e `PlaySoundA` + `waveOutSetVolume` para `SoundEffect`).
 * **Limites de Hardware no `AudioEngine` (Seção 9.2):** Pool de **4 canais SFX** simultâneos (`kMaxSfxChannels = 4`, correspondente aos 4 decodificadores ADPCM/PCM/QCP do MSM7201A) e bloqueio automático de um segundo MP3 caso a BGM já esteja tocando MP3 no Decoder #1.
 
