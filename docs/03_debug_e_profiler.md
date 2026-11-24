@@ -11,8 +11,8 @@ O **DebugOverlay** é um painel renderizado diretamente via OpenGL ES 1.x / Open
 * **Atalho de Ativação:** Pressione simultaneamente **`START + D-Pad Baixo`** ou **`HOME + D-Pad Baixo`** (no Windows: **`Enter + Seta Baixo`**).
 * **Indicador Discreto:** Quando o painel completo está fechado, exibe um pequeno aviso `START+DN:DBG` no canto superior direito.
 * **Métricas Exibidas:**
-  * FPS em tempo real, *frame time* (ms) e quantidade de *draw calls* do frame anterior.
-  * Uso total de memória (`RAM + VRAM`), percentual em relação ao limite (padrão `32 MB`) com barra colorida (verde/amarelo/vermelho) e pico de RAM.
+  * FPS médio real (janela de 500 ms sem clamp), *frame time* (ms), *draw calls* (`Drw`) e quantidade de vértices (`Vtx`) submetidos no frame anterior.
+  * Uso total de memória (`RAM + VRAM`), percentual em relação ao limite configurável (padrão `32 MB`) com barra colorida (verde/amarelo/vermelho) e pico de RAM.
   * Uso de VRAM (texturas + VBOs) e quebra por subsistema (`CORE`, `GFX`, `AUD`, `FS`).
   * Console com as últimas linhas de log.
 * **Compilação Condicional:** Defina `ZSDK_ENABLE_DEBUG_OVERLAY=0` em builds finais de produção para remover todo o código do painel e os logs `INFO`/`WARN` com zero overhead.
@@ -46,6 +46,11 @@ zsdk::debug::MemoryTracker::GetSnapshot(snap);
 ```
 
 As classes `Texture` e `MeshBuffer` também contabilizam automaticamente toda alocação e liberação de **VRAM** via `RecordVramAlloc()` e `RecordVramFree()`.
+
+### Trava Rígida de Orçamento no Windows (`SetStrictBudget`)
+Para simular o limite de memória do console durante o desenvolvimento no PC:
+* **Windows:** `MemoryTracker::IsStrictBudget()` vem ativo por padrão (`true`) com orçamento de 32 MiB (`SetBudgetBytes`). Se `RAM + VRAM` ultrapassar o limite, `Alloc`/`Realloc` retorna `nullptr` e `Texture::Create`/`MeshBuffer::Create` retornam `Result::OutOfMemory`. Pode ser alterado ou desativado em runtime via `MemoryTracker::SetStrictBudget(false)`.
+* **Zeebo:** `SetStrictBudget` é *no-op* (`IsStrictBudget()` retorna `false`) e nunca bloqueia alocações artificiais.
 
 ---
 

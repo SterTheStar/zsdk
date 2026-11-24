@@ -48,15 +48,15 @@ app->SetFpsCap(zsdk::FpsCap::Fps30); // ou FpsCap::Fps60
 uint16_t atual = app->GetTargetFps();
 ```
 
-> No Zeebo (`zeebo_core.cpp`), o agendador desconta automaticamente o tempo gasto em `OnUpdate` + `OnRender` (`workMs`) antes de chamar `ISHELL_SetTimer`, garantindo 30 FPS reais em vez de 20 FPS.
+> No Zeebo (`zeebo_core.cpp`), o agendador desconta automaticamente o tempo gasto em `OnUpdate` + `OnRender` (`workMs`) antes de chamar `ISHELL_SetTimer`. No Windows (`windows_backend.cpp`), o loop usa `timeBeginPeriod(1)` + *deadline* contínuo via `QueryPerformanceCounter` para travar exatamente em 30/60 FPS.
 
 ---
 
 ## 2. Tempo e Timers (`Clock` & `FrameTimer`)
 
-* `zsdk::Clock::GetUptimeMs()` — Milissegundos monotônicos desde o boot (`GETUPTIMEMS` no BREW, `GetTickCount` no Windows).
+* `zsdk::Clock::GetUptimeMs()` — Milissegundos monotônicos desde o boot (`GETUPTIMEMS` no BREW, `QueryPerformanceCounter` de 1 ms no Windows).
 * `zsdk::Clock::GetWallTimeMs()` — Tempo de parede (`GETTIMEMS`).
-* `zsdk::FrameTimer` — Calcula `deltaMs`, `deltaSeconds` e `FPS` a cada 500 ms sem alocações.
+* `zsdk::FrameTimer` — Calcula `deltaMs` (clamp `[1..250]` ms para física) e `FPS` real a cada 500 ms usando o tempo bruto sem clamp.
 
 ---
 
