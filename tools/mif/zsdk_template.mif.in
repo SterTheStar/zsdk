@@ -1,0 +1,47 @@
+-- =============================================================================
+-- zsdk_template.mif.in - Qualcomm BREW 4.x Module Information File (CIF -> MIF)
+-- =============================================================================
+-- Configured by cmake/ZsdkBrew.cmake and compiled via BREW cifc.exe into
+-- <target>.mif.
+-- =============================================================================
+
+ModRsc {
+   id    = 1000,
+   type  = 1, -- RESTYPE_ENCSTRING
+   data  = UTF16_EncString("@ZSDK_MIF_APP_NAME@"),
+}
+
+ModRsc {
+   id    = 6, -- IDS_MIF_COMPANY
+   type  = 1,
+   data  = UTF16_EncString("@ZSDK_MIF_COMPANY@"),
+}
+
+ModRsc {
+   id    = 7, -- IDS_MIF_COPYRIGHT
+   type  = 1,
+   data  = UTF16_EncString("@ZSDK_MIF_COPYRIGHT@"),
+}
+
+ModRsc {
+   id    = 8, -- IDS_MIF_VERSION
+   type  = 1,
+   data  = UTF16_EncString("@ZSDK_MIF_VERSION@"),
+}
+
+Applet {
+   appletid     = @ZSDK_MIF_CLASS_ID@,
+   resbaseid    = 1000,
+   applethostid = 0,
+   type         = 0,
+   flags        = 0x0,
+   privs        = {
+      -- Standard ZSDK privileges (without PL_SHARED_WRITE to protect shared NAND):
+      -- PL_FILE | PL_NETWORK | PL_TAPI | PL_WEB | PL_ADDRBOOK |
+      -- PL_DOWNLOAD | PL_POS_LOCATION | PL_RINGER | PL_SECTORINFO
+      0x07AF,
+   },
+   deps         = {
+      0x0101414E, -- AEECLSID_CARD0_ACCESS (SD card fs:/card0/)
+   },
+}

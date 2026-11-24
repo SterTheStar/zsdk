@@ -1,0 +1,31 @@
+# Build directories
+build/
+build_*/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+
+# Compiled objects & binaries
+*.o
+*.obj
+*.d
+*.a
+*.lib
+*.elf
+*.mod
+*.mif
+*.pdb
+*.ilk
+*.idb
+*.suo
+*.user
+
+# IDE & OS
+.vs/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Runtime savegame data
+udata/
+*.sav

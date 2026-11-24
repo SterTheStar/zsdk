@@ -1,0 +1,70 @@
+# ============================================================================
+# ZSDK Makefile for Qualcomm BREW 4.0.2 / Zeebo (ARM11 / ARMCC or GCC)
+# ============================================================================
+
+BREW_SDK_ROOT ?= C:/Users/Esther/AppData/Local/Programs/brew-sdk
+BREW_INC      := "$(BREW_SDK_ROOT)/platform_402/BREW 4.0.2 SP19/sdk/inc"
+BREW_SYS_INC  := "$(BREW_SDK_ROOT)/platform_402/BREW 4.0.2 SP19/inc"
+OGLES_INC     := "$(BREW_SDK_ROOT)/ogles_ext/unpacked/sdk/inc"
+IHID_INC      := "$(BREW_SDK_ROOT)/zeebo_msi_extracted/BREW402SP09 IHID Extension Folder/sdk/inc"
+
+CXX      ?= arm-none-eabi-g++
+AR       ?= arm-none-eabi-ar
+
+DEBUG_OVERLAY ?= 1
+
+CXXFLAGS := -std=c++14 -O2 -fno-exceptions -fno-rtti -Wall -Wextra \
+            -DZSDK_PLATFORM_ZEEBO=1 -DZSDK_PLATFORM_WINDOWS=0 \
+            -DZSDK_ENABLE_DEBUG_OVERLAY=$(DEBUG_OVERLAY) \
+            -DDYNAMIC_APP \
+            -Iinclude -I$(BREW_INC) -I$(BREW_SYS_INC) -I$(OGLES_INC) -I$(IHID_INC)
+
+SRCS := \
+	src/core/app.cpp \
+	src/debug/embedded_font.cpp \
+	src/debug/memory_tracker.cpp \
+	src/debug/logger.cpp \
+	src/debug/debug_overlay.cpp \
+	src/input/input.cpp \
+	src/graphics/texture.cpp \
+	src/graphics/mesh_buffer.cpp \
+	src/graphics/renderer.cpp \
+	src/graphics/renderer_lighting.cpp \
+	src/graphics/renderer_state.cpp \
+	src/graphics/renderer_2d_vbo.cpp \
+	src/graphics/sprite_batch.cpp \
+	src/graphics/frustum.cpp \
+	src/audio/audio_engine.cpp \
+	src/fs/savegame.cpp \
+	src/platform/zeebo/zeebo_core.cpp \
+	src/platform/zeebo/zeebo_signal.cpp \
+	src/platform/zeebo/zeebo_system_info.cpp \
+	src/platform/zeebo/zeebo_thread.cpp \
+	src/platform/zeebo/zeebo_input.cpp \
+	src/platform/zeebo/zeebo_keyboard_mouse.cpp \
+	src/platform/zeebo/zeebo_gl_context.cpp \
+	src/platform/zeebo/zeebo_display2d.cpp \
+	src/platform/zeebo/zeebo_image_decoder.cpp \
+	src/platform/zeebo/zeebo_sprite2d.cpp \
+	src/platform/zeebo/zeebo_fs.cpp \
+	src/platform/zeebo/zeebo_storage.cpp \
+	src/platform/zeebo/zeebo_database.cpp \
+	src/platform/zeebo/zeebo_audio.cpp \
+	src/platform/zeebo/zeebo_unzip.cpp \
+	src/platform/zeebo/zeebo_socket.cpp \
+	src/platform/zeebo/zeebo_net_extra.cpp \
+	src/platform/zeebo/zeebo_crypto.cpp \
+	src/platform/zeebo/zeebo_security_extra.cpp
+
+OBJS := $(SRCS:.cpp=.o)
+
+all: libzsdk.a
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+libzsdk.a: $(OBJS)
+	$(AR) rcs $@ $(OBJS)
+
+clean:
+	rm -f $(OBJS) libzsdk.a

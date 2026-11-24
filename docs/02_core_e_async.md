@@ -1,0 +1,95 @@
+# 02 — Core, Ciclo de Vida, Tempo e Concorrência
+
+Headers incluídos: `core/config.hpp`, `core/types.hpp`, `core/app.hpp`, `core/clock.hpp`, `core/math_fixed.hpp`, `core/thread.hpp`, `core/signal.hpp`, `core/system_info.hpp`.
+
+---
+
+## 1. Ciclo de Vida da Aplicação (`Application` & `IAppDelegate`)
+
+O usuário implementa `zsdk::IAppDelegate` e registra sua classe com a macro `ZSDK_IMPLEMENT_APP`, sem precisar escrever `AEEClsCreateInstance` ou `WinMain`:
+
+```cpp
+#include "zsdk/zsdk.hpp"
+
+class MeuJogo : public zsdk::IAppDelegate {
+public:
+    zsdk::Result OnInit() override {
+        auto* app = zsdk::Application::GetInstance();
+        // Inicializar GLContext, SaveGameManager, AudioEngine...
+        return zsdk::Result::Ok;
+    }
+
+    void OnUpdate(uint32_t deltaTimeMs) override {
+        // Lógica de jogo com deltaTimeMs clampado em [1..250] ms
+    }
+
+    void OnRender() override {
+        // Comandos Renderer + m_gl.SwapBuffers()
+    }
+
+    void OnSuspend() override { /* Pausa música/jogo quando BREW suspender */ }
+    void OnResume() override  { /* Retoma quando voltar */ }
+
+    void OnShutdown() override {
+        // Liberar recursos determinísticos
+    }
+};
+
+// Parâmetros: (Classe, Nome, FPS alvo, DebugOverlay inicial visível?)
+ZSDK_IMPLEMENT_APP(MeuJogo, "MeuJogo", 60, true)
+```
+
+### Controle de FPS (`FpsCap`)
+O Zeebo suporta **30 FPS** e **60 FPS** (o modo *Uncapped* foi removido por incompatibilidade prática com o timer cooperativo/VSync do BREW):
+
+```cpp
+auto* app = zsdk::Application::GetInstance();
+app->SetFpsCap(zsdk::FpsCap::Fps30); // ou FpsCap::Fps60
+uint16_t atual = app->GetTargetFps();
+```
+
+> No Zeebo (`zeebo_core.cpp`), o agendador desconta automaticamente o tempo gasto em `OnUpdate` + `OnRender` (`workMs`) antes de chamar `ISHELL_SetTimer`, garantindo 30 FPS reais em vez de 20 FPS.
+
+---
+
+## 2. Tempo e Timers (`Clock` & `FrameTimer`)
+
+* `zsdk::Clock::GetUptimeMs()` — Milissegundos monotônicos desde o boot (`GETUPTIMEMS` no BREW, `GetTickCount` no Windows).
+* `zsdk::Clock::GetWallTimeMs()` — Tempo de parede (`GETTIMEMS`).
+* `zsdk::FrameTimer` — Calcula `deltaMs`, `deltaSeconds` e `FPS` a cada 500 ms sem alocações.
+
+---
+
+## 3. Matemática em Ponto Fixo (`Fixed16`)
+
+Para máxima performance no ARM11 sem FPU pesada:
+
+```cpp
+zsdk::Fixed16 a = zsdk::FloatToFixed(2.5f);
+zsdk::Fixed16 b = zsdk::IntToFixed(3);
+zsdk::Fixed16 c = zsdk::FixedMul(a, b); // 7.5 em 16.16
+float f = zsdk::FixedToFloat(c);
+```
+
+---
+
+## 4. Threads, Sinais e Callbacks Assíncronos
+
+* **`zsdk::Thread` (`core/thread.hpp`):** Encapsula `IThread` cooperativo do BREW (`Start`, `Join`, `SleepMs`, `IsRunning`).
+* **`zsdk::AsyncCallback` (`core/signal.hpp`):** Encapsula `AEECallback` + `ISHELL_Resume` para agendar callbacks sem alocação.
+* **`zsdk::Signal` & `zsdk::SignalBus` (`core/signal.hpp`):** Encapsulam `ISignal`, `ISignalCtl` e `ISignalBus` do BREW 4.0.2.
+
+---
+
+## 5. Informações do Sistema (`SystemInfo`)
+
+```cpp
+zsdk::SystemMemoryInfo mem;
+zsdk::SystemInfo::GetMemoryInfo(mem); // GETRAMFREE + GETFSFREE no Zeebo
+
+zsdk::BatteryStatus bat;
+zsdk::SystemInfo::GetBatteryStatus(app->GetNativePlatformContext(), bat);
+
+zsdk::SystemInfo::SetBacklight(app->GetNativePlatformContext(), true, 80);
+uint32_t lang = zsdk::SystemInfo::GetLanguageCode(app->GetNativePlatformContext());
+```
