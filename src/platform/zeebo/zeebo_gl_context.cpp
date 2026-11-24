@@ -206,14 +206,18 @@ void GLContext::Shutdown() {
     if (m_impl->display) {
         IDISPLAY_Release(m_impl->display);
     }
-    if (m_impl->iegl) {
-        IEGL10_Release(m_impl->iegl);
-    }
+    /* Zeebo Developer Guide 7.3.1: release GLES before IEGL10 and EGL */
     if (m_impl->glesBindingsLoaded) {
         GLES_Release();
+        m_impl->glesBindingsLoaded = false;
+    }
+    if (m_impl->iegl) {
+        IEGL10_Release(m_impl->iegl);
+        m_impl->iegl = nullptr;
     }
     if (m_impl->eglBindingsLoaded) {
         EGL_Release();
+        m_impl->eglBindingsLoaded = false;
     }
 
     debug::MemoryTracker::Free(debug::MemorySubsystem::Graphics, m_impl);
