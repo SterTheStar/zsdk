@@ -183,10 +183,20 @@ void GLContext::Shutdown() {
         return;
     }
 
+    if (m_impl->eglDisplay != EGL_NO_DISPLAY &&
+        m_impl->eglContext != EGL_NO_CONTEXT &&
+        m_impl->eglSurface != EGL_NO_SURFACE) {
+        Renderer::ReleaseSharedFontTexture();
+    }
+
+    /* Zeebo Developer Guide 7.3.1: release GLES before EGL teardown/IEGL10_Release
+     * so IGLES10/IGLES11 remain valid when Released (before eglDestroyContext/eglTerminate). */
+    if (m_impl->glesBindingsLoaded) {
+        GLES_Release();
+        m_impl->glesBindingsLoaded = false;
+    }
+
     if (m_impl->eglDisplay != EGL_NO_DISPLAY) {
-        if (m_impl->eglContext != EGL_NO_CONTEXT && m_impl->eglSurface != EGL_NO_SURFACE) {
-            Renderer::ReleaseSharedFontTexture();
-        }
         eglMakeCurrent(m_impl->eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         if (m_impl->eglContext != EGL_NO_CONTEXT) {
             eglDestroyContext(m_impl->eglDisplay, m_impl->eglContext);
@@ -205,11 +215,6 @@ void GLContext::Shutdown() {
     }
     if (m_impl->display) {
         IDISPLAY_Release(m_impl->display);
-    }
-    /* Zeebo Developer Guide 7.3.1: release GLES before IEGL10 and EGL */
-    if (m_impl->glesBindingsLoaded) {
-        GLES_Release();
-        m_impl->glesBindingsLoaded = false;
     }
     if (m_impl->iegl) {
         IEGL10_Release(m_impl->iegl);
