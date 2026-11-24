@@ -15,7 +15,8 @@
 namespace zsdk {
 namespace fs {
 
-static const uint8_t kMaxSaveSlots = 16u;
+static const uint8_t  kMaxSaveSlots     = 16u;
+static const uint32_t kMaxSaveDataBytes = 65536u; /**< Zeebo Developer Guide 5.1: 64 KB max save data */
 
 /**
  * @brief Standardized `udata` directory & SaveGame slot manager.

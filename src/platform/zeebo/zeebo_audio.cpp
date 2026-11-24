@@ -77,6 +77,8 @@ Result MediaStream::LoadFromFile(void* platformContext, const char* filePath) {
         return Result::AudioError;
     }
 
+    /* Zeebo Developer Guide 9.5.1.1: required for concurrent playback with other IMedia objects */
+    IMEDIA_EnableChannelShare(m_impl->media, TRUE);
     IMEDIA_RegisterNotify(m_impl->media, MediaNotifyCallback, &m_impl->playing);
     return Result::Ok;
 }
@@ -108,6 +110,8 @@ Result MediaStream::LoadFromMemory(void* platformContext, const void* data, uint
         return Result::AudioError;
     }
 
+    /* Zeebo Developer Guide 9.5.1.1: required for concurrent playback with other IMedia objects */
+    IMEDIA_EnableChannelShare(m_impl->media, TRUE);
     IMEDIA_RegisterNotify(m_impl->media, MediaNotifyCallback, &m_impl->playing);
     return Result::Ok;
 }

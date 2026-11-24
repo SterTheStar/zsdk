@@ -1,12 +1,12 @@
 # 04 — Input, Controles (Z-Pad / Boomerang / Xbox) e Teclado/Mouse
 
-Headers incluídos: `input/input_types.hpp`, `input/input.hpp`, `input/keyboard_mouse.hpp`.
+Headers incluídos: `input/input_types.hpp`, `input/input.hpp`, `input/keyboard_mouse.hpp`, `input/virtual_keyboard.hpp`.
 
 ---
 
 ## 1. Mapeamento Oficial de Botões (1:1 com `AEEHIDButtons.h`)
 
-No Zeebo, os botões são mapeados via `IHID` / `IHIDDevice` (`AEEHIDButtons.h`, `AEEHIDThumbsticks.h`, `AEEHIDDevice_Joystick.h`) com fallback automático para eventos `AVK_*` (`AEEVCodes.h`). No Windows, são mapeados via **XInput** (controles Xbox P1–P4) + teclado no P1.
+No Zeebo, os botões são mapeados via `IHID` / `IHIDDevice` (`AEEHIDButtons.h`, `AEEHIDThumbsticks.h`, `AEEHIDDevice_Joystick.h`, com `IHIDDevice_SetExclusiveLevel(1)` e recuperação de fila `dropped`) com fallback completo para eventos `AVK_*` e `AVK_GP_1..4/5/6/SL/SR` (`AEEVCodes.h`). No Windows, são mapeados via **XInput** (controles Xbox P1–P4) + teclado no P1.
 
 | Enum `GamepadButton` | Posição Física | Zeebo Z-Pad | Xbox (Windows) | Teclado (Windows) |
 | :--- | :--- | :--- | :--- | :--- |
@@ -78,4 +78,20 @@ zsdk::input::KeyboardMouseManager km;
 km.Initialize(app->GetNativePlatformContext());
 km.Update();
 if (km.HasKeyboard() && km.IsKeyDown(0x04)) { /* ... */ }
+```
+
+---
+
+## 5. Teclado Virtual em Tela (`VirtualKeyboard`)
+
+Para entrada de texto com Z-Pad ou teclado (metade inferior da tela 640x480 com safe area para CRT, sem dependência de `Zeebo.lib` externa):
+
+```cpp
+zsdk::input::VirtualKeyboard vkb;
+vkb.Open("NOME DO JOGADOR", "ZEEBO", 16);
+// No OnUpdate(): vkb.Update(p1);
+// No OnRender(): vkb.Render(w, h);
+if (vkb.IsSubmitted()) {
+    const char* texto = vkb.GetText();
+}
 ```

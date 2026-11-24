@@ -145,6 +145,59 @@ Result Texture::CreateCompressed(uint16_t width, uint16_t height, uint32_t glInt
     return Result::Ok;
 }
 
+Result Texture::CreateFromAtitc(const void* fileBytes, uint32_t fileSizeBytes,
+                                TextureFilter filter) {
+    if (!fileBytes || fileSizeBytes <= 20u) {
+        return Result::InvalidArg;
+    }
+
+    struct AtitcHeader {
+        uint32_t signature;
+        uint32_t width;
+        uint32_t height;
+        uint32_t flags;
+        uint32_t dataOffset;
+    };
+
+    const uint8_t* bytes = static_cast<const uint8_t*>(fileBytes);
+    AtitcHeader hdr;
+    const uint8_t* src = bytes;
+    uint32_t fields[5];
+    for (int i = 0; i < 5; ++i) {
+        fields[i] = static_cast<uint32_t>(src[0]) |
+                    (static_cast<uint32_t>(src[1]) << 8u) |
+                    (static_cast<uint32_t>(src[2]) << 16u) |
+                    (static_cast<uint32_t>(src[3]) << 24u);
+        src += 4;
+    }
+    hdr.signature  = fields[0];
+    hdr.width      = fields[1];
+    hdr.height     = fields[2];
+    hdr.flags      = fields[3];
+    hdr.dataOffset = fields[4];
+
+    const uint32_t offset = (hdr.dataOffset >= 20u) ? hdr.dataOffset : 20u;
+    if (hdr.width == 0u || hdr.height == 0u || hdr.width > 1024u || hdr.height > 1024u ||
+        offset >= fileSizeBytes) {
+        return Result::InvalidArg;
+    }
+
+    /* GL_ATC_RGB_AMD = 0x8C92, GL_ATC_RGBA_EXPLICIT_ALPHA_AMD = 0x8C93, INTERPOLATED = 0x87EE */
+    uint32_t glInternalFmt = 0x8C92u;
+    if ((hdr.flags & 0x2u) != 0u) {
+        glInternalFmt = 0x87EEu;
+    } else if ((hdr.flags & 0x1u) != 0u) {
+        glInternalFmt = 0x8C93u;
+    }
+
+    return CreateCompressed(static_cast<uint16_t>(hdr.width),
+                            static_cast<uint16_t>(hdr.height),
+                            glInternalFmt,
+                            fileSizeBytes - offset,
+                            bytes + offset,
+                            filter);
+}
+
 Result Texture::UpdateSubImage(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
                                const void* pixelData) {
     if (m_glId == 0u || !pixelData) {
@@ -172,9 +225,11 @@ Result Texture::GenerateMipmaps(TextureFilter filter) {
 
     glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(m_glId));
 
+    /* Zeebo Developer Guide 7.1.3: trilinear (GL_LINEAR_MIPMAP_LINEAR) is software-emulated;
+       use GL_LINEAR_MIPMAP_NEAREST for hardware-accelerated mipmapping. */
     const GLint minFilter = (filter == TextureFilter::Nearest)
         ? GL_NEAREST_MIPMAP_NEAREST
-        : GL_LINEAR_MIPMAP_LINEAR;
+        : GL_LINEAR_MIPMAP_NEAREST;
     const GLint magFilter = (filter == TextureFilter::Nearest) ? GL_NEAREST : GL_LINEAR;
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
@@ -200,6 +255,62 @@ Result Texture::GenerateMipmaps(TextureFilter filter) {
 #endif
 
     return (glGetError() == GL_NO_ERROR) ? Result::Ok : Result::GraphicsError;
+}
+
+Result Texture::SetWrap(TextureWrap wrapS, TextureWrap wrapT) {
+    if (m_glId == 0u) {
+        return Result::NotInitialized;
+    }
+    const GLint glS = (wrapS == TextureWrap::Repeat) ? GL_REPEAT : GL_CLAMP_TO_EDGE;
+    const GLint glT = (wrapT == TextureWrap::Repeat) ? GL_REPEAT : GL_CLAMP_TO_EDGE;
+    glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(m_glId));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glS);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glT);
+    return (glGetError() == GL_NO_ERROR) ? Result::Ok : Result::GraphicsError;
+}
+
+Result Texture::CopyFromFramebuffer(int32_t x, int32_t y, uint16_t width, uint16_t height,
+                                    TextureFilter filter) {
+    if (width == 0u || height == 0u) {
+        return Result::InvalidArg;
+    }
+
+    const uint32_t newVramBytes = static_cast<uint32_t>(width) * static_cast<uint32_t>(height) * 2u;
+    if (m_glId != 0u) {
+        Destroy();
+    }
+    if (!debug::MemoryTracker::CanAllocateVram(newVramBytes)) {
+        return Result::OutOfMemory;
+    }
+
+    GLuint id = 0u;
+    glGenTextures(1, &id);
+    if (id == 0u) {
+        return Result::GraphicsError;
+    }
+
+    const GLint glFilter = (filter == TextureFilter::Nearest) ? GL_NEAREST : GL_LINEAR;
+    glBindTexture(GL_TEXTURE_2D, id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                     static_cast<GLint>(x), static_cast<GLint>(y),
+                     static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0);
+
+    if (glGetError() != GL_NO_ERROR) {
+        glDeleteTextures(1, &id);
+        return Result::GraphicsError;
+    }
+
+    m_glId      = static_cast<uint32_t>(id);
+    m_width     = width;
+    m_height    = height;
+    m_format    = TextureFormat::RGB565;
+    m_vramBytes = newVramBytes;
+    debug::MemoryTracker::RecordVramAlloc(m_vramBytes);
+    return Result::Ok;
 }
 
 Result Texture::ReadFramebuffer(int32_t x, int32_t y, uint16_t width, uint16_t height,

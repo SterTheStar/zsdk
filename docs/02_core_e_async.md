@@ -27,8 +27,8 @@ public:
         // Comandos Renderer + m_gl.SwapBuffers()
     }
 
-    void OnSuspend() override { /* Pausa música/jogo quando BREW suspender */ }
-    void OnResume() override  { /* Retoma quando voltar */ }
+    void OnSuspend() override { /* Pausa música/jogo quando BREW suspender (IHID é liberado automaticamente) */ }
+    void OnResume() override  { /* Retoma quando voltar (IHID é recriado automaticamente) */ }
 
     void OnShutdown() override {
         // Liberar recursos determinísticos
@@ -48,7 +48,7 @@ app->SetFpsCap(zsdk::FpsCap::Fps30); // ou FpsCap::Fps60
 uint16_t atual = app->GetTargetFps();
 ```
 
-> No Zeebo (`zeebo_core.cpp`), o agendador desconta automaticamente o tempo gasto em `OnUpdate` + `OnRender` (`workMs`) antes de chamar `ISHELL_SetTimer`. No Windows (`windows_backend.cpp`), o loop usa `timeBeginPeriod(1)` + *deadline* contínuo via `QueryPerformanceCounter` para travar exatamente em 30/60 FPS.
+> No Zeebo (`zeebo_core.cpp`), o agendador desconta automaticamente o tempo gasto em `OnUpdate` + `OnRender` (`workMs`) antes de chamar `ISHELL_SetTimer`, trata `EVT_APP_NO_SLEEP` (evitando *throttling* de energia), trata o botão Power (`AVK_END` -> `RequestQuit()`), e libera/recria o `IHID` em `EVT_APP_SUSPEND`/`EVT_APP_RESUME` conforme o Zeebo Developer Guide 0.97 (Seções 4.2, 11.8 e 11.9). No Windows (`windows_backend.cpp`), o loop usa `timeBeginPeriod(1)` + *deadline* contínuo via `QueryPerformanceCounter` para travar exatamente em 30/60 FPS.
 
 ---
 

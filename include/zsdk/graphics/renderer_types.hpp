@@ -75,7 +75,24 @@ enum class TexEnvMode : uint8_t {
     Modulate = 0,
     Replace,
     Decal,
-    Add
+    Add,
+    Combine,
+    Dot3
+};
+
+/** @brief Texture addressing wrap modes. */
+enum class TextureWrap : uint8_t {
+    ClampToEdge = 0,
+    Repeat
+};
+
+/** @brief Blend equation modes (Appendix B: BlendEquationEXT). */
+enum class BlendEquationMode : uint8_t {
+    Add = 0,
+    Subtract,
+    ReverseSubtract,
+    Min,
+    Max
 };
 
 /** @brief Fixed-function light source classification. */

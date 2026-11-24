@@ -7,6 +7,7 @@
 #define ZSDK_GRAPHICS_TEXTURE_HPP
 
 #include "zsdk/core/types.hpp"
+#include "zsdk/graphics/renderer_types.hpp"
 
 namespace zsdk {
 namespace graphics {
@@ -52,15 +53,32 @@ public:
                             uint32_t imageSize, const void* compressedData,
                             TextureFilter filter = TextureFilter::Linear);
 
+    /**
+     * @brief Loads an `.atitc` file buffer (Zeebo Developer Guide 8.2.2),
+     *        stripping the 20-byte ATITC_HEADER before uploading via CreateCompressed().
+     */
+    Result CreateFromAtitc(const void* fileBytes, uint32_t fileSizeBytes,
+                           TextureFilter filter = TextureFilter::Linear);
+
     /** @brief Updates a sub-rectangle of an existing texture without reallocating VRAM. */
     Result UpdateSubImage(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
                           const void* pixelData);
 
     /**
      * @brief Generates mipmaps for this texture (glGenerateMipmapOES / GL_GENERATE_MIPMAP)
-     *        and updates minification filter to mipmap filtering.
+     *        and updates minification filter to GL_LINEAR_MIPMAP_NEAREST (hardware fast-path).
      */
     Result GenerateMipmaps(TextureFilter filter = TextureFilter::Linear);
+
+    /** @brief Sets S/T texture wrap mode (ClampToEdge or Repeat). */
+    Result SetWrap(TextureWrap wrapS, TextureWrap wrapT);
+
+    /**
+     * @brief Copies a region from the active framebuffer into this texture via glCopyTexImage2D.
+     *        Ideal for RGB565 effects on Zeebo where FBO render-to-texture is unavailable.
+     */
+    Result CopyFromFramebuffer(int32_t x, int32_t y, uint16_t width, uint16_t height,
+                               TextureFilter filter = TextureFilter::Linear);
 
     /**
      * @brief Reads pixels from the active framebuffer via glReadPixels.

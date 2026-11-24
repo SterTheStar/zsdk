@@ -22,6 +22,7 @@
 #include "zsdk/input/input_types.hpp"
 #include "zsdk/input/input.hpp"
 #include "zsdk/input/keyboard_mouse.hpp"
+#include "zsdk/input/virtual_keyboard.hpp"
 
 #include "zsdk/graphics/gl_context.hpp"
 #include "zsdk/graphics/texture.hpp"

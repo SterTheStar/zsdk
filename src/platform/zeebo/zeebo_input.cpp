@@ -79,6 +79,16 @@ bool MapAvkToLogical(uint16_t keyCode, GamepadButton& outBtn) {
         case AVK_CLR:    outBtn = GamepadButton::Back;      return true;
         case AVK_SOFT1:  outBtn = GamepadButton::Action1;   return true;
         case AVK_SOFT2:  outBtn = GamepadButton::Action2;   return true;
+#ifdef AVK_GP_1
+        case AVK_GP_1:   outBtn = GamepadButton::Action1;       return true;
+        case AVK_GP_2:   outBtn = GamepadButton::Action2;       return true;
+        case AVK_GP_3:   outBtn = GamepadButton::Action3;       return true;
+        case AVK_GP_4:   outBtn = GamepadButton::Action4;       return true;
+        case AVK_GP_5:   outBtn = GamepadButton::ShoulderLeft;  return true;
+        case AVK_GP_6:   outBtn = GamepadButton::ShoulderRight; return true;
+        case AVK_GP_SL:  outBtn = GamepadButton::TriggerLeft;   return true;
+        case AVK_GP_SR:  outBtn = GamepadButton::TriggerRight;  return true;
+#endif
         default:         return false;
     }
 }
@@ -112,6 +122,8 @@ public:
             if (!impl->slots[i].device) {
                 IHIDDevice* dev = nullptr;
                 if (IHID_CreateDevice(impl->hid, devHandle, &dev) == AEE_SUCCESS && dev) {
+                    /* Zeebo Developer Guide 6.3.6: suppress duplicate default AVK events */
+                    IHIDDevice_SetExclusiveLevel(dev, 1);
                     impl->slots[i].devHandle = devHandle;
                     impl->slots[i].device = dev;
                     impl->slots[i].thumbMapping = nullptr;
@@ -235,7 +247,12 @@ void InputManager::Update(uint32_t deltaTimeMs) {
     int devHandle = 0;
     int status = 0;
     boolean dropped = FALSE;
+    boolean connectDropped = FALSE;
     while (IHID_GetNextConnectEvent(m_impl->hid, &devHandle, &status, &dropped) == AEE_SUCCESS) {
+        if (dropped) {
+            connectDropped = TRUE;
+            break;
+        }
         AEEHIDDeviceInfo info;
         MEMSET(&info, 0, sizeof(info));
         if (status != 0 && IHID_GetDeviceInfo(m_impl->hid, devHandle, &info) == AEE_SUCCESS) {
@@ -244,6 +261,22 @@ void InputManager::Update(uint32_t deltaTimeMs) {
             }
         } else {
             ZeeboInputBridge::DetachDeviceSlot(m_impl, m_gamepads, devHandle);
+        }
+    }
+
+    if (connectDropped) {
+        /* Zeebo Developer Guide 6.2.2: flush queue and re-enumerate connected devices */
+        while (IHID_GetNextConnectEvent(m_impl->hid, nullptr, nullptr, nullptr) == AEE_SUCCESS) {}
+        int handles[ZSDK_MAX_GAMEPADS] = {};
+        int reqLen = 0;
+        if (IHID_GetConnectedDevices(m_impl->hid, AEEUID_HID_Joystick_Device,
+                                     handles, ZSDK_MAX_GAMEPADS, &reqLen) == AEE_SUCCESS) {
+            const int count = (reqLen < static_cast<int>(ZSDK_MAX_GAMEPADS))
+                                  ? reqLen
+                                  : static_cast<int>(ZSDK_MAX_GAMEPADS);
+            for (int i = 0; i < count; ++i) {
+                ZeeboInputBridge::AttachDeviceSlot(m_impl, m_gamepads, handles[i]);
+            }
         }
     }
 

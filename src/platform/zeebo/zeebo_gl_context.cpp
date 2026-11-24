@@ -292,6 +292,9 @@ Result GLContext::SetSurfaceScale(const Rect& srcRect, const Rect& dstRect, bool
         static_cast<AEEEGLint>(dstRect.height)
     };
 
+    /* Zeebo Developer Guide 8.3: QUALCOMM_surface_scale only applies to non-current surfaces */
+    eglMakeCurrent(m_impl->eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+
     AEEEGLBoolean ok = EGL_FALSE;
     IEGLSURFACEMANIP_SetSurfaceScale(manip,
                                      reinterpret_cast<AEEEGLDisplay>(m_impl->eglDisplay),
@@ -303,6 +306,8 @@ Result GLContext::SetSurfaceScale(const Rect& srcRect, const Rect& dstRect, bool
                                             reinterpret_cast<AEEEGLSurface>(m_impl->eglSurface),
                                             enable ? EGL_TRUE : EGL_FALSE, &ok);
     }
+
+    eglMakeCurrent(m_impl->eglDisplay, m_impl->eglSurface, m_impl->eglSurface, m_impl->eglContext);
     IEGLSURFACEMANIP_Release(manip);
     return (ok != EGL_FALSE) ? Result::Ok : Result::GraphicsError;
 }
@@ -315,11 +320,13 @@ Result GLContext::EnableSurfaceScale(bool enable) {
     if (!manip) {
         return Result::NotSupported;
     }
+    eglMakeCurrent(m_impl->eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     AEEEGLBoolean ok = EGL_FALSE;
     IEGLSURFACEMANIP_SurfaceScaleEnable(manip,
                                         reinterpret_cast<AEEEGLDisplay>(m_impl->eglDisplay),
                                         reinterpret_cast<AEEEGLSurface>(m_impl->eglSurface),
                                         enable ? EGL_TRUE : EGL_FALSE, &ok);
+    eglMakeCurrent(m_impl->eglDisplay, m_impl->eglSurface, m_impl->eglSurface, m_impl->eglContext);
     IEGLSURFACEMANIP_Release(manip);
     return (ok != EGL_FALSE) ? Result::Ok : Result::GraphicsError;
 }
@@ -332,6 +339,7 @@ Result GLContext::SetSurfaceRotate(bool rot90, bool hMirror, bool vMirror, bool 
     if (!manip) {
         return Result::NotSupported;
     }
+    eglMakeCurrent(m_impl->eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     AEEEGLBoolean ok = EGL_FALSE;
     IEGLSURFACEMANIP_SetSurfaceRotate(manip,
                                       reinterpret_cast<AEEEGLDisplay>(m_impl->eglDisplay),
@@ -346,6 +354,7 @@ Result GLContext::SetSurfaceRotate(bool rot90, bool hMirror, bool vMirror, bool 
                                              reinterpret_cast<AEEEGLSurface>(m_impl->eglSurface),
                                              enable ? EGL_TRUE : EGL_FALSE, &ok);
     }
+    eglMakeCurrent(m_impl->eglDisplay, m_impl->eglSurface, m_impl->eglSurface, m_impl->eglContext);
     IEGLSURFACEMANIP_Release(manip);
     return (ok != EGL_FALSE) ? Result::Ok : Result::GraphicsError;
 }

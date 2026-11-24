@@ -6,8 +6,9 @@ Headers incluídos: `audio/audio.hpp`, `audio/audio_engine.hpp`, `net/socket.hpp
 
 ## 1. Áudio & Streaming (`MediaStream`, `SoundEffect`, `AudioEngine`)
 
-* **Zeebo:** Encapsula `IMedia` (`AEEMediaUtil_CreateMedia`) e `ISoundPlayer` (`AEECLSID_SOUNDPLAYER`).
+* **Zeebo:** Encapsula `IMedia` (`AEEMediaUtil_CreateMedia` com `IMEDIA_EnableChannelShare(TRUE)` obrigatório para *multisequencing* — Developer Guide 9.5.1.1) e `ISoundPlayer` (`AEECLSID_SOUNDPLAYER`).
 * **Windows:** Implementado com `winmm` (`mciSendStringA` para `MediaStream` MP3/WAV/MIDI e `PlaySoundA` + `waveOutSetVolume` para `SoundEffect`).
+* **Limites de Hardware no `AudioEngine` (Seção 9.2):** Pool de **4 canais SFX** simultâneos (`kMaxSfxChannels = 4`, correspondente aos 4 decodificadores ADPCM/PCM/QCP do MSM7201A) e bloqueio automático de um segundo MP3 caso a BGM já esteja tocando MP3 no Decoder #1.
 
 ```cpp
 zsdk::audio::AudioEngine audio;
@@ -15,7 +16,7 @@ audio.Initialize(app->GetNativePlatformContext());
 
 audio.SetMasterVolume(90);
 audio.PlayMusic("fs:/~/audio/tema.mp3", true); // BGM em loop
-audio.PlaySfx("fs:/~/audio/pulo.wav");         // Pool de 8 canais SFX
+audio.PlaySfx("fs:/~/audio/pulo.wav");         // Pool de 4 canais SFX (limite MSM7201A)
 ```
 
 ---

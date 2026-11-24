@@ -4,9 +4,35 @@
  */
 
 #include "zsdk/audio/audio_engine.hpp"
+#include "zsdk/debug/logger.hpp"
 
 namespace zsdk {
 namespace audio {
+
+namespace {
+
+bool IsMp3Path(const char* path) {
+    if (!path) {
+        return false;
+    }
+    size_t len = 0u;
+    while (path[len] != '\0') {
+        ++len;
+    }
+    if (len < 4u) {
+        return false;
+    }
+    const char c0 = path[len - 4u];
+    const char c1 = path[len - 3u];
+    const char c2 = path[len - 2u];
+    const char c3 = path[len - 1u];
+    return c0 == '.' &&
+           (c1 == 'm' || c1 == 'M') &&
+           (c2 == 'p' || c2 == 'P') &&
+           c3 == '3';
+}
+
+} // namespace
 
 AudioEngine::AudioEngine()
     : m_platformContext(nullptr)
@@ -14,7 +40,8 @@ AudioEngine::AudioEngine()
     , m_masterVolume(100u)
     , m_bgmVolume(100u)
     , m_sfxVolume(100u)
-    , m_initialized(false) {
+    , m_initialized(false)
+    , m_bgmIsMp3(false) {
 }
 
 AudioEngine::~AudioEngine() {
@@ -49,8 +76,12 @@ Result AudioEngine::PlayMusic(const char* filePath, bool loop) {
     if (!m_initialized) {
         return Result::NotInitialized;
     }
+    m_bgm.Stop();
+    m_bgm.Unload();
+    m_bgmIsMp3 = IsMp3Path(filePath);
     Result r = m_bgm.LoadFromFile(m_platformContext, filePath);
     if (Failed(r)) {
+        m_bgmIsMp3 = false;
         return r;
     }
     m_bgm.SetLooping(loop);
@@ -60,6 +91,7 @@ Result AudioEngine::PlayMusic(const char* filePath, bool loop) {
 
 void AudioEngine::StopMusic() {
     m_bgm.Stop();
+    m_bgmIsMp3 = false;
 }
 
 void AudioEngine::SetMusicVolume(uint8_t volumePercent) {
@@ -70,6 +102,10 @@ void AudioEngine::SetMusicVolume(uint8_t volumePercent) {
 Result AudioEngine::PlaySfx(const char* filePath) {
     if (!m_initialized) {
         return Result::NotInitialized;
+    }
+    if (IsMp3Path(filePath) && m_bgmIsMp3 && m_bgm.IsPlaying()) {
+        ZSDK_LOG_WARN("AUD", "Zeebo allows only 1 simultaneous MP3 (BGM active)");
+        return Result::NotSupported;
     }
     SoundEffect& ch = m_sfxPool[m_nextChannel];
     m_nextChannel = static_cast<uint8_t>((m_nextChannel + 1u) % kMaxSfxChannels);

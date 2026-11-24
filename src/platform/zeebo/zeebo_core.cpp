@@ -20,6 +20,7 @@
 #include "AEEStdLib.h"
 #include "AEEDisp.h"
 #include "AEEModGen.h"
+#include "AEEVCodes.h"
 
 namespace zsdk {
 
@@ -140,11 +141,15 @@ public:
                 if (app->m_delegate) {
                     app->m_delegate->OnSuspend();
                 }
+                /* Zeebo Developer Guide 11.9: release all IHID instances on suspend */
+                app->m_input.Shutdown();
                 return TRUE;
 
             case EVT_APP_RESUME:
                 app->m_suspended = false;
                 app->m_timer.Reset();
+                /* Zeebo Developer Guide 11.9: recreate IHID instances on resume */
+                app->m_input.Initialize(ps->applet.m_pIShell);
                 if (app->m_delegate) {
                     app->m_delegate->OnResume();
                 }
@@ -154,9 +159,18 @@ public:
                                 FrameTickCallback, ps);
                 return TRUE;
 
+            case EVT_APP_NO_SLEEP:
+                /* Zeebo Developer Guide 4.2: return TRUE to prevent BREW low-power slowdown */
+                return (!app->m_suspended && !app->m_quitRequested) ? TRUE : FALSE;
+
             case EVT_KEY:
             case EVT_KEY_PRESS:
             case EVT_KEY_RELEASE:
+                /* Zeebo Developer Guide 11.8: Power button sends AVK_END -> app should quit */
+                if (wParam == AVK_END) {
+                    app->RequestQuit();
+                    return TRUE;
+                }
                 if (app->m_input.HandlePlatformEvent(static_cast<uint32_t>(eCode), wParam, dwParam)) {
                     return TRUE;
                 }

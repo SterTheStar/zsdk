@@ -34,6 +34,9 @@ public:
 
     /* Blending, Depth, Alpha Test, Culling, Stencil, Color Mask, Polygon Offset & Clip Planes */
     static void SetBlendMode(BlendMode mode);
+    static void SetBlendEquation(BlendEquationMode mode);
+    static void SetDither(bool enabled);
+    static void SetPerspectiveCorrectionFast(bool fast);
     static void SetDepthTest(bool enabled);
     static void SetDepthFunc(CompareFunc func);
     static void SetDepthMask(bool writeEnabled);
@@ -56,6 +59,7 @@ public:
     static void PushMatrix();
     static void PopMatrix();
     static void LoadMatrix(const float* mat4x4ColumnMajor);
+    static void MultMatrix(const float* mat4x4ColumnMajor);
     static void Translate(float x, float y, float z);
     static void Rotate(float angleDegrees, float x, float y, float z);
     static void Scale(float x, float y, float z);
@@ -90,6 +94,7 @@ public:
     static void SetColor(const Color& color);
     static void SetLineWidth(float width);
     static void SetPointSize(float size);
+    static void SetPointSpritesEnabled(bool enabled);
 
     /* VBO, Interleaved & Raw Vertex Attribute Binding */
     static void BindPositionBuffer(const MeshBuffer& vbo, uint8_t components = 3);
@@ -101,6 +106,15 @@ public:
                                     const void* normals, const void* colors,
                                     const void* texCoords, int32_t strideBytes);
     static void UnbindVertexAttributes();
+
+    /* Hardware Vertex Skinning (OES_matrix_palette) & Point Size Array (OES_point_size_array) */
+    static void SetMatrixPaletteEnabled(bool enabled);
+    static void LoadPaletteMatrixFromModelView(uint32_t matrixIndex);
+    static void BindSkinningBuffers(const MeshBuffer& weightVbo, uint8_t weightsPerVertex,
+                                    const MeshBuffer& indexVbo, uint8_t indicesPerVertex);
+    static void UnbindSkinningBuffers();
+    static void BindPointSizeBuffer(const MeshBuffer& vbo);
+    static void UnbindPointSizeBuffer();
 
     static void DrawArrays(PrimitiveType type, int32_t firstVertex, int32_t vertexCount);
     static void DrawElementsU16(PrimitiveType type, int32_t indexCount, const uint16_t* indices);

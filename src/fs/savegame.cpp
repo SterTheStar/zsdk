@@ -110,6 +110,10 @@ Result SaveGameManager::WriteUserFile(const char* filename, const void* data, ui
     if (!m_initialized || !filename || (!data && sizeBytes > 0u)) {
         return Result::InvalidArg;
     }
+    if (sizeBytes > kMaxSaveDataBytes) {
+        ZSDK_LOG_ERROR("SAVE", "WriteUserFile(%u B) exceeds Zeebo 64KB limit", sizeBytes);
+        return Result::InvalidArg;
+    }
     char path[128];
     BuildUdataPath(filename, path, sizeof(path));
 

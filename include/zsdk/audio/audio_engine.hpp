@@ -11,7 +11,8 @@
 namespace zsdk {
 namespace audio {
 
-static const uint8_t kMaxSfxChannels = 8u;
+/* Zeebo Developer Guide 9.2: max 4 simultaneous ADPCM/PCM/QCP decoders + 1 MP3 decoder (#1). */
+static const uint8_t kMaxSfxChannels = 4u;
 
 /**
  * @brief Central audio mixer owning 1 BGM MediaStream + up to 8 SoundEffect channels.
@@ -43,6 +44,7 @@ private:
     uint8_t     m_bgmVolume;
     uint8_t     m_sfxVolume;
     bool        m_initialized;
+    bool        m_bgmIsMp3;
 };
 
 } // namespace audio

@@ -18,6 +18,7 @@ set(ZSDK_SOURCES
     src/debug/logger.cpp
     src/debug/debug_overlay.cpp
     src/input/input.cpp
+    src/input/virtual_keyboard.cpp
     src/graphics/texture.cpp
     src/graphics/mesh_buffer.cpp
     src/graphics/renderer.cpp

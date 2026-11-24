@@ -194,6 +194,12 @@ void Renderer::LoadMatrix(const float* mat4x4ColumnMajor) {
     }
 }
 
+void Renderer::MultMatrix(const float* mat4x4ColumnMajor) {
+    if (mat4x4ColumnMajor) {
+        glMultMatrixf(mat4x4ColumnMajor);
+    }
+}
+
 void Renderer::Translate(float x, float y, float z) {
     glTranslatef(x, y, z);
 }
