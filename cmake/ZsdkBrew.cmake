@@ -61,10 +61,11 @@ function(zsdk_add_brew_app TARGET_NAME)
         )
 
         add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${TARGET_NAME}>/mod/${TARGET_NAME}"
             COMMAND "${ZSDK_ROOT_DIR}/tools/elf2mod/elf2mod.exe"
-                    -output "$<TARGET_FILE_DIR:${TARGET_NAME}>/${TARGET_NAME}.mod"
+                    -output "$<TARGET_FILE_DIR:${TARGET_NAME}>/mod/${TARGET_NAME}/${TARGET_NAME}.mod"
                     "$<TARGET_FILE:${TARGET_NAME}>"
-            COMMENT "Packaging ${TARGET_NAME}.mod via elf2mod"
+            COMMENT "Packaging mod/${TARGET_NAME}/${TARGET_NAME}.mod via elf2mod"
         )
 
         # ----------------------------------------------------------------------
@@ -116,17 +117,19 @@ function(zsdk_add_brew_app TARGET_NAME)
 
         if(ZSDK_BREW_CIFC)
             add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${TARGET_NAME}>/mif"
                 COMMAND "${ZSDK_BREW_CIFC}"
-                        -mif "$<TARGET_FILE_DIR:${TARGET_NAME}>/${TARGET_NAME}.mif"
+                        -mif "$<TARGET_FILE_DIR:${TARGET_NAME}>/mif/${TARGET_NAME}.mif"
                         "${ZSDK_GENERATED_CIF}"
-                COMMENT "Packaging ${TARGET_NAME}.mif via cifc (${ZSDK_MIF_CLASS_ID})"
+                COMMENT "Packaging mif/${TARGET_NAME}.mif via cifc (${ZSDK_MIF_CLASS_ID})"
             )
         else()
             add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${TARGET_NAME}>/mif"
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
                         "${ZSDK_GENERATED_CIF}"
-                        "$<TARGET_FILE_DIR:${TARGET_NAME}>/${TARGET_NAME}.mif"
-                COMMENT "Copying configured ${TARGET_NAME}.mif (cifc not found)"
+                        "$<TARGET_FILE_DIR:${TARGET_NAME}>/mif/${TARGET_NAME}.mif"
+                COMMENT "Copying configured mif/${TARGET_NAME}.mif (cifc not found)"
             )
         endif()
     else()

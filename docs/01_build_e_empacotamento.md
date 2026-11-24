@@ -27,8 +27,8 @@ cmake --build build_zeebo
 ### Saídas geradas em `build_zeebo/`
 * `libzsdk.a` — Biblioteca estática do ZSDK.
 * `01_spinning_cube.elf` — Executável ELF relocável linkado com `tools/elf2mod/elf2mod.x`.
-* `01_spinning_cube.mod` — Módulo executável BREW gerado pelo `tools/elf2mod/elf2mod.exe`.
-* `01_spinning_cube.mif` — Manifesto BREW compilado pelo `cifc.exe` a partir de `tools/mif/zsdk_template.mif.in`.
+* `mod/01_spinning_cube/01_spinning_cube.mod` — Módulo executável BREW gerado pelo `tools/elf2mod/elf2mod.exe` (estrutura padrão BREW pronta para copiar para o console/SD).
+* `mif/01_spinning_cube.mif` — Manifesto BREW compilado pelo `cifc.exe` a partir de `tools/mif/zsdk_template.mif.in`.
 
 > **Nota de Runtime C++:** O arquivo [AEEModGen.c](../third_party/brew_crt/AEEModGen.c) foi adaptado para colocar `AEEMod_Load` no offset `0x00000000` (`.text.AEEMod_Load`) e executar os construtores globais C++ (`__preinit_array` e `__init_array`) automaticamente no carregamento do módulo.
 
