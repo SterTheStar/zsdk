@@ -5,6 +5,7 @@
 
 #include "zsdk/graphics/texture.hpp"
 #include "zsdk/debug/memory_tracker.hpp"
+#include "zsdk/debug/logger.hpp"
 #include "gl_platform.hpp"
 
 #if ZSDK_PLATFORM_ZEEBO
@@ -16,6 +17,15 @@ namespace zsdk {
 namespace graphics {
 
 namespace {
+
+void WarnIfNonZeeboTextureDims(uint16_t width, uint16_t height) {
+    /* Zeebo Developer Guide 7.1.3: textures must be power-of-2 and at most 1024x1024 */
+    if (!Texture::IsPowerOfTwo(width) || !Texture::IsPowerOfTwo(height) ||
+        width > 1024u || height > 1024u) {
+        ZSDK_LOG_WARN("GFX", "Texture %ux%u is not power-of-2 or >1024 (required on Zeebo)",
+                      static_cast<unsigned>(width), static_cast<unsigned>(height));
+    }
+}
 
 void MapFormat(TextureFormat fmt, GLenum& outGlFormat, GLenum& outGlType, uint32_t& outBpp) {
     switch (fmt) {
@@ -54,6 +64,7 @@ Result Texture::Create(uint16_t width, uint16_t height, TextureFormat format,
     if (width == 0u || height == 0u) {
         return Result::InvalidArg;
     }
+    WarnIfNonZeeboTextureDims(width, height);
     if (m_glId != 0u) {
         Destroy();
     }
@@ -106,6 +117,7 @@ Result Texture::CreateCompressed(uint16_t width, uint16_t height, uint32_t glInt
     if (width == 0u || height == 0u || imageSize == 0u || !compressedData) {
         return Result::InvalidArg;
     }
+    WarnIfNonZeeboTextureDims(width, height);
     if (m_glId != 0u) {
         Destroy();
     }
@@ -274,6 +286,7 @@ Result Texture::CopyFromFramebuffer(int32_t x, int32_t y, uint16_t width, uint16
     if (width == 0u || height == 0u) {
         return Result::InvalidArg;
     }
+    WarnIfNonZeeboTextureDims(width, height);
 
     const uint32_t newVramBytes = static_cast<uint32_t>(width) * static_cast<uint32_t>(height) * 2u;
     if (m_glId != 0u) {

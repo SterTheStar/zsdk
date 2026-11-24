@@ -29,10 +29,10 @@ O `Renderer` isola totalmente `<gles/gles_1_1/gl.h>` e `<GL/gl.h>` do código do
   * `SetBlendMode`, `SetDepthTest`, `SetCullFace` e `SetTexture2DEnabled` usam cache de estado interno para evitar chamadas redundantes ao driver OpenGL ES. Use `ResetStateCache()` caso código externo altere estados GL diretamente (o `Begin2D`/`End2D` e `DebugOverlay::Render` já fazem isso automaticamente).
 * **Câmera, Matrizes & Ponto Fixo:**
   * `SetOrtho`, `SetFrustum`, `SetPerspective(fovY, aspect, nearZ, farZ)`
-  * `ResetModelView`, `LookAt(eye, target, up)`, `PushMatrix`, `PopMatrix`, `LoadMatrix`, `MultMatrix`, `Translate`, `Rotate`, `Scale`
+  * `ResetModelView`, `LookAt(eye, target, up)`, `PushMatrix`, `PopMatrix` (avisa se `MODELVIEW` ultrapassar 16 níveis), `LoadMatrix`, `MultMatrix`, `Translate`, `Rotate`, `Scale`
   * Fast-path ARM11: `TranslateFx`, `RotateFx`, `ScaleFx` (`Fixed16`)
 * **Iluminação & Materiais:**
-  * `SetShadeModel`, `SetNormalizeNormals`, `SetGlobalAmbientLight`, `SetLighting`, `SetLightEnabled`
+  * `SetShadeModel`, `SetNormalizeNormals`, `SetGlobalAmbientLight`, `SetLighting`, `SetLightEnabled` (emite aviso ao habilitar mais de 1 luz simultânea, pois iluminação no Zeebo roda na CPU)
   * `ConfigureLight(...)` e `ConfigureLightEx(index, LightDesc)` (suporta `LightType::Directional`, `Point`, `Spot` com cutoff/expoente e atenuação constante/linear/quadrática)
   * `SetMaterial(ambient, diffuse, specular, shininess)`
 * **Fog & Multi-Texturing:**
@@ -61,6 +61,7 @@ Formatos prontos em `vertex_formats.hpp`: `VertexP3N3C4` (28B), `VertexP3N3U2` (
 ## 3. Texturas (`Texture`) e Buffers (`MeshBuffer`) com Tracking de VRAM
 
 * **`Texture`:** `Create(w, h, format, pixels, filter)` (`Alpha8`, `RGB565`, `RGBA4444`, `RGBA5551`, `RGB888`, `RGBA8888`), `UpdateSubImage`, `SetWrap(ClampToEdge/Repeat)`, `CreateCompressed`, `CreateFromAtitc` (remove o header de 20 bytes `ATITC_HEADER` automaticamente), `GenerateMipmaps` (usa `GL_LINEAR_MIPMAP_NEAREST` acelerado em hardware em vez de trilinear lento), `CopyFromFramebuffer` (`glCopyTexImage2D`), `ReadFramebuffer` (`glReadPixels`).
+  * Validação Zeebo: `IsPowerOfTwo()` / `NextPowerOfTwo()`, com aviso automático (`ZSDK_LOG_WARN`) caso a textura não seja potência de 2 ou ultrapasse `1024x1024` (Seção 7.1.3 do Developer Guide).
 * Contabiliza automaticamente toda alocação/liberação de VRAM no `MemoryTracker`.
 
 ---
@@ -69,7 +70,7 @@ Formatos prontos em `vertex_formats.hpp`: `VertexP3N3C4` (28B), `VertexP3N3U2` (
 
 * **2D via OpenGL ES (`Renderer::Begin2D` / `Begin2DVirtual` / `End2D`):**
   ```cpp
-  // Ou use Begin2DVirtual(640.0f, 480.0f, realW, realH) para resolução virtual com letterbox!
+  // Ou use Begin2DVirtual(640.0f, 480.0f, realW, realH) + GetSafeAreaRect(640, 480, 8) para TV CRT!
   Renderer::Begin2D(w, h);
   Renderer::DrawRect2D(10, 10, 200, 40, Color::Rgba(0, 0, 0, 180));
   Renderer::DrawTexturedQuad2D(minhaTex, 20, 60, 64, 64);

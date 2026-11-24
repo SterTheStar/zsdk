@@ -4,6 +4,7 @@
  */
 
 #include "zsdk/fs/savegame.hpp"
+#include "zsdk/core/system_info.hpp"
 #include "zsdk/debug/logger.hpp"
 
 #if ZSDK_PLATFORM_ZEEBO
@@ -113,6 +114,16 @@ Result SaveGameManager::WriteUserFile(const char* filename, const void* data, ui
     if (sizeBytes > kMaxSaveDataBytes) {
         ZSDK_LOG_ERROR("SAVE", "WriteUserFile(%u B) exceeds Zeebo 64KB limit", sizeBytes);
         return Result::InvalidArg;
+    }
+    if (!m_useSdCard) {
+        SystemMemoryInfo mem;
+        if (Succeeded(SystemInfo::GetMemoryInfo(mem)) &&
+            mem.freeFsBytes > 0u &&
+            mem.freeFsBytes < (sizeBytes + 4096u)) {
+            ZSDK_LOG_ERROR("SAVE", "Insufficient flash (%u B free, need %u B)",
+                           mem.freeFsBytes, sizeBytes);
+            return Result::IoError;
+        }
     }
     char path[128];
     BuildUdataPath(filename, path, sizeof(path));

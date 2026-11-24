@@ -123,6 +123,8 @@ public:
     static void Begin2D(int32_t viewportWidth, int32_t viewportHeight);
     static void Begin2DVirtual(float virtualWidth, float virtualHeight, int32_t realWidth, int32_t realHeight);
     static void End2D();
+    /** @brief Returns a CRT TV-Out safe HUD rectangle (4-8 px margin, Developer Guide 3.1.6 / 11.2). */
+    static Rect GetSafeAreaRect(int32_t viewportWidth, int32_t viewportHeight, int32_t marginPx = 8);
     static void DrawRect2D(float x, float y, float width, float height, const Color& color);
     static void DrawText2D(float x, float y, float scale, const char* text, const Color& color);
     static void DrawTexturedQuad2D(const Texture& tex, float x, float y, float width, float height,

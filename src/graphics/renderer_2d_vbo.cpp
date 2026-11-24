@@ -260,6 +260,15 @@ void Renderer::End2D() {
     ResetStateCache();
 }
 
+Rect Renderer::GetSafeAreaRect(int32_t viewportWidth, int32_t viewportHeight, int32_t marginPx) {
+    if (marginPx < 0) {
+        marginPx = 0;
+    }
+    const int32_t w = (viewportWidth > marginPx * 2) ? (viewportWidth - marginPx * 2) : 0;
+    const int32_t h = (viewportHeight > marginPx * 2) ? (viewportHeight - marginPx * 2) : 0;
+    return Rect{marginPx, marginPx, w, h};
+}
+
 void Renderer::DrawRect2D(float x, float y, float width, float height, const Color& color) {
     const GLfloat verts[8] = {
         x,         y,

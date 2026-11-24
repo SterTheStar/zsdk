@@ -98,6 +98,23 @@ public:
     /** @brief Binds this texture to GL_TEXTURE_2D (or unbinds if invalid). */
     void Bind(uint8_t textureUnit = 0) const;
 
+    /** @brief Returns true if @p value is a non-zero power of 2 (required on Zeebo <= 1024). */
+    static ZSDK_FORCE_INLINE bool IsPowerOfTwo(uint16_t value) {
+        return value != 0u && (value & static_cast<uint16_t>(value - 1u)) == 0u;
+    }
+
+    /** @brief Rounds @p value up to the next power of 2 (minimum 1). */
+    static ZSDK_FORCE_INLINE uint16_t NextPowerOfTwo(uint16_t value) {
+        if (value <= 1u) {
+            return 1u;
+        }
+        uint16_t p = 1u;
+        while (p < value && p < 32768u) {
+            p = static_cast<uint16_t>(p << 1u);
+        }
+        return p;
+    }
+
     ZSDK_FORCE_INLINE uint32_t GetNativeId() const { return m_glId; }
     ZSDK_FORCE_INLINE uint16_t GetWidth() const { return m_width; }
     ZSDK_FORCE_INLINE uint16_t GetHeight() const { return m_height; }

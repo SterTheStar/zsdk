@@ -68,6 +68,8 @@ Para máxima performance no ARM11 sem FPU pesada:
 zsdk::Fixed16 a = zsdk::FloatToFixed(2.5f);
 zsdk::Fixed16 b = zsdk::IntToFixed(3);
 zsdk::Fixed16 c = zsdk::FixedMul(a, b); // 7.5 em 16.16
+zsdk::Fixed16 s = zsdk::FixedSinDeg(zsdk::IntToFixed(30)); // 0.5 em 16.16 (zero float)
+zsdk::Fixed16 cs = zsdk::FixedCosDeg(zsdk::IntToFixed(60));
 float f = zsdk::FixedToFloat(c);
 ```
 

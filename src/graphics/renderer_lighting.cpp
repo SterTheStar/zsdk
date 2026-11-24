@@ -4,6 +4,7 @@
  */
 
 #include "zsdk/graphics/renderer.hpp"
+#include "zsdk/debug/logger.hpp"
 #include "gl_platform.hpp"
 
 #include <math.h>
@@ -115,6 +116,14 @@ void Renderer::SetLighting(bool enabled) {
 }
 
 void Renderer::SetLightEnabled(uint8_t lightIndex, bool enabled) {
+    if (enabled && lightIndex > 0u) {
+        static bool s_warnedMultiLight = false;
+        if (!s_warnedMultiLight) {
+            s_warnedMultiLight = true;
+            ZSDK_LOG_WARN("GFX", "Light %u enabled: Zeebo lighting runs on CPU (1 light recommended)",
+                          static_cast<unsigned>(lightIndex));
+        }
+    }
     const GLenum lightId = GL_LIGHT0 + static_cast<GLenum>(lightIndex & 7u);
     if (enabled) glEnable(lightId);
     else         glDisable(lightId);

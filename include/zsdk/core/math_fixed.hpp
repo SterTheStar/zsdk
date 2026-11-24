@@ -40,6 +40,35 @@ ZSDK_FORCE_INLINE Fixed16 FixedDiv(Fixed16 a, Fixed16 b) {
     return static_cast<Fixed16>((static_cast<int64_t>(a) << 16) / static_cast<int64_t>(b));
 }
 
+/**
+ * @brief Fast 16.16 fixed-point sine for @p angleDeg in degrees (zero float ops on ARM11).
+ *        Uses integer Bhaskara I approximation (max error < 0.0016, exact at 0/30/90/150/180).
+ */
+ZSDK_FORCE_INLINE Fixed16 FixedSinDeg(Fixed16 angleDeg) {
+    static const int32_t k360Fx = 360 * 65536;
+    static const int32_t k180Fx = 180 * 65536;
+    int32_t a = angleDeg % k360Fx;
+    if (a < 0) {
+        a += k360Fx;
+    }
+    bool neg = false;
+    if (a >= k180Fx) {
+        a -= k180Fx;
+        neg = true;
+    }
+    const int64_t x = static_cast<int64_t>(a >> 8); /* 0..46080 (8 fractional bits) */
+    const int64_t p = x * (46080LL - x);
+    const int64_t num = (4LL * p) << 16;
+    const int64_t den = (40500LL << 16) - p;
+    const Fixed16 res = (den > 0) ? static_cast<Fixed16>(num / den) : 0;
+    return neg ? -res : res;
+}
+
+/** @brief Fast 16.16 fixed-point cosine for @p angleDeg in degrees (zero float ops on ARM11). */
+ZSDK_FORCE_INLINE Fixed16 FixedCosDeg(Fixed16 angleDeg) {
+    return FixedSinDeg(angleDeg + (90 * 65536));
+}
+
 } // namespace zsdk
 
 #endif /* ZSDK_CORE_MATH_FIXED_HPP */

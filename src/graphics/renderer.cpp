@@ -9,6 +9,7 @@
 #include "zsdk/graphics/renderer.hpp"
 #include "zsdk/graphics/mesh_buffer.hpp"
 #include "zsdk/debug/debug_overlay.hpp"
+#include "zsdk/debug/logger.hpp"
 #include "gl_platform.hpp"
 
 #include <math.h>
@@ -26,6 +27,8 @@ struct RenderStateCache {
 };
 
 RenderStateCache g_stateCache = {-1, -1, -1, -1};
+int32_t g_modelViewDepth = 1;
+bool    g_warnedMvOverflow = false;
 
 GLenum ToGlPrimitive(PrimitiveType p) {
     switch (p) {
@@ -178,13 +181,22 @@ void Renderer::SetPerspective(float fovYDegrees, float aspect, float nearZ, floa
 void Renderer::ResetModelView() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    g_modelViewDepth = 1;
 }
 
 void Renderer::PushMatrix() {
+    if (g_modelViewDepth >= 16 && !g_warnedMvOverflow) {
+        g_warnedMvOverflow = true;
+        ZSDK_LOG_WARN("GFX", "MODELVIEW stack depth > 16 (Zeebo GLES limit)");
+    }
+    ++g_modelViewDepth;
     glPushMatrix();
 }
 
 void Renderer::PopMatrix() {
+    if (g_modelViewDepth > 1) {
+        --g_modelViewDepth;
+    }
     glPopMatrix();
 }
 
