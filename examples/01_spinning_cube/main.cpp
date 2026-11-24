@@ -125,7 +125,11 @@ public:
         , m_lastDrawnCubes(1u)
         , m_menuOpen(false)
         , m_menuCursor(0u)
+#if ZSDK_PLATFORM_ZEEBO
+        , m_settings{1u, 1u, 1u, 2u, 0u, 1u, 1u} {} /* 30 FPS default on Zeebo TV-Out (Guide 11.9) */
+#else
         , m_settings{1u, 0u, 1u, 2u, 0u, 1u, 1u} {}
+#endif
 
     zsdk::Result OnInit() override {
         auto* app = zsdk::Application::GetInstance();
@@ -503,4 +507,8 @@ private:
     CubeSettings m_settings;
 };
 
+#if ZSDK_PLATFORM_ZEEBO
+ZSDK_IMPLEMENT_APP(SpinningCubeApp, "ZSDK_SpinningCube", 30, true)
+#else
 ZSDK_IMPLEMENT_APP(SpinningCubeApp, "ZSDK_SpinningCube", 60, true)
+#endif

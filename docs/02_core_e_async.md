@@ -40,7 +40,7 @@ ZSDK_IMPLEMENT_APP(MeuJogo, "MeuJogo", 60, true)
 ```
 
 ### Controle de FPS (`FpsCap`)
-O Zeebo suporta **30 FPS** e **60 FPS** (o modo *Uncapped* foi removido por incompatibilidade prática com o timer cooperativo/VSync do BREW):
+O Zeebo suporta **30 FPS** e **60 FPS** (o modo *Uncapped* foi removido por incompatibilidade prática com o timer cooperativo/VSync do BREW). Para saída de TV CRT no console real, o Developer Guide 0.97 (Seção 11.9) recomenda **30 FPS** (`FpsCap::Fps30`, usado como padrão no exemplo `01_spinning_cube` no Zeebo):
 
 ```cpp
 auto* app = zsdk::Application::GetInstance();

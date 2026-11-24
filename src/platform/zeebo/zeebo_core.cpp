@@ -65,10 +65,18 @@ public:
             debug::DebugOverlay::Update(app->m_input, static_cast<float>(dtMs));
 
             app->m_delegate->OnUpdate(dtMs);
-            app->m_delegate->OnRender();
+            if (!app->m_quitRequested) {
+                app->m_delegate->OnRender();
+            }
         }
 
-        if (ps->timerActive && !app->m_quitRequested) {
+        if (app->m_quitRequested) {
+            ps->timerActive = false;
+            ISHELL_CloseApplet(ps->applet.m_pIShell, FALSE);
+            return;
+        }
+
+        if (ps->timerActive) {
             const uint32_t nowMs = GETUPTIMEMS();
             const uint32_t workMs = (nowMs >= frameStartMs) ? (nowMs - frameStartMs) : 0u;
             uint32_t nextDelayMs = (ps->frameIntervalMs > workMs)
@@ -169,6 +177,8 @@ public:
                 /* Zeebo Developer Guide 11.8: Power button sends AVK_END -> app should quit */
                 if (wParam == AVK_END) {
                     app->RequestQuit();
+                    ps->timerActive = false;
+                    ISHELL_CloseApplet(ps->applet.m_pIShell, FALSE);
                     return TRUE;
                 }
                 if (app->m_input.HandlePlatformEvent(static_cast<uint32_t>(eCode), wParam, dwParam)) {

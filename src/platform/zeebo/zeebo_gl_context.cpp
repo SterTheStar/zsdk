@@ -6,6 +6,7 @@
  */
 
 #include "zsdk/graphics/gl_context.hpp"
+#include "zsdk/graphics/renderer.hpp"
 #include "zsdk/debug/debug_overlay.hpp"
 #include "zsdk/debug/memory_tracker.hpp"
 #include "zsdk/debug/logger.hpp"
@@ -183,6 +184,9 @@ void GLContext::Shutdown() {
     }
 
     if (m_impl->eglDisplay != EGL_NO_DISPLAY) {
+        if (m_impl->eglContext != EGL_NO_CONTEXT && m_impl->eglSurface != EGL_NO_SURFACE) {
+            Renderer::ReleaseSharedFontTexture();
+        }
         eglMakeCurrent(m_impl->eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         if (m_impl->eglContext != EGL_NO_CONTEXT) {
             eglDestroyContext(m_impl->eglDisplay, m_impl->eglContext);
