@@ -19,6 +19,7 @@ INITIALIZATION AND SEQUENCING REQUIREMENTS:  N/A
 
 
 #include "AEEStdLib.h"
+#include <reent.h>
 
 void * malloc ( size_t size )
 {
@@ -38,4 +39,29 @@ void * realloc (void *p, size_t size )
 void *calloc(size_t nelements, size_t elementSize)
 {
 	return MALLOC(nelements * elementSize);
+}
+
+/* Route newlib reentrant allocators (used by printf/snprintf) to BREW MALLOC/FREE */
+void *_malloc_r(struct _reent *reent, size_t size)
+{
+	(void)reent;
+	return malloc(size);
+}
+
+void _free_r(struct _reent *reent, void *p)
+{
+	(void)reent;
+	free(p);
+}
+
+void *_realloc_r(struct _reent *reent, void *p, size_t size)
+{
+	(void)reent;
+	return realloc(p, size);
+}
+
+void *_calloc_r(struct _reent *reent, size_t count, size_t size)
+{
+	(void)reent;
+	return calloc(count, size);
 }
