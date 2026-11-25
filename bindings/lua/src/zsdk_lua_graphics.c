@@ -233,10 +233,71 @@ static int l_gfx_draw_textured_quad_2d(lua_State* L) { zsdk_render_draw_textured
 static int l_gfx_set_fog(lua_State* L) { zsdk_render_set_fog(lua_toboolean(L, 1)); return 0; }
 static int l_gfx_configure_fog(lua_State* L) { zsdk_render_configure_fog((uint8_t)luaL_checkinteger(L, 1), (uint8_t)luaL_checkinteger(L, 2), (uint8_t)luaL_checkinteger(L, 3), (uint8_t)luaL_checkinteger(L, 4), (uint8_t)luaL_optinteger(L, 5, 255), (float)luaL_checknumber(L, 6), (float)luaL_checknumber(L, 7), (float)luaL_optnumber(L, 8, 1.0)); return 0; }
 static int l_gfx_set_lighting(lua_State* L) { zsdk_render_set_lighting(lua_toboolean(L, 1)); return 0; }
+static int l_gfx_configure_light(lua_State* L) {
+    zsdk_render_configure_light(
+        (uint8_t)luaL_checkinteger(L, 1),
+        (float)luaL_checknumber(L, 2), (float)luaL_checknumber(L, 3), (float)luaL_checknumber(L, 4),
+        (uint8_t)luaL_checkinteger(L, 5), (uint8_t)luaL_checkinteger(L, 6), (uint8_t)luaL_checkinteger(L, 7), (uint8_t)luaL_optinteger(L, 8, 255),
+        (uint8_t)luaL_checkinteger(L, 9), (uint8_t)luaL_checkinteger(L, 10), (uint8_t)luaL_checkinteger(L, 11), (uint8_t)luaL_optinteger(L, 12, 255),
+        (uint8_t)luaL_checkinteger(L, 13), (uint8_t)luaL_checkinteger(L, 14), (uint8_t)luaL_checkinteger(L, 15), (uint8_t)luaL_optinteger(L, 16, 255));
+    return 0;
+}
 static int l_gfx_set_alpha_test(lua_State* L) { zsdk_render_set_alpha_test(lua_toboolean(L, 1), (uint8_t)luaL_optinteger(L, 2, 4), (float)luaL_optnumber(L, 3, 0.5)); return 0; }
 static int l_gfx_set_stencil_test(lua_State* L) { zsdk_render_set_stencil_test(lua_toboolean(L, 1)); return 0; }
 static int l_gfx_set_color_mask(lua_State* L) { zsdk_render_set_color_mask(lua_toboolean(L, 1), lua_toboolean(L, 2), lua_toboolean(L, 3), lua_toboolean(L, 4)); return 0; }
 static int l_gfx_draw_blob_shadow(lua_State* L) { zsdk_render_draw_blob_shadow((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2), (float)luaL_checknumber(L, 3), (float)luaL_checknumber(L, 4), (uint8_t)luaL_optinteger(L, 5, 0), (uint8_t)luaL_optinteger(L, 6, 0), (uint8_t)luaL_optinteger(L, 7, 0), (uint8_t)luaL_optinteger(L, 8, 110)); return 0; }
+
+typedef struct { float x, y, z, nx, ny, nz; uint8_t r, g, b, a; } ZsdkLuaLitVtx;
+static ZsdkLuaLitVtx s_boundVerts[256];
+static uint16_t       s_boundIndices[1024];
+static int            s_boundIndexCount = 0;
+
+static int l_gfx_bind_lit_mesh(lua_State* L) {
+    luaL_checktype(L, 1, LUA_TTABLE);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    int vcount = (int)zsdk_lua_rawlen(L, 1);
+    int icount = (int)zsdk_lua_rawlen(L, 2);
+    if (vcount <= 0 || vcount > 256 || icount <= 0 || icount > 1024) {
+        return luaL_error(L, "bind_lit_mesh: vertex/index count out of range");
+    }
+    for (int i = 0; i < vcount; ++i) {
+        lua_rawgeti(L, 1, i + 1);
+        lua_rawgeti(L, -1, 1);  s_boundVerts[i].x  = (float)lua_tonumber(L, -1); lua_pop(L, 1);
+        lua_rawgeti(L, -1, 2);  s_boundVerts[i].y  = (float)lua_tonumber(L, -1); lua_pop(L, 1);
+        lua_rawgeti(L, -1, 3);  s_boundVerts[i].z  = (float)lua_tonumber(L, -1); lua_pop(L, 1);
+        lua_rawgeti(L, -1, 4);  s_boundVerts[i].nx = (float)lua_tonumber(L, -1); lua_pop(L, 1);
+        lua_rawgeti(L, -1, 5);  s_boundVerts[i].ny = (float)lua_tonumber(L, -1); lua_pop(L, 1);
+        lua_rawgeti(L, -1, 6);  s_boundVerts[i].nz = (float)lua_tonumber(L, -1); lua_pop(L, 1);
+        lua_rawgeti(L, -1, 7);  s_boundVerts[i].r  = (uint8_t)luaL_optinteger(L, -1, 255); lua_pop(L, 1);
+        lua_rawgeti(L, -1, 8);  s_boundVerts[i].g  = (uint8_t)luaL_optinteger(L, -1, 255); lua_pop(L, 1);
+        lua_rawgeti(L, -1, 9);  s_boundVerts[i].b  = (uint8_t)luaL_optinteger(L, -1, 255); lua_pop(L, 1);
+        lua_rawgeti(L, -1, 10); s_boundVerts[i].a  = (uint8_t)luaL_optinteger(L, -1, 255); lua_pop(L, 1);
+        lua_pop(L, 1);
+    }
+    for (int i = 0; i < icount; ++i) {
+        lua_rawgeti(L, 2, i + 1);
+        s_boundIndices[i] = (uint16_t)lua_tointeger(L, -1);
+        lua_pop(L, 1);
+    }
+    s_boundIndexCount = icount;
+    zsdk_render_bind_raw_vertex_arrays(&s_boundVerts[0].x, 3, &s_boundVerts[0].nx,
+                                       &s_boundVerts[0].r, NULL, (int32_t)sizeof(ZsdkLuaLitVtx));
+    return 0;
+}
+
+static int l_gfx_draw_bound_mesh(lua_State* L) {
+    (void)L;
+    if (s_boundIndexCount > 0) {
+        zsdk_render_draw_elements_u16(ZSDK_PRIM_TRIANGLES, (int32_t)s_boundIndexCount, s_boundIndices);
+    }
+    return 0;
+}
+
+static int l_gfx_unbind_mesh(lua_State* L) {
+    (void)L;
+    zsdk_render_unbind_vertex_attributes();
+    return 0;
+}
 
 static int l_gfx_draw_colored_mesh(lua_State* L) {
     typedef struct { float x, y, z; uint8_t r, g, b, a; } ColorVtx;
@@ -311,11 +372,15 @@ static const luaL_Reg kGfxFuncs[] = {
     { "set_fog",               l_gfx_set_fog              },
     { "configure_fog",         l_gfx_configure_fog        },
     { "set_lighting",          l_gfx_set_lighting         },
+    { "configure_light",       l_gfx_configure_light      },
     { "set_alpha_test",        l_gfx_set_alpha_test       },
     { "set_stencil_test",      l_gfx_set_stencil_test     },
     { "set_color_mask",        l_gfx_set_color_mask       },
     { "draw_blob_shadow",      l_gfx_draw_blob_shadow     },
     { "draw_colored_mesh",     l_gfx_draw_colored_mesh    },
+    { "bind_lit_mesh",         l_gfx_bind_lit_mesh        },
+    { "draw_bound_mesh",       l_gfx_draw_bound_mesh      },
+    { "unbind_mesh",           l_gfx_unbind_mesh          },
     { NULL,                    NULL                       }
 };
 

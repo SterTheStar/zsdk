@@ -138,6 +138,10 @@ ZSDK_C_API void zsdk_render_set_fog(int enabled);
 ZSDK_C_API void zsdk_render_configure_fog(uint8_t mode, uint8_t r, uint8_t g, uint8_t b, uint8_t a,
                                           float start_z, float end_z, float density);
 ZSDK_C_API void zsdk_render_set_lighting(int enabled);
+ZSDK_C_API void zsdk_render_configure_light(uint8_t light_index, float x, float y, float z,
+                                            uint8_t ar, uint8_t ag, uint8_t ab, uint8_t aa,
+                                            uint8_t dr, uint8_t dg, uint8_t db, uint8_t da,
+                                            uint8_t sr, uint8_t sg, uint8_t sb, uint8_t sa);
 ZSDK_C_API void zsdk_render_set_alpha_test(int enabled, uint8_t compare_func, float ref_val);
 ZSDK_C_API void zsdk_render_set_stencil_test(int enabled);
 ZSDK_C_API void zsdk_render_set_color_mask(int r, int g, int b, int a);

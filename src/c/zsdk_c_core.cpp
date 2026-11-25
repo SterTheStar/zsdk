@@ -5,6 +5,7 @@
 
 #include "zsdk/c/zsdk_c_core.h"
 #include "zsdk_c_helpers.hpp"
+#include "zsdk/core/app.hpp"
 #include "zsdk/core/clock.hpp"
 #include "zsdk/core/system_info.hpp"
 #include "zsdk/debug/debug_overlay.hpp"
@@ -66,6 +67,18 @@ int zsdk_debug_overlay_is_visible(void) {
 
 void zsdk_debug_overlay_record_draw_call(uint32_t vertex_count) {
     zsdk::debug::DebugOverlay::RecordDrawCall(vertex_count);
+}
+
+void zsdk_app_set_fps_cap(uint8_t fps) {
+    if (zsdk::Application* app = zsdk::Application::GetInstance()) {
+        app->SetFpsCap(fps <= 30u ? zsdk::FpsCap::Fps30 : zsdk::FpsCap::Fps60);
+    }
+}
+
+void zsdk_app_request_quit(void) {
+    if (zsdk::Application* app = zsdk::Application::GetInstance()) {
+        app->RequestQuit();
+    }
 }
 
 } /* extern "C" */

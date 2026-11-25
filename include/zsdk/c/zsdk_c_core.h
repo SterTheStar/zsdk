@@ -48,6 +48,12 @@ ZSDK_C_API int zsdk_debug_overlay_is_visible(void);
 /** @brief Records a draw call (and optional vertex count) in DebugOverlay telemetry. */
 ZSDK_C_API void zsdk_debug_overlay_record_draw_call(uint32_t vertex_count);
 
+/** @brief Sets the application FPS cap (30 or 60). */
+ZSDK_C_API void zsdk_app_set_fps_cap(uint8_t fps);
+
+/** @brief Requests clean application shutdown at the end of the current frame. */
+ZSDK_C_API void zsdk_app_request_quit(void);
+
 ZSDK_C_EXTERN_END
 
 #endif /* ZSDK_C_CORE_H */

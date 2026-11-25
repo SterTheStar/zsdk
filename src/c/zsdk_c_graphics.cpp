@@ -320,6 +320,18 @@ void zsdk_render_set_lighting(int enabled) {
     zsdk::graphics::Renderer::SetLighting(enabled != 0);
 }
 
+void zsdk_render_configure_light(uint8_t light_index, float x, float y, float z,
+                                 uint8_t ar, uint8_t ag, uint8_t ab, uint8_t aa,
+                                 uint8_t dr, uint8_t dg, uint8_t db, uint8_t da,
+                                 uint8_t sr, uint8_t sg, uint8_t sb, uint8_t sa) {
+    zsdk::graphics::Renderer::ConfigureLight(
+        light_index,
+        zsdk::Vec3{x, y, z},
+        zsdk::Color::Rgba(ar, ag, ab, aa),
+        zsdk::Color::Rgba(dr, dg, db, da),
+        zsdk::Color::Rgba(sr, sg, sb, sa));
+}
+
 void zsdk_render_set_alpha_test(int enabled, uint8_t compare_func, float ref_val) {
     zsdk::graphics::Renderer::SetAlphaTest(
         enabled != 0, static_cast<zsdk::graphics::CompareFunc>(compare_func), ref_val);

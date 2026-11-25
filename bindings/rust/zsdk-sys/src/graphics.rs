@@ -128,6 +128,7 @@ extern "C" {
     pub fn zsdk_render_set_fog(enabled: c_int);
     pub fn zsdk_render_configure_fog(mode: u8, r: u8, g: u8, b: u8, a: u8, start_z: f32, end_z: f32, density: f32);
     pub fn zsdk_render_set_lighting(enabled: c_int);
+    pub fn zsdk_render_configure_light(light_index: u8, x: f32, y: f32, z: f32, ar: u8, ag: u8, ab: u8, aa: u8, dr: u8, dg: u8, db: u8, da: u8, sr: u8, sg: u8, sb: u8, sa: u8);
     pub fn zsdk_render_set_alpha_test(enabled: c_int, compare_func: u8, ref_val: f32);
     pub fn zsdk_render_set_stencil_test(enabled: c_int);
     pub fn zsdk_render_set_color_mask(r: c_int, g: c_int, b: c_int, a: c_int);

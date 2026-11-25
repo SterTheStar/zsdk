@@ -25,3 +25,6 @@ impl DebugOverlay {
     #[inline] pub fn is_visible() -> bool { unsafe { zsdk_debug_overlay_is_visible() != 0 } }
     #[inline] pub fn record_draw_call(vertex_count: u32) { unsafe { zsdk_debug_overlay_record_draw_call(vertex_count); } }
 }
+
+#[inline] pub fn set_fps_cap(fps: u8) { unsafe { zsdk_app_set_fps_cap(fps); } }
+#[inline] pub fn request_quit() { unsafe { zsdk_app_request_quit(); } }

@@ -126,6 +126,16 @@ pub mod renderer {
         unsafe { zsdk_render_configure_fog(mode, rgba[0], rgba[1], rgba[2], rgba[3], start_z, end_z, density); }
     }
     #[inline] pub fn set_lighting(enabled: bool) { unsafe { zsdk_render_set_lighting(enabled as i32); } }
+    #[inline] pub fn configure_light(index: u8, pos: [f32; 3], ambient: [u8; 4], diffuse: [u8; 4], specular: [u8; 4]) {
+        unsafe {
+            zsdk_render_configure_light(
+                index, pos[0], pos[1], pos[2],
+                ambient[0], ambient[1], ambient[2], ambient[3],
+                diffuse[0], diffuse[1], diffuse[2], diffuse[3],
+                specular[0], specular[1], specular[2], specular[3],
+            );
+        }
+    }
     #[inline] pub fn set_alpha_test(enabled: bool, compare_func: u8, ref_val: f32) { unsafe { zsdk_render_set_alpha_test(enabled as i32, compare_func, ref_val); } }
     #[inline] pub fn set_stencil_test(enabled: bool) { unsafe { zsdk_render_set_stencil_test(enabled as i32); } }
     #[inline] pub fn set_color_mask(r: bool, g: bool, b: bool, a: bool) { unsafe { zsdk_render_set_color_mask(r as i32, g as i32, b as i32, a as i32); } }

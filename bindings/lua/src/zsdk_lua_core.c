@@ -72,6 +72,17 @@ static int l_core_record_draw_call(lua_State* L) {
     return 0;
 }
 
+static int l_core_set_fps_cap(lua_State* L) {
+    zsdk_app_set_fps_cap((uint8_t)luaL_checkinteger(L, 1));
+    return 0;
+}
+
+static int l_core_request_quit(lua_State* L) {
+    (void)L;
+    zsdk_app_request_quit();
+    return 0;
+}
+
 static const luaL_Reg kCoreFuncs[] = {
     { "uptime_ms",           l_core_uptime_ms           },
     { "wall_ms",             l_core_wall_ms             },
@@ -83,6 +94,8 @@ static const luaL_Reg kCoreFuncs[] = {
     { "set_overlay_visible", l_core_set_overlay_visible },
     { "is_overlay_visible",  l_core_is_overlay_visible  },
     { "record_draw_call",    l_core_record_draw_call    },
+    { "set_fps_cap",         l_core_set_fps_cap         },
+    { "request_quit",        l_core_request_quit        },
     { NULL,                  NULL                       }
 };
 

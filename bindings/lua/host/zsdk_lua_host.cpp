@@ -15,6 +15,15 @@ extern "C" {
     #define ZSDK_LUA_APP_NAME "ZSDK_Lua_App"
 #endif
 
+static zsdk::graphics::GLContext* g_luaHostGl = nullptr;
+
+static int l_host_set_swap_interval(lua_State* L) {
+    if (g_luaHostGl) {
+        g_luaHostGl->SetSwapInterval(static_cast<int32_t>(luaL_checkinteger(L, 1)));
+    }
+    return 0;
+}
+
 class ZsdkLuaHostApp : public zsdk::IAppDelegate {
 public:
     ZsdkLuaHostApp()
@@ -58,6 +67,9 @@ public:
         luaL_openlibs(m_L);
         luaL_requiref(m_L, "zsdk", luaopen_zsdk, 1);
         lua_pop(m_L, 1);
+        g_luaHostGl = &m_gl;
+        lua_pushcfunction(m_L, l_host_set_swap_interval);
+        lua_setglobal(m_L, "zsdk_set_swap_interval");
 
         if (luaL_loadbuffer(m_L, static_cast<const char*>(scriptBuf), scriptSize, scriptPath) != LUA_OK ||
             lua_pcall(m_L, 0, 0, 0) != LUA_OK) {

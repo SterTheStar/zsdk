@@ -22,4 +22,6 @@ extern "C" {
     pub fn zsdk_debug_overlay_set_visible(visible: c_int);
     pub fn zsdk_debug_overlay_is_visible() -> c_int;
     pub fn zsdk_debug_overlay_record_draw_call(vertex_count: u32);
+    pub fn zsdk_app_set_fps_cap(fps: u8);
+    pub fn zsdk_app_request_quit();
 }
