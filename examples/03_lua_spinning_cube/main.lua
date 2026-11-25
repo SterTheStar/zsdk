@@ -11,6 +11,19 @@ local CUBE_COUNTS = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024}
 local GRID_COLS   = {1, 2, 2, 4, 4, 4, 4, 8, 8, 8, 16}
 local GRID_ROWS   = {1, 1, 2, 2, 4, 4, 4, 4, 8, 8, 8}
 local GRID_DIST   = {4.5, 6.5, 8.0, 10.5, 13.0, 16.0, 19.0, 23.0, 28.0, 33.0, 38.0}
+local SPIN_SPEEDS = {[0]=0.0, [1]=20.0, [2]=48.0, [3]=110.0}
+local SPIN_LABELS = {
+    [0]="Spin Speed  : Paused",
+    [1]="Spin Speed  : Slow",
+    [2]="Spin Speed  : Normal",
+    [3]="Spin Speed  : Fast",
+}
+local CUBE_COUNT_LABELS = {
+    "Cube Count  : 1",    "Cube Count  : 2",   "Cube Count  : 4",
+    "Cube Count  : 8",    "Cube Count  : 16",  "Cube Count  : 32",
+    "Cube Count  : 64",   "Cube Count  : 128", "Cube Count  : 256",
+    "Cube Count  : 512",  "Cube Count  : 1024",
+}
 
 local CUBE_VERTS = {
     -- Front (+Z) - Cyan
@@ -80,6 +93,14 @@ local settings = {
 local batch   = nil
 local frustum = nil
 local saveMgr = nil
+
+local hudTotal   = -1
+local hudDrawn   = -1
+local hudFrustum = -1
+local hudFace    = -1
+local hudLine1   = ""
+local hudLine2   = ""
+local menuLabels = {}
 
 local function apply_fps()
     core.set_fps_cap((settings.fpsMode == 1) and 30 or 60)
@@ -185,13 +206,21 @@ local function render_hud(w, h, totalCubes, drawnCubes)
     batch:draw_rect(10.0, 10.0, 290.0, 36.0, 10, 14, 22, 180)
     batch:flush()
 
-    local line1 = string.format("CUBES: %d  DRAWN: %d", totalCubes, drawnCubes)
-    local line2 = string.format("FRUSTUM:%s FACE:%s",
-        (settings.frustumCull ~= 0) and "ON " or "OFF ",
-        (settings.faceCull ~= 0) and "ON" or "OFF")
+    if totalCubes ~= hudTotal or drawnCubes ~= hudDrawn then
+        hudTotal = totalCubes
+        hudDrawn = drawnCubes
+        hudLine1 = string.format("CUBES: %d  DRAWN: %d", totalCubes, drawnCubes)
+    end
+    if settings.frustumCull ~= hudFrustum or settings.faceCull ~= hudFace then
+        hudFrustum = settings.frustumCull
+        hudFace = settings.faceCull
+        hudLine2 = string.format("FRUSTUM:%s FACE:%s",
+            (settings.frustumCull ~= 0) and "ON " or "OFF ",
+            (settings.faceCull ~= 0) and "ON" or "OFF")
+    end
 
-    gfx.draw_text_2d(18.0, 16.0, 1.0, line1, 235, 245, 255, 255)
-    gfx.draw_text_2d(18.0, 30.0, 1.0, line2, 160, 215, 255, 255)
+    gfx.draw_text_2d(18.0, 16.0, 1.0, hudLine1, 235, 245, 255, 255)
+    gfx.draw_text_2d(18.0, 30.0, 1.0, hudLine2, 160, 215, 255, 255)
     batch:finish()
 end
 
@@ -211,26 +240,23 @@ local function render_menu(w, h)
 
     gfx.draw_text_2d(mx + 12.0, my + 8.0, 1.0, "ZSDK SETTINGS (START)", 255, 255, 255, 255)
 
-    local spinNames = {[0]="Paused", [1]="Slow", [2]="Normal", [3]="Fast"}
-    local labels = {
-        string.format("Cube Count  : %d", CUBE_COUNTS[settings.cubeCountIndex]),
-        (settings.frustumCull ~= 0) and "Frustum Cull: ON" or "Frustum Cull: OFF",
-        (settings.faceCull    ~= 0) and "Face Cull   : ON" or "Face Cull   : OFF",
-        (settings.lighting    ~= 0) and "Lighting    : ON" or "Lighting    : OFF",
-        "FPS Cap     : " .. ((settings.fpsMode == 1) and "30 FPS" or "60 FPS"),
-        (settings.vsync       ~= 0) and "VSync       : ON" or "VSync       : OFF",
-        "Spin Speed  : " .. (spinNames[settings.spinMode] or "Normal"),
-        core.is_overlay_visible() and "Debug Panel : SHOW" or "Debug Panel : HIDE",
-        "Save Config (udata)",
-        "Exit App"
-    }
+    menuLabels[1]  = CUBE_COUNT_LABELS[settings.cubeCountIndex] or "Cube Count  : 1"
+    menuLabels[2]  = (settings.frustumCull ~= 0) and "Frustum Cull: ON" or "Frustum Cull: OFF"
+    menuLabels[3]  = (settings.faceCull    ~= 0) and "Face Cull   : ON" or "Face Cull   : OFF"
+    menuLabels[4]  = (settings.lighting    ~= 0) and "Lighting    : ON" or "Lighting    : OFF"
+    menuLabels[5]  = (settings.fpsMode     == 1) and "FPS Cap     : 30 FPS" or "FPS Cap     : 60 FPS"
+    menuLabels[6]  = (settings.vsync       ~= 0) and "VSync       : ON" or "VSync       : OFF"
+    menuLabels[7]  = SPIN_LABELS[settings.spinMode] or "Spin Speed  : Normal"
+    menuLabels[8]  = core.is_overlay_visible() and "Debug Panel : SHOW" or "Debug Panel : HIDE"
+    menuLabels[9]  = "Save Config (udata)"
+    menuLabels[10] = "Exit App"
 
     for i = 1, MENU_ITEMS do
         local ry = my + 34.0 + (i - 1) * 18.0
         if i == menuCursor then
-            gfx.draw_text_2d(mx + 16.0, ry, 1.0, labels[i], 255, 240, 120, 255)
+            gfx.draw_text_2d(mx + 16.0, ry, 1.0, menuLabels[i], 255, 240, 120, 255)
         else
-            gfx.draw_text_2d(mx + 16.0, ry, 1.0, labels[i], 210, 220, 230, 255)
+            gfx.draw_text_2d(mx + 16.0, ry, 1.0, menuLabels[i], 210, 220, 230, 255)
         end
     end
 
@@ -274,8 +300,7 @@ function zsdk_on_update(delta_ms, input)
     if menuOpen then
         update_menu(input, delta_ms)
     else
-        local spinTable = {[0]=0.0, [1]=20.0, [2]=48.0, [3]=110.0}
-        local baseSpin = spinTable[settings.spinMode % 4] or 48.0
+        local baseSpin = SPIN_SPEEDS[settings.spinMode % 4] or 48.0
         angleY = angleY + baseSpin * dt
         angleX = angleX + (baseSpin * 0.65) * dt
 

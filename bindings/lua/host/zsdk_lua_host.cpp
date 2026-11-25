@@ -65,6 +65,9 @@ public:
             return zsdk::Result::OutOfMemory;
         }
         luaL_openlibs(m_L);
+        /* Use generational GC with tight minor/major thresholds and step each frame
+           so short-lived per-frame strings/tables don't climb the heap. */
+        lua_gc(m_L, LUA_GCGEN, 20, 100);
         luaL_requiref(m_L, "zsdk", luaopen_zsdk, 1);
         lua_pop(m_L, 1);
         g_luaHostGl = &m_gl;
@@ -130,6 +133,7 @@ public:
             } else {
                 lua_pop(m_L, 1);
             }
+            lua_gc(m_L, LUA_GCSTEP, 2);
         }
 
         zsdk::debug::DebugOverlay::Render(w, h);
