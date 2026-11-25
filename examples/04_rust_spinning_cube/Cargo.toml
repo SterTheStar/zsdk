@@ -1,0 +1,19 @@
+[package]
+name = "zsdk_rust_spinning_cube"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+zsdk = { path = "../../bindings/rust/zsdk" }
+
+[workspace]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"

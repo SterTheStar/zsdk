@@ -146,10 +146,8 @@ if(ZSDK_BUILD_EXAMPLES)
     zsdk_add_brew_app(01_spinning_cube
         SOURCES examples/01_spinning_cube/main.cpp
     )
-    zsdk_add_brew_app(02_c_spinning_cube
-        SOURCES
-            examples/02_c_spinning_cube/main.cpp
-            examples/02_c_spinning_cube/cube_c.c
+    zsdk_add_c_app(02_c_spinning_cube
+        SOURCES examples/02_c_spinning_cube/cube_c.c
         MIF_CLASS_ID 0x01099002
         MIF_APP_NAME "ZSDK_C_Cube"
     )
@@ -158,20 +156,12 @@ if(ZSDK_BUILD_EXAMPLES)
         MIF_CLASS_ID 0x01099003
         MIF_APP_NAME "ZSDK_Lua_Cube"
     )
-    if(ZSDK_ENABLE_LUA_VM)
-        # Embed scripts/star_catcher.lua as the fallback used when script:/ has no copy.
-        set(ZSDK_DEMO_LUA "${CMAKE_CURRENT_SOURCE_DIR}/examples/04_lua_vm_demo/scripts/star_catcher.lua")
-        set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${ZSDK_DEMO_LUA}")
-        file(READ "${ZSDK_DEMO_LUA}" ZSDK_DEMO_LUA_TEXT)
-        file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/gen/star_catcher_lua.h"
-             "static const char kEmbeddedScript[] = R\"LUA(${ZSDK_DEMO_LUA_TEXT})LUA\";\n")
-        zsdk_add_brew_app(04_lua_vm_demo
-            SOURCES examples/04_lua_vm_demo/main.cpp
-            MIF_CLASS_ID 0x01099004
-            MIF_APP_NAME "ZSDK_LuaVmDemo"
-        )
-        target_include_directories(04_lua_vm_demo PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/gen")
-    endif()
+    zsdk_add_rust_app(04_rust_spinning_cube
+        MANIFEST examples/04_rust_spinning_cube/Cargo.toml
+        LIB_NAME zsdk_rust_spinning_cube
+        MIF_CLASS_ID 0x01099004
+        MIF_APP_NAME "ZSDK_Rust_Cube"
+    )
 endif()
 
 if(ZSDK_ENABLE_TESTS)
