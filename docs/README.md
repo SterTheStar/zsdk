@@ -18,7 +18,7 @@ O **ZSDK** é uma camada de abstração de plataforma (*Platform Abstraction Lay
 | :--- | :--- | :--- |
 | **Build & `.mod`/`.mif`** | [01_build_e_empacotamento.md](./01_build_e_empacotamento.md) | CMake, `zsdk_add_{brew,c,lua,rust}_app`, `elf2mod`, `cifc`, `.mif` e build Windows |
 | **Core & Assíncrono** | [02_core_e_async.md](./02_core_e_async.md) | `Application`, `ZSDK_IMPLEMENT_APP`, `FpsCap`, `Clock`, `Fixed16`, `Thread`, `Signal`, `SystemInfo` |
-| **Debug & Profiler** | [03_debug_e_profiler.md](./03_debug_e_profiler.md) | `MemoryTracker` (RAM/VRAM), `Logger` e `DebugOverlay` (`START/HOME + Baixo`) |
+| **Debug & Profiler** | [03_debug_e_profiler.md](./03_debug_e_profiler.md) | `MemoryTracker` (RAM/VRAM), `Logger` e `DebugOverlay` (`L + Baixo`) |
 | **Input & Controles** | [04_input_controles.md](./04_input_controles.md) | Z-Pad (`IHID`), Boomerang (motion), Rumble, XInput (Xbox) e `KeyboardMouseManager` |
 | **Gráficos 3D & 2D** | [05_graficos_3d_e_2d.md](./05_graficos_3d_e_2d.md) | `GLContext`, `Renderer` (com State Cache), `SpriteBatch2D`, `Frustum`, `Texture`, `MeshBuffer`, `Display2D`, `ImageDecoder`, `Sprite2D` |
 | **Filesystem & Save** | [06_filesystem_e_savegame.md](./06_filesystem_e_savegame.md) | `FileSystem`, `ZSDK_NAND_WRITE_GUARD`, `SaveGameManager` (`udata` + CRC32, SD Card `fs:/card0/`), `Database`, `UnzipStream` |

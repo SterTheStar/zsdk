@@ -157,12 +157,11 @@ void DebugOverlay::Shutdown() {
 }
 
 void DebugOverlay::Update(const input::InputManager& input, float deltaTimeMs) {
-    /* Shortcut: START + D-Pad Down (or Z-Pad HOME + D-Pad Down) toggles the panel. */
-    const uint32_t dpadDown = input::ButtonMask(input::GamepadButton::DPadDown);
-    const uint32_t toggleStart = input::ButtonMask(input::GamepadButton::Start) | dpadDown;
-    const uint32_t toggleHome  = input::ButtonMask(input::GamepadButton::Home) | dpadDown;
+    /* Shortcut: L + D-Pad Down toggles the panel (works reliably on real Zeebo Z-Pad and Windows). */
+    const uint32_t toggleCombo = input::ButtonMask(input::GamepadButton::ShoulderLeft) |
+                                 input::ButtonMask(input::GamepadButton::DPadDown);
     const auto& pad0 = input.GetGamepad(0);
-    if (pad0.IsComboJustTriggered(toggleStart) || pad0.IsComboJustTriggered(toggleHome)) {
+    if (pad0.IsComboJustTriggered(toggleCombo)) {
         g_overlay.visible = !g_overlay.visible;
     }
 

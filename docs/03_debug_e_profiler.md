@@ -8,8 +8,8 @@ Headers incluídos: `debug/memory_tracker.hpp`, `debug/logger.hpp`, `debug/debug
 
 O **DebugOverlay** é um painel renderizado diretamente via OpenGL ES 1.x / OpenGL sobre o framebuffer, usando uma fonte bitmap **8x8 embutida em ROM** (768 bytes, zero assets externos).
 
-* **Atalho de Ativação:** Pressione simultaneamente **`START + D-Pad Baixo`** ou **`HOME + D-Pad Baixo`** (no Windows: **`Enter + Seta Baixo`**).
-* **Indicador Discreto:** Quando o painel completo está fechado, exibe um pequeno aviso `START+DN:DBG` no canto superior direito.
+* **Atalho de Ativação:** Pressione simultaneamente **`L + D-Pad Baixo`** (no Windows: **`Q + Seta Baixo`** ou `LB + Baixo` no Xbox).
+* **Discreto por padrão:** Quando fechado, não desenha nenhum indicador na tela nem altera o estado OpenGL.
 * **Métricas Exibidas:**
   * FPS médio real (janela de 500 ms sem clamp), *frame time* (ms), *draw calls* (`Drw`) e quantidade de vértices (`Vtx`) submetidos no frame anterior.
   * Uso total de memória (`RAM + VRAM`), percentual em relação ao limite configurável (padrão `32 MB`) com barra colorida (verde/amarelo/vermelho) e pico de RAM.

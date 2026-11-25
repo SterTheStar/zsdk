@@ -38,7 +38,7 @@ O ZSDK expõe uma **ABI C99 estável** como camada base única, permitindo integ
 * **`bindings/lua/`** (módulo Lua em C99 puro, compatível com Lua 5.1–5.4 e LuaJIT):
   * `include/zsdk_lua.h` — `luaopen_zsdk` + `luaopen_zsdk_{log,core,input,audio,graphics,fs,net,security}`.
   * `src/zsdk_lua.c` e `src/zsdk_lua_*.c` — Um arquivo por subsistema (`log`, `core`, `input`, `audio`, `graphics`, `fs`, `net`, `security`).
-  * `host/zsdk_lua_host.cpp` — Host genérico usado automaticamente por `zsdk_add_lua_app` (veja `examples/03_lua_spinning_cube/main.lua`).
+  * `host/zsdk_lua_host.cpp` — Host genérico usado automaticamente por `zsdk_add_lua_app` (veja `examples/03_lua_spinning_cube/main.lua`): carrega `main.luac` (se gerado com `BYTECODE` / `-DZSDK_LUA_BYTECODE=ON`) ou `main.lua`, expõe `zsdk_platform_context` e chama `zsdk_on_init(w, h, platform_ctx)`, `zsdk_on_update(delta_ms, input)` e `zsdk_on_render(w, h)`.
   * `CMakeLists.txt` — Ativado com `-DZSDK_BUILD_LUA_BINDINGS=ON`.
 * **`bindings/rust/`** (workspace `#![no_std]` com `zsdk-sys` + `zsdk`):
   * `host/zsdk_rust_host.cpp` — Host genérico usado automaticamente por `zsdk_add_rust_app` (veja `examples/04_rust_spinning_cube/`).

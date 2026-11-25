@@ -6,7 +6,7 @@
  *
  * Controls (Z-Pad):
  *   - START              : Open / Close Settings Menu
- *   - START + D-Pad Down : Toggle Debug / RAM / VRAM Overlay
+ *   - L + D-Pad Down     : Toggle Debug / RAM / VRAM Overlay
  *   - Left Stick / D-Pad : Pan camera & spin cubes (or navigate menu when open)
  *   - Button 1 (South)   : Toggle lighting (or activate/adjust item in menu)
  *   - Button 2 (West)    : Quick-toggle 30 / 60 FPS cap
