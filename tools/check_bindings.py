@@ -83,6 +83,13 @@ def check_subsystems(errors: list[str]) -> None:
             if f"src/zsdk_lua_{c_sub}.c" not in lua_cmake:
                 errors.append(f"src/zsdk_lua_{c_sub}.c not listed in bindings/lua/CMakeLists.txt")
 
+        rust_sys_mod = ROOT / "bindings" / "rust" / "zsdk-sys" / "src" / f"{c_sub}.rs"
+        rust_sys_lib = (ROOT / "bindings" / "rust" / "zsdk-sys" / "src" / "lib.rs").read_text(encoding="utf-8")
+        if not rust_sys_mod.is_file():
+            errors.append(f"Missing Rust FFI module: {rust_sys_mod.relative_to(ROOT)}")
+        elif f"pub mod {c_sub};" not in rust_sys_lib:
+            errors.append(f"pub mod {c_sub}; not exported in bindings/rust/zsdk-sys/src/lib.rs")
+
 
 def check_c_abi_definitions(errors: list[str]) -> list[str]:
     inc_c = ROOT / "include" / "zsdk" / "c"
@@ -140,6 +147,16 @@ def check_enum_parity(errors: list[str]) -> None:
             "in types.hpp vs zsdk_c_types.h"
         )
 
+    rust_types = (ROOT / "bindings" / "rust" / "zsdk-sys" / "src" / "types.rs").read_text(encoding="utf-8")
+    rust_vals = parse_enum_values(rust_types, r"pub\s+enum\s+ZsdkResult\s*\{(.*?)\}")
+    if not rust_vals:
+        errors.append("Failed to parse ZsdkResult enum values in zsdk-sys/src/types.rs.")
+    elif cpp_vals != rust_vals:
+        errors.append(
+            f"Enum mismatch: zsdk::Result ({cpp_vals}) != ZsdkResult ({rust_vals}) "
+            "in types.hpp vs zsdk-sys/src/types.rs"
+        )
+
 
 def main() -> int:
     errors: list[str] = []
@@ -162,6 +179,20 @@ def main() -> int:
 
     wrapped_in_lua = len(declared_fns) - len(missing_in_lua) - len(c_only_fns & set(declared_fns))
 
+    rust_text = "\n".join(
+        p.read_text(encoding="utf-8")
+        for p in sorted((ROOT / "bindings" / "rust" / "zsdk-sys" / "src").glob("*.rs"))
+    )
+    rust_only_excluded = {"zsdk_log_v"}  # C va_list has no portable Rust FFI
+    missing_in_rust = [
+        fn for fn in declared_fns
+        if fn not in rust_only_excluded and not re.search(rf"\b{re.escape(fn)}\b", rust_text)
+    ]
+    for fn in missing_in_rust:
+        errors.append(f"C ABI function '{fn}' is not declared in bindings/rust/zsdk-sys/src/*.rs")
+
+    wrapped_in_rust = len(declared_fns) - len(missing_in_rust) - len(rust_only_excluded & set(declared_fns))
+
     if errors:
         print("[ZSDK BINDINGS CHECK FAILED]")
         for err in errors:
@@ -171,7 +202,8 @@ def main() -> int:
     print(
         f"[ZSDK BINDINGS CHECK OK] {len(SUBSYSTEM_MAP)} subsystems, "
         f"{len(declared_fns)} C ABI functions verified, "
-        f"{wrapped_in_lua}/{len(declared_fns)} bound in Lua, Result enum 1:1 parity."
+        f"{wrapped_in_lua}/{len(declared_fns)} in Lua, "
+        f"{wrapped_in_rust}/{len(declared_fns)} in Rust, Result enum 1:1 parity."
     )
     return 0
 
