@@ -9,6 +9,8 @@ option(ZSDK_ENABLE_DEBUG_OVERLAY "Enable in-game OpenGL ES Debug & RAM/VRAM Over
 option(ZSDK_ENABLE_LOGGING "Enable ZSDK_LOG_INFO and ZSDK_LOG_WARN logging" ON)
 option(ZSDK_BUILD_ZEEBO "Build for Zeebo / Qualcomm BREW 4.0.2" ON)
 option(ZSDK_BUILD_EXAMPLES "Build ZSDK sample applications" ON)
+option(ZSDK_BUILD_LUA_BINDINGS "Build modular Lua C bindings (requires ZSDK_LUA_INCLUDE_DIR)" OFF)
+option(ZSDK_ENABLE_TESTS "Enable C ABI self-verification tests and bindings parity check" ON)
 
 set(BREW_SDK_ROOT "C:/Users/Esther/AppData/Local/Programs/brew-sdk" CACHE PATH "Path to BREW/Zeebo SDK")
 
@@ -30,6 +32,14 @@ set(ZSDK_SOURCES
     src/graphics/frustum.cpp
     src/audio/audio_engine.cpp
     src/audio/pcm_mixer.cpp
+    src/c/zsdk_c_log.cpp
+    src/c/zsdk_c_core.cpp
+    src/c/zsdk_c_input.cpp
+    src/c/zsdk_c_audio.cpp
+    src/c/zsdk_c_graphics.cpp
+    src/c/zsdk_c_fs.cpp
+    src/c/zsdk_c_net.cpp
+    src/c/zsdk_c_security.cpp
     src/fs/savegame.cpp
 )
 
@@ -103,8 +113,40 @@ endif()
 
 include(cmake/ZsdkBrew.cmake)
 
+if(ZSDK_BUILD_LUA_BINDINGS)
+    add_subdirectory(bindings/lua)
+endif()
+
 if(ZSDK_BUILD_EXAMPLES)
     zsdk_add_brew_app(01_spinning_cube
         SOURCES examples/01_spinning_cube/main.cpp
     )
+    zsdk_add_brew_app(02_c_spinning_cube
+        SOURCES
+            examples/02_c_spinning_cube/main.cpp
+            examples/02_c_spinning_cube/cube_c.c
+        MIF_CLASS_ID 0x01099002
+        MIF_APP_NAME "ZSDK_C_Cube"
+    )
+endif()
+
+if(ZSDK_ENABLE_TESTS)
+    enable_testing()
+
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(Python3_Interpreter_FOUND)
+        add_custom_target(zsdk_check_bindings ALL
+            COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/check_bindings.py"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+            COMMENT "Verifying ZSDK C ABI & Lua bindings parity"
+        )
+        add_test(NAME zsdk_bindings_parity
+            COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/check_bindings.py"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        )
+    endif()
+
+    add_library(zsdk_c_abi_compile_test OBJECT tests/c_abi_smoke_test.c)
+    set_target_properties(zsdk_c_abi_compile_test PROPERTIES C_STANDARD 99 C_STANDARD_REQUIRED ON)
+    target_include_directories(zsdk_c_abi_compile_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endif()

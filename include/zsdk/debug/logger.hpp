@@ -8,6 +8,8 @@
 
 #include "zsdk/core/config.hpp"
 
+#include <stdarg.h>
+
 namespace zsdk {
 namespace debug {
 
@@ -23,6 +25,7 @@ enum class LogLevel : uint8_t {
 class Logger {
 public:
     static void Log(LogLevel level, const char* tag, const char* fmt, ...);
+    static void LogV(LogLevel level, const char* tag, const char* fmt, va_list args);
 };
 
 } // namespace debug
