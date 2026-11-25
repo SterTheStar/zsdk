@@ -123,4 +123,22 @@ int zsdk_socket_is_open(const zsdk_socket_t* sock) {
     return (sock && sock->sock.IsOpen()) ? 1 : 0;
 }
 
+void zsdk_net_cancel_dns(zsdk_net_mgr_t* mgr) {
+    if (mgr) mgr->mgr.CancelDns();
+}
+
+void zsdk_http_set_max_response_bytes(zsdk_http_t* http, uint32_t max_bytes) {
+    if (http) http->http.SetMaxResponseBytes(max_bytes);
+}
+
+zsdk_result_t zsdk_http_post(zsdk_http_t* http, const char* url, const char* content_type,
+                             const void* body, uint32_t body_bytes, zsdk_http_cb_t cb, void* user_data) {
+    if (!http) return ZSDK_C_ERR_INVALID_ARG;
+    return zsdk::c_abi::ToCResult(http->http.Post(url, content_type, body, body_bytes, cb, user_data));
+}
+
+void zsdk_http_cancel_pending(zsdk_http_t* http) {
+    if (http) http->http.CancelPending();
+}
+
 } /* extern "C" */

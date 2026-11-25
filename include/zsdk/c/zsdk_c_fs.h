@@ -87,6 +87,12 @@ ZSDK_C_API zsdk_result_t     zsdk_ram_cache_put(zsdk_ram_cache_t* cache, const c
 ZSDK_C_API zsdk_result_t     zsdk_ram_cache_get(zsdk_ram_cache_t* cache, const char* key, void* out_buf, uint32_t max_bytes, uint32_t* out_size);
 ZSDK_C_API void              zsdk_ram_cache_clear(zsdk_ram_cache_t* cache);
 
+ZSDK_C_API int               zsdk_savegame_is_using_sd_card(const zsdk_savegame_t* sg);
+ZSDK_C_API zsdk_result_t     zsdk_savegame_write_user_file(zsdk_savegame_t* sg, const char* filename, const void* data, uint32_t size_bytes);
+ZSDK_C_API zsdk_result_t     zsdk_savegame_read_user_file(zsdk_savegame_t* sg, const char* filename, void* out_buf, uint32_t max_bytes, uint32_t* out_read);
+ZSDK_C_API int               zsdk_savegame_exists_user_file(const zsdk_savegame_t* sg, const char* filename);
+ZSDK_C_API zsdk_result_t     zsdk_savegame_delete_user_file(zsdk_savegame_t* sg, const char* filename);
+
 ZSDK_C_EXTERN_END
 
 #endif /* ZSDK_C_FS_H */

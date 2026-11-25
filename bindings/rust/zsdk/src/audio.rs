@@ -63,6 +63,8 @@ impl PcmMixer {
         let frames = (out_stereo.len() / 2) as u32;
         unsafe { zsdk_pcm_mixer_mix(self.raw, out_stereo.as_mut_ptr(), frames); }
     }
+    pub fn output_rate(&self) -> u32 { unsafe { zsdk_pcm_mixer_get_output_rate(self.raw) } }
+    pub fn master_volume(&self) -> u8 { unsafe { zsdk_pcm_mixer_get_master_volume(self.raw) } }
 }
 
 impl Drop for PcmMixer {
@@ -90,6 +92,7 @@ impl MediaStream {
     pub fn set_volume(&mut self, vol_percent: u8) -> Result<()> { check(unsafe { zsdk_media_set_volume(self.raw, vol_percent) }) }
     pub fn set_looping(&mut self, looping: bool) { unsafe { zsdk_media_set_looping(self.raw, looping as i32); } }
     pub fn is_playing(&self) -> bool { unsafe { zsdk_media_is_playing(self.raw) != 0 } }
+    pub fn is_loaded(&self) -> bool { unsafe { zsdk_media_is_loaded(self.raw) != 0 } }
 }
 
 impl Drop for MediaStream {
@@ -116,6 +119,7 @@ impl Sfx {
     }
 
     pub fn play_file(&mut self, path: &CStr) -> Result<()> { check(unsafe { zsdk_sfx_play_file(self.raw, path.as_ptr()) }) }
+    pub fn play_memory(&mut self, data: &[u8]) -> Result<()> { check(unsafe { zsdk_sfx_play_memory(self.raw, data.as_ptr() as *const _, data.len() as u32) }) }
     pub fn stop(&mut self) -> Result<()> { check(unsafe { zsdk_sfx_stop(self.raw) }) }
     pub fn set_volume(&mut self, vol_percent: u8) -> Result<()> { check(unsafe { zsdk_sfx_set_volume(self.raw, vol_percent) }) }
 }

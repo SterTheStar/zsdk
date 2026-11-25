@@ -40,6 +40,8 @@ extern "C" {
     pub fn zsdk_pcm_mixer_stop_all(mixer: *mut zsdk_pcm_mixer_t);
     pub fn zsdk_pcm_mixer_is_voice_playing(mixer: *const zsdk_pcm_mixer_t, voice: i8) -> c_int;
     pub fn zsdk_pcm_mixer_mix(mixer: *mut zsdk_pcm_mixer_t, out_stereo: *mut i16, out_frames: u32);
+    pub fn zsdk_pcm_mixer_get_output_rate(mixer: *const zsdk_pcm_mixer_t) -> u32;
+    pub fn zsdk_pcm_mixer_get_master_volume(mixer: *const zsdk_pcm_mixer_t) -> u8;
 
     pub fn zsdk_media_create() -> *mut zsdk_media_stream_t;
     pub fn zsdk_media_destroy(stream: *mut zsdk_media_stream_t);
@@ -52,12 +54,14 @@ extern "C" {
     pub fn zsdk_media_set_volume(stream: *mut zsdk_media_stream_t, vol_percent: u8) -> zsdk_result_t;
     pub fn zsdk_media_set_looping(stream: *mut zsdk_media_stream_t, loop_: c_int);
     pub fn zsdk_media_is_playing(stream: *const zsdk_media_stream_t) -> c_int;
+    pub fn zsdk_media_is_loaded(stream: *const zsdk_media_stream_t) -> c_int;
 
     pub fn zsdk_sfx_create() -> *mut zsdk_sfx_t;
     pub fn zsdk_sfx_destroy(sfx: *mut zsdk_sfx_t);
     pub fn zsdk_sfx_init(sfx: *mut zsdk_sfx_t, platform_ctx: *mut c_void) -> zsdk_result_t;
     pub fn zsdk_sfx_shutdown(sfx: *mut zsdk_sfx_t);
     pub fn zsdk_sfx_play_file(sfx: *mut zsdk_sfx_t, file_path: *const c_char) -> zsdk_result_t;
+    pub fn zsdk_sfx_play_memory(sfx: *mut zsdk_sfx_t, data: *const c_void, size_bytes: u32) -> zsdk_result_t;
     pub fn zsdk_sfx_stop(sfx: *mut zsdk_sfx_t) -> zsdk_result_t;
     pub fn zsdk_sfx_set_volume(sfx: *mut zsdk_sfx_t, vol_percent: u8) -> zsdk_result_t;
 }

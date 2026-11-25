@@ -225,18 +225,53 @@ static int l_input_set_rumble(lua_State* L) {
     return 1;
 }
 
+static int l_input_hold_duration_ms(lua_State* L) {
+    lua_pushinteger(L, (lua_Integer)zsdk_input_hold_duration_ms(
+        check_input(L, 1), (uint8_t)luaL_optinteger(L, 2, 0), (zsdk_button_t)luaL_checkinteger(L, 3)));
+    return 1;
+}
+
+static int l_input_is_combo_triggered(lua_State* L) {
+    lua_pushboolean(L, zsdk_input_is_combo_triggered(
+        check_input(L, 1), (uint8_t)luaL_optinteger(L, 2, 0), (uint32_t)luaL_checkinteger(L, 3)));
+    return 1;
+}
+
+static int l_input_motion(lua_State* L) {
+    float ax = 0, ay = 0, az = 0, gx = 0, gy = 0, gz = 0;
+    int sup = zsdk_input_motion(check_input(L, 1), (uint8_t)luaL_optinteger(L, 2, 0),
+                                &ax, &ay, &az, &gx, &gy, &gz);
+    lua_pushboolean(L, sup);
+    lua_pushnumber(L, (lua_Number)ax); lua_pushnumber(L, (lua_Number)ay); lua_pushnumber(L, (lua_Number)az);
+    lua_pushnumber(L, (lua_Number)gx); lua_pushnumber(L, (lua_Number)gy); lua_pushnumber(L, (lua_Number)gz);
+    return 7;
+}
+
+static int l_kbm_has_keyboard(lua_State* L) {
+    lua_pushboolean(L, zsdk_kbm_has_keyboard(((zsdk_lua_kbm_ud*)luaL_checkudata(L, 1, ZSDK_LUA_KBM_MT))->ptr));
+    return 1;
+}
+
+static int l_kbm_has_mouse(lua_State* L) {
+    lua_pushboolean(L, zsdk_kbm_has_mouse(((zsdk_lua_kbm_ud*)luaL_checkudata(L, 1, ZSDK_LUA_KBM_MT))->ptr));
+    return 1;
+}
+
 static const luaL_Reg kInputMethods[] = {
-    { "update",          l_input_update          },
-    { "connected_count", l_input_connected_count },
-    { "is_connected",    l_input_is_connected    },
-    { "is_down",         l_input_is_down         },
-    { "is_pressed",      l_input_is_pressed      },
-    { "is_released",     l_input_is_released     },
-    { "left_stick",      l_input_left_stick      },
-    { "right_stick",     l_input_right_stick     },
-    { "set_rumble",      l_input_set_rumble      },
-    { "__gc",            l_input_gc              },
-    { NULL,              NULL                    }
+    { "update",             l_input_update             },
+    { "connected_count",    l_input_connected_count    },
+    { "is_connected",       l_input_is_connected       },
+    { "is_down",            l_input_is_down            },
+    { "is_pressed",         l_input_is_pressed         },
+    { "is_released",        l_input_is_released        },
+    { "left_stick",         l_input_left_stick         },
+    { "right_stick",        l_input_right_stick        },
+    { "set_rumble",         l_input_set_rumble         },
+    { "hold_duration_ms",   l_input_hold_duration_ms   },
+    { "is_combo_triggered", l_input_is_combo_triggered },
+    { "motion",             l_input_motion             },
+    { "__gc",               l_input_gc                 },
+    { NULL,                 NULL                       }
 };
 
 static const luaL_Reg kKbmMethods[] = {
@@ -244,6 +279,8 @@ static const luaL_Reg kKbmMethods[] = {
     { "is_key_down",   l_kbm_is_key_down   },
     { "mouse_delta",   l_kbm_mouse_delta   },
     { "mouse_buttons", l_kbm_mouse_buttons },
+    { "has_keyboard",  l_kbm_has_keyboard  },
+    { "has_mouse",     l_kbm_has_mouse     },
     { "__gc",          l_kbm_gc            },
     { NULL,            NULL                }
 };

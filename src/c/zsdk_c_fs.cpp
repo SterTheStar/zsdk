@@ -259,4 +259,30 @@ void zsdk_ram_cache_clear(zsdk_ram_cache_t* cache) {
     if (cache) cache->cache.Clear();
 }
 
+int zsdk_savegame_is_using_sd_card(const zsdk_savegame_t* sg) {
+    return (sg && sg->sg.IsUsingSdCard()) ? 1 : 0;
+}
+
+zsdk_result_t zsdk_savegame_write_user_file(zsdk_savegame_t* sg, const char* filename, const void* data, uint32_t size_bytes) {
+    if (!sg) return ZSDK_C_ERR_INVALID_ARG;
+    return zsdk::c_abi::ToCResult(sg->sg.WriteUserFile(filename, data, size_bytes));
+}
+
+zsdk_result_t zsdk_savegame_read_user_file(zsdk_savegame_t* sg, const char* filename, void* out_buf, uint32_t max_bytes, uint32_t* out_read) {
+    if (!sg) return ZSDK_C_ERR_INVALID_ARG;
+    uint32_t readBytes = 0u;
+    zsdk::Result r = sg->sg.ReadUserFile(filename, out_buf, max_bytes, readBytes);
+    if (out_read) *out_read = readBytes;
+    return zsdk::c_abi::ToCResult(r);
+}
+
+int zsdk_savegame_exists_user_file(const zsdk_savegame_t* sg, const char* filename) {
+    return (sg && sg->sg.ExistsUserFile(filename)) ? 1 : 0;
+}
+
+zsdk_result_t zsdk_savegame_delete_user_file(zsdk_savegame_t* sg, const char* filename) {
+    if (!sg) return ZSDK_C_ERR_INVALID_ARG;
+    return zsdk::c_abi::ToCResult(sg->sg.DeleteUserFile(filename));
+}
+
 } /* extern "C" */

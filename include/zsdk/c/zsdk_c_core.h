@@ -18,6 +18,12 @@ typedef struct zsdk_sys_mem_info_t {
     uint32_t total_fs_bytes;
 } zsdk_sys_mem_info_t;
 
+typedef struct zsdk_battery_status_t {
+    int     present;
+    int     charging;
+    uint8_t level_percent;
+} zsdk_battery_status_t;
+
 /** @brief Monotonic milliseconds since boot/start (Clock::GetUptimeMs). */
 ZSDK_C_API uint32_t zsdk_clock_uptime_ms(void);
 
@@ -38,6 +44,12 @@ ZSDK_C_API zsdk_result_t zsdk_system_get_memory_info(zsdk_sys_mem_info_t* out_in
 
 /** @brief Queries device language code. */
 ZSDK_C_API uint32_t zsdk_system_get_language_code(void* platform_ctx);
+
+/** @brief Queries battery status (present, charging, level 0..100). */
+ZSDK_C_API zsdk_result_t zsdk_system_get_battery_status(void* platform_ctx, zsdk_battery_status_t* out_status);
+
+/** @brief Sets display backlight state and brightness percent. */
+ZSDK_C_API zsdk_result_t zsdk_system_set_backlight(void* platform_ctx, int enabled, uint8_t level_percent);
 
 /** @brief Shows or hides the in-game DebugOverlay. */
 ZSDK_C_API void zsdk_debug_overlay_set_visible(int visible);

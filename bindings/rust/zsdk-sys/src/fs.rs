@@ -75,4 +75,10 @@ extern "C" {
     pub fn zsdk_ram_cache_put(cache: *mut zsdk_ram_cache_t, key: *const c_char, data: *const c_void, size_bytes: u32) -> zsdk_result_t;
     pub fn zsdk_ram_cache_get(cache: *mut zsdk_ram_cache_t, key: *const c_char, out_buf: *mut c_void, max_bytes: u32, out_size: *mut u32) -> zsdk_result_t;
     pub fn zsdk_ram_cache_clear(cache: *mut zsdk_ram_cache_t);
+
+    pub fn zsdk_savegame_is_using_sd_card(sg: *const zsdk_savegame_t) -> c_int;
+    pub fn zsdk_savegame_write_user_file(sg: *mut zsdk_savegame_t, filename: *const c_char, data: *const c_void, size_bytes: u32) -> zsdk_result_t;
+    pub fn zsdk_savegame_read_user_file(sg: *mut zsdk_savegame_t, filename: *const c_char, out_buf: *mut c_void, max_bytes: u32, out_read: *mut u32) -> zsdk_result_t;
+    pub fn zsdk_savegame_exists_user_file(sg: *const zsdk_savegame_t, filename: *const c_char) -> c_int;
+    pub fn zsdk_savegame_delete_user_file(sg: *mut zsdk_savegame_t, filename: *const c_char) -> zsdk_result_t;
 }

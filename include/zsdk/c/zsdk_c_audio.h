@@ -44,6 +44,8 @@ ZSDK_C_API void              zsdk_pcm_mixer_stop_voice(zsdk_pcm_mixer_t* mixer, 
 ZSDK_C_API void              zsdk_pcm_mixer_stop_all(zsdk_pcm_mixer_t* mixer);
 ZSDK_C_API int               zsdk_pcm_mixer_is_voice_playing(const zsdk_pcm_mixer_t* mixer, int8_t voice);
 ZSDK_C_API void              zsdk_pcm_mixer_mix(zsdk_pcm_mixer_t* mixer, int16_t* out_stereo, uint32_t out_frames);
+ZSDK_C_API uint32_t          zsdk_pcm_mixer_get_output_rate(const zsdk_pcm_mixer_t* mixer);
+ZSDK_C_API uint8_t           zsdk_pcm_mixer_get_master_volume(const zsdk_pcm_mixer_t* mixer);
 
 /* MediaStream */
 ZSDK_C_API zsdk_media_stream_t* zsdk_media_create(void);
@@ -57,6 +59,7 @@ ZSDK_C_API zsdk_result_t        zsdk_media_resume(zsdk_media_stream_t* stream);
 ZSDK_C_API zsdk_result_t        zsdk_media_set_volume(zsdk_media_stream_t* stream, uint8_t vol_percent);
 ZSDK_C_API void                 zsdk_media_set_looping(zsdk_media_stream_t* stream, int loop);
 ZSDK_C_API int                  zsdk_media_is_playing(const zsdk_media_stream_t* stream);
+ZSDK_C_API int                  zsdk_media_is_loaded(const zsdk_media_stream_t* stream);
 
 /* SoundEffect */
 ZSDK_C_API zsdk_sfx_t*   zsdk_sfx_create(void);
@@ -64,6 +67,7 @@ ZSDK_C_API void          zsdk_sfx_destroy(zsdk_sfx_t* sfx);
 ZSDK_C_API zsdk_result_t zsdk_sfx_init(zsdk_sfx_t* sfx, void* platform_ctx);
 ZSDK_C_API void          zsdk_sfx_shutdown(zsdk_sfx_t* sfx);
 ZSDK_C_API zsdk_result_t zsdk_sfx_play_file(zsdk_sfx_t* sfx, const char* file_path);
+ZSDK_C_API zsdk_result_t zsdk_sfx_play_memory(zsdk_sfx_t* sfx, const void* data, uint32_t size_bytes);
 ZSDK_C_API zsdk_result_t zsdk_sfx_stop(zsdk_sfx_t* sfx);
 ZSDK_C_API zsdk_result_t zsdk_sfx_set_volume(zsdk_sfx_t* sfx, uint8_t vol_percent);
 

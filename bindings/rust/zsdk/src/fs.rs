@@ -101,6 +101,17 @@ impl SaveGameManager {
     }
     pub fn pump_async(&mut self, budget_bytes: u32) -> i32 { unsafe { zsdk_savegame_pump_async(self.raw, budget_bytes) } }
     pub fn async_status(&self) -> i32 { unsafe { zsdk_savegame_async_status(self.raw) } }
+    pub fn is_using_sd_card(&self) -> bool { unsafe { zsdk_savegame_is_using_sd_card(self.raw) != 0 } }
+    pub fn write_user_file(&mut self, filename: &CStr, data: &[u8]) -> Result<()> {
+        check(unsafe { zsdk_savegame_write_user_file(self.raw, filename.as_ptr(), data.as_ptr() as *const _, data.len() as u32) })
+    }
+    pub fn read_user_file(&mut self, filename: &CStr, out_buf: &mut [u8]) -> Result<u32> {
+        let mut read = 0u32;
+        check(unsafe { zsdk_savegame_read_user_file(self.raw, filename.as_ptr(), out_buf.as_mut_ptr() as *mut _, out_buf.len() as u32, &mut read) })?;
+        Ok(read)
+    }
+    pub fn exists_user_file(&self, filename: &CStr) -> bool { unsafe { zsdk_savegame_exists_user_file(self.raw, filename.as_ptr()) != 0 } }
+    pub fn delete_user_file(&mut self, filename: &CStr) -> Result<()> { check(unsafe { zsdk_savegame_delete_user_file(self.raw, filename.as_ptr()) }) }
 }
 impl Drop for SaveGameManager {
     fn drop(&mut self) {

@@ -43,6 +43,9 @@ extern "C" {
     pub fn zsdk_input_left_stick(input: *const zsdk_input_t, player: u8, out_x: *mut f32, out_y: *mut f32);
     pub fn zsdk_input_right_stick(input: *const zsdk_input_t, player: u8, out_x: *mut f32, out_y: *mut f32);
     pub fn zsdk_input_set_rumble(input: *mut zsdk_input_t, player: u8, left_motor: u16, right_motor: u16) -> zsdk_result_t;
+    pub fn zsdk_input_hold_duration_ms(input: *const zsdk_input_t, player: u8, btn: zsdk_button_t) -> u32;
+    pub fn zsdk_input_is_combo_triggered(input: *const zsdk_input_t, player: u8, combo_mask: u32) -> c_int;
+    pub fn zsdk_input_motion(input: *const zsdk_input_t, player: u8, out_ax: *mut f32, out_ay: *mut f32, out_az: *mut f32, out_gx: *mut f32, out_gy: *mut f32, out_gz: *mut f32) -> c_int;
 
     pub fn zsdk_kbm_create() -> *mut zsdk_kbm_t;
     pub fn zsdk_kbm_destroy(kbm: *mut zsdk_kbm_t);
@@ -52,6 +55,8 @@ extern "C" {
     pub fn zsdk_kbm_is_key_down(kbm: *const zsdk_kbm_t, hid_key: u16) -> c_int;
     pub fn zsdk_kbm_mouse_delta(kbm: *const zsdk_kbm_t, out_dx: *mut f32, out_dy: *mut f32);
     pub fn zsdk_kbm_mouse_buttons(kbm: *const zsdk_kbm_t) -> u8;
+    pub fn zsdk_kbm_has_keyboard(kbm: *const zsdk_kbm_t) -> c_int;
+    pub fn zsdk_kbm_has_mouse(kbm: *const zsdk_kbm_t) -> c_int;
 
     pub fn zsdk_vkbd_create() -> *mut zsdk_vkbd_t;
     pub fn zsdk_vkbd_destroy(vkbd: *mut zsdk_vkbd_t);

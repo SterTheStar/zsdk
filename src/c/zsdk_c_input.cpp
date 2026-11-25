@@ -188,4 +188,35 @@ const char* zsdk_vkbd_get_text(const zsdk_vkbd_t* vkbd) {
     return vkbd ? vkbd->vkbd.GetText() : "";
 }
 
+int zsdk_kbm_has_keyboard(const zsdk_kbm_t* kbm) {
+    return (kbm && kbm->kbm.HasKeyboard()) ? 1 : 0;
+}
+
+int zsdk_kbm_has_mouse(const zsdk_kbm_t* kbm) {
+    return (kbm && kbm->kbm.HasMouse()) ? 1 : 0;
+}
+
+uint32_t zsdk_input_hold_duration_ms(const zsdk_input_t* input, uint8_t player, zsdk_button_t btn) {
+    if (!input || btn >= ZSDK_BTN_COUNT) return 0u;
+    return input->mgr.GetGamepad(player).GetHoldDurationMs(static_cast<zsdk::input::GamepadButton>(btn));
+}
+
+int zsdk_input_is_combo_triggered(const zsdk_input_t* input, uint8_t player, uint32_t combo_mask) {
+    return (input && input->mgr.GetGamepad(player).IsComboJustTriggered(combo_mask)) ? 1 : 0;
+}
+
+int zsdk_input_motion(const zsdk_input_t* input, uint8_t player,
+                      float* out_ax, float* out_ay, float* out_az,
+                      float* out_gx, float* out_gy, float* out_gz) {
+    if (!input) return 0;
+    const zsdk::input::MotionState& m = input->mgr.GetGamepad(player).GetMotion();
+    if (out_ax) *out_ax = m.acceleration.x;
+    if (out_ay) *out_ay = m.acceleration.y;
+    if (out_az) *out_az = m.acceleration.z;
+    if (out_gx) *out_gx = m.angularVelocity.x;
+    if (out_gy) *out_gy = m.angularVelocity.y;
+    if (out_gz) *out_gz = m.angularVelocity.z;
+    return m.supported ? 1 : 0;
+}
+
 } /* extern "C" */

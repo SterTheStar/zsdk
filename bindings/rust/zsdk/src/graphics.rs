@@ -30,6 +30,18 @@ impl GLContext {
     pub fn set_swap_interval(&mut self, interval: i32) -> Result<()> { check(unsafe { zsdk_gl_set_swap_interval(self.raw, interval) }) }
     pub fn width(&self) -> i32 { unsafe { zsdk_gl_get_width(self.raw) } }
     pub fn height(&self) -> i32 { unsafe { zsdk_gl_get_height(self.raw) } }
+    pub fn render_width(&self) -> i32 { unsafe { zsdk_gl_get_render_width(self.raw) } }
+    pub fn render_height(&self) -> i32 { unsafe { zsdk_gl_get_render_height(self.raw) } }
+    pub fn set_render_resolution(&mut self, w: i32, h: i32) -> Result<()> { check(unsafe { zsdk_gl_set_render_resolution(self.raw, w, h) }) }
+    pub fn power_level(&self) -> Result<i32> {
+        let mut lvl = 0i32;
+        check(unsafe { zsdk_gl_get_power_level(self.raw, &mut lvl) })?;
+        Ok(lvl)
+    }
+    pub fn enable_surface_scale(&mut self, enabled: bool) -> Result<()> { check(unsafe { zsdk_gl_enable_surface_scale(self.raw, enabled as i32) }) }
+    pub fn set_surface_rotate(&mut self, rot90: bool, h_mirror: bool, v_mirror: bool, enabled: bool) -> Result<()> {
+        check(unsafe { zsdk_gl_set_surface_rotate(self.raw, rot90 as i32, h_mirror as i32, v_mirror as i32, enabled as i32) })
+    }
 }
 impl Drop for GLContext {
     fn drop(&mut self) {
@@ -58,6 +70,7 @@ impl Texture {
     pub fn width(&self) -> u16 { unsafe { zsdk_texture_get_width(self.raw) } }
     pub fn height(&self) -> u16 { unsafe { zsdk_texture_get_height(self.raw) } }
     pub fn gl_id(&self) -> u32 { unsafe { zsdk_texture_get_gl_id(self.raw) } }
+    pub fn vram_bytes(&self) -> u32 { unsafe { zsdk_texture_get_vram_bytes(self.raw) } }
     pub fn as_raw(&self) -> *const zsdk_texture_t { self.raw }
 }
 impl Drop for Texture {
@@ -80,6 +93,7 @@ impl MeshBuffer {
     }
     pub fn release(&mut self) { unsafe { zsdk_mesh_release(self.raw); } }
     pub fn is_valid(&self) -> bool { unsafe { zsdk_mesh_is_valid(self.raw) != 0 } }
+    pub fn size_bytes(&self) -> u32 { unsafe { zsdk_mesh_get_size_bytes(self.raw) } }
     pub fn as_raw(&self) -> *const zsdk_mesh_buffer_t { self.raw }
 }
 impl Drop for MeshBuffer {
@@ -142,6 +156,34 @@ pub mod renderer {
     #[inline] pub fn draw_blob_shadow(x: f32, y: f32, z: f32, radius: f32, rgba: [u8; 4]) {
         unsafe { zsdk_render_draw_blob_shadow(x, y, z, radius, rgba[0], rgba[1], rgba[2], rgba[3]); }
     }
+    #[inline] pub fn set_front_face(clockwise: bool) { unsafe { zsdk_render_set_front_face(clockwise as i32); } }
+    #[inline] pub fn set_depth_func(func: u8) { unsafe { zsdk_render_set_depth_func(func); } }
+    #[inline] pub fn set_depth_mask(write_enabled: bool) { unsafe { zsdk_render_set_depth_mask(write_enabled as i32); } }
+    #[inline] pub fn set_dither(enabled: bool) { unsafe { zsdk_render_set_dither(enabled as i32); } }
+    #[inline] pub fn set_shade_model(model: u8) { unsafe { zsdk_render_set_shade_model(model); } }
+    #[inline] pub fn set_line_width(width: f32) { unsafe { zsdk_render_set_line_width(width); } }
+    #[inline] pub fn set_point_size(size: f32) { unsafe { zsdk_render_set_point_size(size); } }
+    #[inline] pub fn set_light_enabled(index: u8, enabled: bool) { unsafe { zsdk_render_set_light_enabled(index, enabled as i32); } }
+    #[inline] pub fn set_global_ambient(rgba: [u8; 4]) { unsafe { zsdk_render_set_global_ambient(rgba[0], rgba[1], rgba[2], rgba[3]); } }
+    #[inline] pub fn set_material(ambient: [u8; 4], diffuse: [u8; 4], specular: [u8; 4], shininess: f32) {
+        unsafe {
+            zsdk_render_set_material(
+                ambient[0], ambient[1], ambient[2], ambient[3],
+                diffuse[0], diffuse[1], diffuse[2], diffuse[3],
+                specular[0], specular[1], specular[2], specular[3],
+                shininess,
+            );
+        }
+    }
+    #[inline] pub fn set_polygon_offset(enabled: bool, factor: f32, units: f32) { unsafe { zsdk_render_set_polygon_offset(enabled as i32, factor, units); } }
+    #[inline] pub fn set_texture_2d(enabled: bool) { unsafe { zsdk_render_set_texture_2d(enabled as i32); } }
+    #[inline] pub fn set_active_texture_unit(unit: u8) { unsafe { zsdk_render_set_active_texture_unit(unit); } }
+    #[inline] pub fn set_normalize_normals(enabled: bool) { unsafe { zsdk_render_set_normalize_normals(enabled as i32); } }
+    #[inline] pub fn load_matrix(mat16: &[f32; 16]) { unsafe { zsdk_render_load_matrix(mat16.as_ptr()); } }
+    #[inline] pub fn mult_matrix(mat16: &[f32; 16]) { unsafe { zsdk_render_mult_matrix(mat16.as_ptr()); } }
+    #[inline] pub fn set_frustum(left: f32, right: f32, bottom: f32, top: f32, near_z: f32, far_z: f32) {
+        unsafe { zsdk_render_set_frustum(left, right, bottom, top, near_z, far_z); }
+    }
 }
 
 pub struct SpriteBatch { raw: *mut zsdk_sprite_batch_t }
@@ -164,6 +206,10 @@ impl SpriteBatch {
     }
     #[inline] pub fn draw_quad(&mut self, tex: &Texture, x: f32, y: f32, w: f32, h: f32, uv: [f32; 4], rgba: [u8; 4]) {
         unsafe { zsdk_batch_draw_quad(self.raw, tex.as_raw(), x, y, w, h, uv[0], uv[1], uv[2], uv[3], rgba[0], rgba[1], rgba[2], rgba[3]); }
+    }
+    #[inline] pub fn draw_rotated(&mut self, tex: Option<&Texture>, cx: f32, cy: f32, w: f32, h: f32, angle_rad: f32, uv: [f32; 4], rgba: [u8; 4]) {
+        let tp = tex.map_or(ptr::null(), |t| t.as_raw());
+        unsafe { zsdk_batch_draw_rotated(self.raw, tp, cx, cy, w, h, angle_rad, uv[0], uv[1], uv[2], uv[3], rgba[0], rgba[1], rgba[2], rgba[3]); }
     }
 }
 impl Drop for SpriteBatch {
@@ -189,6 +235,10 @@ impl Frustum {
                 fov_y_deg, aspect, near_z, far_z,
             );
         }
+    }
+    #[inline]
+    pub fn extract_view_proj(&mut self, vp16: &[f32; 16]) {
+        unsafe { zsdk_frustum_extract_view_proj(self.raw, vp16.as_ptr()); }
     }
     #[inline] pub fn test_sphere(&self, center: [f32; 3], radius: f32) -> bool { unsafe { zsdk_frustum_test_sphere(self.raw, center[0], center[1], center[2], radius) != 0 } }
     #[inline] pub fn test_aabb(&self, min: [f32; 3], max: [f32; 3]) -> bool {

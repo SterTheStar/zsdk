@@ -200,9 +200,21 @@ static const luaL_Reg kAudioMethods[] = {
     { NULL,                NULL                      }
 };
 
+static int l_mixer_get_output_rate(lua_State* L) { lua_pushinteger(L, (lua_Integer)zsdk_pcm_mixer_get_output_rate(check_mixer(L, 1))); return 1; }
+static int l_mixer_get_master_volume(lua_State* L) { lua_pushinteger(L, (lua_Integer)zsdk_pcm_mixer_get_master_volume(check_mixer(L, 1))); return 1; }
+static int l_media_is_loaded(lua_State* L) { lua_pushboolean(L, zsdk_media_is_loaded(((zsdk_lua_media_ud*)luaL_checkudata(L, 1, ZSDK_LUA_MEDIA_MT))->ptr)); return 1; }
+static int l_sfx_play_memory(lua_State* L) {
+    size_t len = 0;
+    const char* data = luaL_checklstring(L, 2, &len);
+    lua_pushinteger(L, (lua_Integer)zsdk_sfx_play_memory(((zsdk_lua_sfx_ud*)luaL_checkudata(L, 1, ZSDK_LUA_SFX_MT))->ptr, data, (uint32_t)len));
+    return 1;
+}
+
 static const luaL_Reg kMixerMethods[] = {
     { "set_output_rate",   l_mixer_set_output_rate   },
     { "set_master_volume", l_mixer_set_master_volume },
+    { "get_output_rate",   l_mixer_get_output_rate   },
+    { "get_master_volume", l_mixer_get_master_volume },
     { "play_bytes",        l_mixer_play_bytes        },
     { "set_voice_rate",    l_mixer_set_voice_rate    },
     { "set_voice_pitch",   l_mixer_set_voice_pitch   },
@@ -225,16 +237,18 @@ static const luaL_Reg kMediaMethods[] = {
     { "set_volume",  l_media_set_volume  },
     { "set_looping", l_media_set_looping },
     { "is_playing",  l_media_is_playing  },
+    { "is_loaded",   l_media_is_loaded   },
     { "__gc",        l_media_gc          },
     { NULL,          NULL                }
 };
 
 static const luaL_Reg kSfxMethods[] = {
-    { "play_file",  l_sfx_play_file  },
-    { "stop",       l_sfx_stop       },
-    { "set_volume", l_sfx_set_volume },
-    { "__gc",       l_sfx_gc         },
-    { NULL,         NULL             }
+    { "play_file",   l_sfx_play_file   },
+    { "play_memory", l_sfx_play_memory },
+    { "stop",        l_sfx_stop        },
+    { "set_volume",  l_sfx_set_volume  },
+    { "__gc",        l_sfx_gc          },
+    { NULL,          NULL              }
 };
 
 static const luaL_Reg kAudioModule[] = {

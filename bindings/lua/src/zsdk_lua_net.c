@@ -147,10 +147,15 @@ static int l_http_new(lua_State* L) {
     return 1;
 }
 
+static int l_net_cancel_dns(lua_State* L) { zsdk_net_cancel_dns(check_net(L, 1)); return 0; }
+static int l_http_set_max_response_bytes(lua_State* L) { zsdk_http_set_max_response_bytes(((zsdk_lua_http_ud*)luaL_checkudata(L, 1, ZSDK_LUA_HTTP_MT))->ptr, (uint32_t)luaL_checkinteger(L, 2)); return 0; }
+static int l_http_cancel_pending(lua_State* L) { zsdk_http_cancel_pending(((zsdk_lua_http_ud*)luaL_checkudata(L, 1, ZSDK_LUA_HTTP_MT))->ptr); return 0; }
+
 static const luaL_Reg kNetMethods[] = {
     { "is_available", l_net_is_available },
     { "get_state",    l_net_get_state    },
     { "local_ip",     l_net_local_ip     },
+    { "cancel_dns",   l_net_cancel_dns   },
     { "__gc",         l_net_gc           },
     { NULL,           NULL               }
 };
@@ -166,8 +171,10 @@ static const luaL_Reg kSockMethods[] = {
 };
 
 static const luaL_Reg kHttpMethods[] = {
-    { "__gc", l_http_gc },
-    { NULL,   NULL      }
+    { "set_max_response_bytes", l_http_set_max_response_bytes },
+    { "cancel_pending",         l_http_cancel_pending         },
+    { "__gc",                   l_http_gc                     },
+    { NULL,                     NULL                          }
 };
 
 static const luaL_Reg kNetModule[] = {

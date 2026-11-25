@@ -28,3 +28,14 @@ impl DebugOverlay {
 
 #[inline] pub fn set_fps_cap(fps: u8) { unsafe { zsdk_app_set_fps_cap(fps); } }
 #[inline] pub fn request_quit() { unsafe { zsdk_app_request_quit(); } }
+
+pub fn battery_status(platform_ctx: *mut c_void) -> Result<zsdk_battery_status_t> {
+    let mut bs = zsdk_battery_status_t::default();
+    check(unsafe { zsdk_system_get_battery_status(platform_ctx, &mut bs) })?;
+    Ok(bs)
+}
+
+#[inline]
+pub fn set_backlight(platform_ctx: *mut c_void, enabled: bool, level_percent: u8) -> Result<()> {
+    check(unsafe { zsdk_system_set_backlight(platform_ctx, enabled as i32, level_percent) })
+}

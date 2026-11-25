@@ -49,4 +49,9 @@ extern "C" {
     pub fn zsdk_socket_send(sock: *mut zsdk_socket_t, data: *const c_void, size_bytes: u32, out_status: *mut zsdk_result_t) -> i32;
     pub fn zsdk_socket_recv(sock: *mut zsdk_socket_t, buffer: *mut c_void, max_bytes: u32, out_status: *mut zsdk_result_t) -> i32;
     pub fn zsdk_socket_is_open(sock: *const zsdk_socket_t) -> c_int;
+
+    pub fn zsdk_net_cancel_dns(mgr: *mut zsdk_net_mgr_t);
+    pub fn zsdk_http_set_max_response_bytes(http: *mut zsdk_http_t, max_bytes: u32);
+    pub fn zsdk_http_post(http: *mut zsdk_http_t, url: *const c_char, content_type: *const c_char, body: *const c_void, body_bytes: u32, cb: zsdk_http_cb_t, user_data: *mut c_void) -> zsdk_result_t;
+    pub fn zsdk_http_cancel_pending(http: *mut zsdk_http_t);
 }

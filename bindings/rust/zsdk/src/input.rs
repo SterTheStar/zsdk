@@ -47,6 +47,15 @@ impl InputManager {
         check(unsafe { zsdk_input_set_rumble(self.raw, player, left_motor, right_motor) })
     }
 
+    #[inline] pub fn hold_duration_ms(&self, player: u8, btn: Button) -> u32 { unsafe { zsdk_input_hold_duration_ms(self.raw, player, btn) } }
+    #[inline] pub fn is_combo_triggered(&self, player: u8, combo_mask: u32) -> bool { unsafe { zsdk_input_is_combo_triggered(self.raw, player, combo_mask) != 0 } }
+    #[inline]
+    pub fn motion(&self, player: u8) -> Option<([f32; 3], [f32; 3])> {
+        let (mut ax, mut ay, mut az, mut gx, mut gy, mut gz) = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        let sup = unsafe { zsdk_input_motion(self.raw, player, &mut ax, &mut ay, &mut az, &mut gx, &mut gy, &mut gz) };
+        if sup != 0 { Some(([ax, ay, az], [gx, gy, gz])) } else { None }
+    }
+
     #[inline] pub fn as_raw(&self) -> *const zsdk_input_t { self.raw }
 }
 
@@ -86,6 +95,8 @@ impl KeyboardMouse {
     }
 
     #[inline] pub fn mouse_buttons(&self) -> u8 { unsafe { zsdk_kbm_mouse_buttons(self.raw) } }
+    #[inline] pub fn has_keyboard(&self) -> bool { unsafe { zsdk_kbm_has_keyboard(self.raw) != 0 } }
+    #[inline] pub fn has_mouse(&self) -> bool { unsafe { zsdk_kbm_has_mouse(self.raw) != 0 } }
 }
 
 impl Drop for KeyboardMouse {

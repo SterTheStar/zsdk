@@ -212,4 +212,21 @@ zsdk_result_t zsdk_sfx_set_volume(zsdk_sfx_t* sfx, uint8_t vol_percent) {
     return zsdk::c_abi::ToCResult(sfx->sfx.SetVolume(vol_percent));
 }
 
+uint32_t zsdk_pcm_mixer_get_output_rate(const zsdk_pcm_mixer_t* mixer) {
+    return mixer ? mixer->mixer.GetOutputSampleRate() : 0u;
+}
+
+uint8_t zsdk_pcm_mixer_get_master_volume(const zsdk_pcm_mixer_t* mixer) {
+    return mixer ? mixer->mixer.GetMasterVolume() : 0u;
+}
+
+int zsdk_media_is_loaded(const zsdk_media_stream_t* stream) {
+    return (stream && stream->stream.IsLoaded()) ? 1 : 0;
+}
+
+zsdk_result_t zsdk_sfx_play_memory(zsdk_sfx_t* sfx, const void* data, uint32_t size_bytes) {
+    if (!sfx) return ZSDK_C_ERR_INVALID_ARG;
+    return zsdk::c_abi::ToCResult(sfx->sfx.PlayMemory(data, size_bytes));
+}
+
 } /* extern "C" */

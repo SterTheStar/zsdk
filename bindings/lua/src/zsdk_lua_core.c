@@ -83,6 +83,27 @@ static int l_core_request_quit(lua_State* L) {
     return 0;
 }
 
+static int l_core_battery_status(lua_State* L) {
+    zsdk_battery_status_t bs = {0, 0, 0};
+    zsdk_result_t r = zsdk_system_get_battery_status(lua_touserdata(L, 1), &bs);
+    if (r != ZSDK_C_OK) {
+        lua_pushnil(L);
+        lua_pushinteger(L, (lua_Integer)r);
+        return 2;
+    }
+    lua_newtable(L);
+    lua_pushboolean(L, bs.present); lua_setfield(L, -2, "present");
+    lua_pushboolean(L, bs.charging); lua_setfield(L, -2, "charging");
+    lua_pushinteger(L, (lua_Integer)bs.level_percent); lua_setfield(L, -2, "level");
+    return 1;
+}
+
+static int l_core_set_backlight(lua_State* L) {
+    lua_pushinteger(L, (lua_Integer)zsdk_system_set_backlight(
+        lua_touserdata(L, 1), lua_toboolean(L, 2), (uint8_t)luaL_optinteger(L, 3, 100)));
+    return 1;
+}
+
 static const luaL_Reg kCoreFuncs[] = {
     { "uptime_ms",           l_core_uptime_ms           },
     { "wall_ms",             l_core_wall_ms             },
@@ -91,6 +112,8 @@ static const luaL_Reg kCoreFuncs[] = {
     { "memory_budget",       l_core_memory_budget       },
     { "mem_info",            l_core_mem_info            },
     { "language_code",       l_core_language_code       },
+    { "battery_status",      l_core_battery_status      },
+    { "set_backlight",       l_core_set_backlight       },
     { "set_overlay_visible", l_core_set_overlay_visible },
     { "is_overlay_visible",  l_core_is_overlay_visible  },
     { "record_draw_call",    l_core_record_draw_call    },

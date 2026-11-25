@@ -176,6 +176,40 @@ ZSDK_C_API int             zsdk_frustum_test_sphere(const zsdk_frustum_t* frustu
 ZSDK_C_API int             zsdk_frustum_test_aabb(const zsdk_frustum_t* frustum,
                                                   float min_x, float min_y, float min_z,
                                                   float max_x, float max_y, float max_z);
+ZSDK_C_API void            zsdk_frustum_extract_view_proj(zsdk_frustum_t* frustum, const float* vp16);
+
+/* Extended GLContext / Texture / Mesh / Renderer / SpriteBatch2D */
+ZSDK_C_API int32_t         zsdk_gl_get_render_width(const zsdk_gl_context_t* ctx);
+ZSDK_C_API int32_t         zsdk_gl_get_render_height(const zsdk_gl_context_t* ctx);
+ZSDK_C_API zsdk_result_t   zsdk_gl_set_render_resolution(zsdk_gl_context_t* ctx, int32_t w, int32_t h);
+ZSDK_C_API zsdk_result_t   zsdk_gl_get_power_level(const zsdk_gl_context_t* ctx, int32_t* out_level);
+ZSDK_C_API zsdk_result_t   zsdk_gl_enable_surface_scale(zsdk_gl_context_t* ctx, int enabled);
+ZSDK_C_API zsdk_result_t   zsdk_gl_set_surface_rotate(zsdk_gl_context_t* ctx, int rot90, int h_mirror, int v_mirror, int enabled);
+ZSDK_C_API uint32_t        zsdk_texture_get_vram_bytes(const zsdk_texture_t* tex);
+ZSDK_C_API uint32_t        zsdk_mesh_get_size_bytes(const zsdk_mesh_buffer_t* buf);
+ZSDK_C_API void            zsdk_render_set_front_face(int clockwise);
+ZSDK_C_API void            zsdk_render_set_depth_func(uint8_t func);
+ZSDK_C_API void            zsdk_render_set_depth_mask(int write_enabled);
+ZSDK_C_API void            zsdk_render_set_dither(int enabled);
+ZSDK_C_API void            zsdk_render_set_shade_model(uint8_t model);
+ZSDK_C_API void            zsdk_render_set_line_width(float width);
+ZSDK_C_API void            zsdk_render_set_point_size(float size);
+ZSDK_C_API void            zsdk_render_set_light_enabled(uint8_t index, int enabled);
+ZSDK_C_API void            zsdk_render_set_global_ambient(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+ZSDK_C_API void            zsdk_render_set_material(uint8_t ar, uint8_t ag, uint8_t ab, uint8_t aa,
+                                                    uint8_t dr, uint8_t dg, uint8_t db, uint8_t da,
+                                                    uint8_t sr, uint8_t sg, uint8_t sb, uint8_t sa, float shininess);
+ZSDK_C_API void            zsdk_render_set_polygon_offset(int enabled, float factor, float units);
+ZSDK_C_API void            zsdk_render_set_texture_2d(int enabled);
+ZSDK_C_API void            zsdk_render_set_active_texture_unit(uint8_t unit);
+ZSDK_C_API void            zsdk_render_set_normalize_normals(int enabled);
+ZSDK_C_API void            zsdk_render_load_matrix(const float* mat16);
+ZSDK_C_API void            zsdk_render_mult_matrix(const float* mat16);
+ZSDK_C_API void            zsdk_render_set_frustum(float left, float right, float bottom, float top, float near_z, float far_z);
+ZSDK_C_API void            zsdk_batch_draw_rotated(zsdk_sprite_batch_t* batch, const zsdk_texture_t* tex,
+                                                   float cx, float cy, float w, float h, float angle_rad,
+                                                   float u0, float v0, float u1, float v1,
+                                                   uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
 ZSDK_C_EXTERN_END
 

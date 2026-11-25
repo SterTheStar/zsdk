@@ -20,6 +20,7 @@ impl NetworkManager {
     pub fn state(&self) -> NetState { unsafe { zsdk_net_get_state(self.raw) } }
     pub fn is_available(&self) -> bool { unsafe { zsdk_net_is_available(self.raw) != 0 } }
     pub fn local_ip(&self) -> u32 { unsafe { zsdk_net_get_local_ip(self.raw) } }
+    pub fn cancel_dns(&mut self) { unsafe { zsdk_net_cancel_dns(self.raw); } }
 }
 impl Drop for NetworkManager {
     fn drop(&mut self) {
@@ -78,6 +79,11 @@ impl HttpClient {
     pub unsafe fn get_raw(&mut self, url: &CStr, cb: zsdk_http_cb_t, user_data: *mut c_void) -> Result<()> {
         check(zsdk_http_get(self.raw, url.as_ptr(), cb, user_data))
     }
+    pub fn set_max_response_bytes(&mut self, max_bytes: u32) { unsafe { zsdk_http_set_max_response_bytes(self.raw, max_bytes); } }
+    pub unsafe fn post_raw(&mut self, url: &CStr, content_type: &CStr, body: &[u8], cb: zsdk_http_cb_t, user_data: *mut c_void) -> Result<()> {
+        check(zsdk_http_post(self.raw, url.as_ptr(), content_type.as_ptr(), body.as_ptr() as *const _, body.len() as u32, cb, user_data))
+    }
+    pub fn cancel_pending(&mut self) { unsafe { zsdk_http_cancel_pending(self.raw); } }
 }
 impl Drop for HttpClient {
     fn drop(&mut self) {

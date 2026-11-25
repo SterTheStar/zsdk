@@ -57,6 +57,22 @@ uint32_t zsdk_system_get_language_code(void* platform_ctx) {
     return zsdk::SystemInfo::GetLanguageCode(platform_ctx);
 }
 
+zsdk_result_t zsdk_system_get_battery_status(void* platform_ctx, zsdk_battery_status_t* out_status) {
+    if (!out_status) return ZSDK_C_ERR_INVALID_ARG;
+    zsdk::BatteryStatus bs{};
+    zsdk::Result r = zsdk::SystemInfo::GetBatteryStatus(platform_ctx, bs);
+    if (zsdk::Succeeded(r)) {
+        out_status->present       = bs.present ? 1 : 0;
+        out_status->charging      = bs.charging ? 1 : 0;
+        out_status->level_percent = bs.levelPercent;
+    }
+    return zsdk::c_abi::ToCResult(r);
+}
+
+zsdk_result_t zsdk_system_set_backlight(void* platform_ctx, int enabled, uint8_t level_percent) {
+    return zsdk::c_abi::ToCResult(zsdk::SystemInfo::SetBacklight(platform_ctx, enabled != 0, level_percent));
+}
+
 void zsdk_debug_overlay_set_visible(int visible) {
     zsdk::debug::DebugOverlay::SetVisible(visible != 0);
 }

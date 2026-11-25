@@ -150,4 +150,32 @@ extern "C" {
     pub fn zsdk_frustum_extract_camera(frustum: *mut zsdk_frustum_t, ex: f32, ey: f32, ez: f32, tx: f32, ty: f32, tz: f32, ux: f32, uy: f32, uz: f32, fov_y_deg: f32, aspect: f32, near_z: f32, far_z: f32);
     pub fn zsdk_frustum_test_sphere(frustum: *const zsdk_frustum_t, cx: f32, cy: f32, cz: f32, radius: f32) -> c_int;
     pub fn zsdk_frustum_test_aabb(frustum: *const zsdk_frustum_t, min_x: f32, min_y: f32, min_z: f32, max_x: f32, max_y: f32, max_z: f32) -> c_int;
+    pub fn zsdk_frustum_extract_view_proj(frustum: *mut zsdk_frustum_t, vp16: *const f32);
+
+    pub fn zsdk_gl_get_render_width(ctx: *const zsdk_gl_context_t) -> i32;
+    pub fn zsdk_gl_get_render_height(ctx: *const zsdk_gl_context_t) -> i32;
+    pub fn zsdk_gl_set_render_resolution(ctx: *mut zsdk_gl_context_t, w: i32, h: i32) -> zsdk_result_t;
+    pub fn zsdk_gl_get_power_level(ctx: *const zsdk_gl_context_t, out_level: *mut i32) -> zsdk_result_t;
+    pub fn zsdk_gl_enable_surface_scale(ctx: *mut zsdk_gl_context_t, enabled: c_int) -> zsdk_result_t;
+    pub fn zsdk_gl_set_surface_rotate(ctx: *mut zsdk_gl_context_t, rot90: c_int, h_mirror: c_int, v_mirror: c_int, enabled: c_int) -> zsdk_result_t;
+    pub fn zsdk_texture_get_vram_bytes(tex: *const zsdk_texture_t) -> u32;
+    pub fn zsdk_mesh_get_size_bytes(buf: *const zsdk_mesh_buffer_t) -> u32;
+    pub fn zsdk_render_set_front_face(clockwise: c_int);
+    pub fn zsdk_render_set_depth_func(func: u8);
+    pub fn zsdk_render_set_depth_mask(write_enabled: c_int);
+    pub fn zsdk_render_set_dither(enabled: c_int);
+    pub fn zsdk_render_set_shade_model(model: u8);
+    pub fn zsdk_render_set_line_width(width: f32);
+    pub fn zsdk_render_set_point_size(size: f32);
+    pub fn zsdk_render_set_light_enabled(index: u8, enabled: c_int);
+    pub fn zsdk_render_set_global_ambient(r: u8, g: u8, b: u8, a: u8);
+    pub fn zsdk_render_set_material(ar: u8, ag: u8, ab: u8, aa: u8, dr: u8, dg: u8, db: u8, da: u8, sr: u8, sg: u8, sb: u8, sa: u8, shininess: f32);
+    pub fn zsdk_render_set_polygon_offset(enabled: c_int, factor: f32, units: f32);
+    pub fn zsdk_render_set_texture_2d(enabled: c_int);
+    pub fn zsdk_render_set_active_texture_unit(unit: u8);
+    pub fn zsdk_render_set_normalize_normals(enabled: c_int);
+    pub fn zsdk_render_load_matrix(mat16: *const f32);
+    pub fn zsdk_render_mult_matrix(mat16: *const f32);
+    pub fn zsdk_render_set_frustum(left: f32, right: f32, bottom: f32, top: f32, near_z: f32, far_z: f32);
+    pub fn zsdk_batch_draw_rotated(batch: *mut zsdk_sprite_batch_t, tex: *const zsdk_texture_t, cx: f32, cy: f32, w: f32, h: f32, angle_rad: f32, u0: f32, v0: f32, u1: f32, v1: f32, r: u8, g: u8, b: u8, a: u8);
 }

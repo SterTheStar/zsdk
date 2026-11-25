@@ -428,4 +428,69 @@ int zsdk_frustum_test_aabb(const zsdk_frustum_t* frustum,
     return (frustum && frustum->frustum.TestAabb(zsdk::Vec3{min_x, min_y, min_z}, zsdk::Vec3{max_x, max_y, max_z})) ? 1 : 0;
 }
 
+void zsdk_frustum_extract_view_proj(zsdk_frustum_t* frustum, const float* vp16) {
+    if (frustum && vp16) frustum->frustum.ExtractFromViewProj(vp16);
+}
+
+int32_t zsdk_gl_get_render_width(const zsdk_gl_context_t* ctx) { return ctx ? ctx->gl.GetRenderWidth() : 0; }
+int32_t zsdk_gl_get_render_height(const zsdk_gl_context_t* ctx) { return ctx ? ctx->gl.GetRenderHeight() : 0; }
+zsdk_result_t zsdk_gl_set_render_resolution(zsdk_gl_context_t* ctx, int32_t w, int32_t h) {
+    return ctx ? zsdk::c_abi::ToCResult(ctx->gl.SetRenderResolution(w, h)) : ZSDK_C_ERR_INVALID_ARG;
+}
+zsdk_result_t zsdk_gl_get_power_level(const zsdk_gl_context_t* ctx, int32_t* out_level) {
+    if (!ctx || !out_level) return ZSDK_C_ERR_INVALID_ARG;
+    int32_t lvl = 0;
+    zsdk::Result r = ctx->gl.GetPowerLevel(lvl);
+    *out_level = lvl;
+    return zsdk::c_abi::ToCResult(r);
+}
+zsdk_result_t zsdk_gl_enable_surface_scale(zsdk_gl_context_t* ctx, int enabled) {
+    return ctx ? zsdk::c_abi::ToCResult(ctx->gl.EnableSurfaceScale(enabled != 0)) : ZSDK_C_ERR_INVALID_ARG;
+}
+zsdk_result_t zsdk_gl_set_surface_rotate(zsdk_gl_context_t* ctx, int rot90, int h_mirror, int v_mirror, int enabled) {
+    return ctx ? zsdk::c_abi::ToCResult(ctx->gl.SetSurfaceRotate(rot90 != 0, h_mirror != 0, v_mirror != 0, enabled != 0)) : ZSDK_C_ERR_INVALID_ARG;
+}
+uint32_t zsdk_texture_get_vram_bytes(const zsdk_texture_t* tex) { return tex ? tex->tex.GetVramBytes() : 0u; }
+uint32_t zsdk_mesh_get_size_bytes(const zsdk_mesh_buffer_t* buf) { return buf ? buf->buf.GetSizeBytes() : 0u; }
+void zsdk_render_set_front_face(int clockwise) {
+    zsdk::graphics::Renderer::SetFrontFace(clockwise ? zsdk::graphics::FrontFace::Clockwise : zsdk::graphics::FrontFace::CounterClockwise);
+}
+void zsdk_render_set_depth_func(uint8_t func) { zsdk::graphics::Renderer::SetDepthFunc(static_cast<zsdk::graphics::CompareFunc>(func)); }
+void zsdk_render_set_depth_mask(int write_enabled) { zsdk::graphics::Renderer::SetDepthMask(write_enabled != 0); }
+void zsdk_render_set_dither(int enabled) { zsdk::graphics::Renderer::SetDither(enabled != 0); }
+void zsdk_render_set_shade_model(uint8_t model) { zsdk::graphics::Renderer::SetShadeModel(static_cast<zsdk::graphics::ShadeModel>(model)); }
+void zsdk_render_set_line_width(float width) { zsdk::graphics::Renderer::SetLineWidth(width); }
+void zsdk_render_set_point_size(float size) { zsdk::graphics::Renderer::SetPointSize(size); }
+void zsdk_render_set_light_enabled(uint8_t index, int enabled) { zsdk::graphics::Renderer::SetLightEnabled(index, enabled != 0); }
+void zsdk_render_set_global_ambient(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    zsdk::graphics::Renderer::SetGlobalAmbientLight(zsdk::Color::Rgba(r, g, b, a));
+}
+void zsdk_render_set_material(uint8_t ar, uint8_t ag, uint8_t ab, uint8_t aa,
+                              uint8_t dr, uint8_t dg, uint8_t db, uint8_t da,
+                              uint8_t sr, uint8_t sg, uint8_t sb, uint8_t sa, float shininess) {
+    zsdk::graphics::Renderer::SetMaterial(
+        zsdk::Color::Rgba(ar, ag, ab, aa), zsdk::Color::Rgba(dr, dg, db, da),
+        zsdk::Color::Rgba(sr, sg, sb, sa), shininess);
+}
+void zsdk_render_set_polygon_offset(int enabled, float factor, float units) {
+    zsdk::graphics::Renderer::SetPolygonOffset(enabled != 0, factor, units);
+}
+void zsdk_render_set_texture_2d(int enabled) { zsdk::graphics::Renderer::SetTexture2DEnabled(enabled != 0); }
+void zsdk_render_set_active_texture_unit(uint8_t unit) { zsdk::graphics::Renderer::SetActiveTextureUnit(unit); }
+void zsdk_render_set_normalize_normals(int enabled) { zsdk::graphics::Renderer::SetNormalizeNormals(enabled != 0); }
+void zsdk_render_load_matrix(const float* mat16) { if (mat16) zsdk::graphics::Renderer::LoadMatrix(mat16); }
+void zsdk_render_mult_matrix(const float* mat16) { if (mat16) zsdk::graphics::Renderer::MultMatrix(mat16); }
+void zsdk_render_set_frustum(float left, float right, float bottom, float top, float near_z, float far_z) {
+    zsdk::graphics::Renderer::SetFrustum(left, right, bottom, top, near_z, far_z);
+}
+void zsdk_batch_draw_rotated(zsdk_sprite_batch_t* batch, const zsdk_texture_t* tex,
+                             float cx, float cy, float w, float h, float angle_rad,
+                             float u0, float v0, float u1, float v1,
+                             uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    if (batch) {
+        batch->batch.DrawRotated(tex ? &tex->tex : nullptr, cx, cy, w, h, angle_rad,
+                                 u0, v0, u1, v1, zsdk::Color::Rgba(r, g, b, a));
+    }
+}
+
 } /* extern "C" */

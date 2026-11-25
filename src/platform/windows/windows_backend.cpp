@@ -1162,6 +1162,8 @@ HttpClient::~HttpClient() {}
 Result HttpClient::Initialize(void*) { return Result::Ok; }
 void HttpClient::Shutdown() {}
 Result HttpClient::Get(const char*, HttpResponseCallback, void*) { return Result::NotSupported; }
+Result HttpClient::Post(const char*, const char*, const void*, uint32_t, HttpResponseCallback, void*) { return Result::NotSupported; }
+void HttpClient::SetMaxResponseBytes(uint32_t) {}
 void HttpClient::CancelPending() {}
 
 struct NetworkManager::Impl { int dummy; };
@@ -1172,6 +1174,7 @@ void NetworkManager::Shutdown() {}
 NetworkState NetworkManager::GetState() const { return NetworkState::Connected; }
 bool NetworkManager::IsWifiAvailable() const { return true; }
 uint32_t NetworkManager::GetLocalIpAddress() const { return 0x7F000001u; }
+void NetworkManager::CancelDns() {}
 
 struct BluetoothManager::Impl { int dummy; };
 BluetoothManager::BluetoothManager() : m_impl(nullptr) {}

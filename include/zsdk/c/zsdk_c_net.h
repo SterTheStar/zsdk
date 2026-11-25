@@ -53,6 +53,12 @@ ZSDK_C_API int32_t        zsdk_socket_send(zsdk_socket_t* sock, const void* data
 ZSDK_C_API int32_t        zsdk_socket_recv(zsdk_socket_t* sock, void* buffer, uint32_t max_bytes, zsdk_result_t* out_status);
 ZSDK_C_API int            zsdk_socket_is_open(const zsdk_socket_t* sock);
 
+ZSDK_C_API void           zsdk_net_cancel_dns(zsdk_net_mgr_t* mgr);
+ZSDK_C_API void           zsdk_http_set_max_response_bytes(zsdk_http_t* http, uint32_t max_bytes);
+ZSDK_C_API zsdk_result_t  zsdk_http_post(zsdk_http_t* http, const char* url, const char* content_type,
+                                         const void* body, uint32_t body_bytes, zsdk_http_cb_t cb, void* user_data);
+ZSDK_C_API void           zsdk_http_cancel_pending(zsdk_http_t* http);
+
 ZSDK_C_EXTERN_END
 
 #endif /* ZSDK_C_NET_H */

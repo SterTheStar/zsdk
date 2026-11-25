@@ -60,6 +60,14 @@ ZSDK_C_API void          zsdk_kbm_update(zsdk_kbm_t* kbm);
 ZSDK_C_API int           zsdk_kbm_is_key_down(const zsdk_kbm_t* kbm, uint16_t hid_key);
 ZSDK_C_API void          zsdk_kbm_mouse_delta(const zsdk_kbm_t* kbm, float* out_dx, float* out_dy);
 ZSDK_C_API uint8_t       zsdk_kbm_mouse_buttons(const zsdk_kbm_t* kbm);
+ZSDK_C_API int           zsdk_kbm_has_keyboard(const zsdk_kbm_t* kbm);
+ZSDK_C_API int           zsdk_kbm_has_mouse(const zsdk_kbm_t* kbm);
+
+ZSDK_C_API uint32_t      zsdk_input_hold_duration_ms(const zsdk_input_t* input, uint8_t player, zsdk_button_t btn);
+ZSDK_C_API int           zsdk_input_is_combo_triggered(const zsdk_input_t* input, uint8_t player, uint32_t combo_mask);
+ZSDK_C_API int           zsdk_input_motion(const zsdk_input_t* input, uint8_t player,
+                                           float* out_ax, float* out_ay, float* out_az,
+                                           float* out_gx, float* out_gy, float* out_gz);
 
 /* VirtualKeyboard */
 ZSDK_C_API zsdk_vkbd_t*  zsdk_vkbd_create(void);
