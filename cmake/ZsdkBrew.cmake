@@ -230,9 +230,11 @@ function(zsdk_add_rust_app TARGET_NAME)
         set(_CARGO_ENV "")
     endif()
 
+    file(GLOB_RECURSE _RUST_SRCS CONFIGURE_DEPENDS "${_CRATE_DIR}/src/*.rs" "${_MANIFEST_ABS}")
     add_custom_command(
         OUTPUT "${_RUST_LIB_PATH}"
         COMMAND ${_CARGO_ENV} "${ZSDK_CARGO}" build --manifest-path "${_MANIFEST_ABS}" --release ${_CARGO_TARGET_FLAG}
+        DEPENDS ${_RUST_SRCS}
         WORKING_DIRECTORY "${_CRATE_DIR}"
         COMMENT "Building Rust staticlib ${ARG_LIB_NAME}"
         USES_TERMINAL
