@@ -238,6 +238,7 @@ void DebugOverlay::Render(int32_t viewportWidth, int32_t viewportHeight) {
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
         glPopMatrix();
+        graphics::Renderer::ResetStateCache();
         return;
     }
 
