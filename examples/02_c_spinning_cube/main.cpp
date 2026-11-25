@@ -22,7 +22,10 @@ public:
             app->RequestQuit();
             return;
         }
-        cube_c_update(static_cast<float>(deltaTimeMs) * 0.001f);
+        const zsdk_input_t* inp = app
+            ? reinterpret_cast<const zsdk_input_t*>(&app->GetInput())
+            : nullptr;
+        cube_c_update(static_cast<float>(deltaTimeMs) * 0.001f, inp);
     }
 
     void OnRender() override {

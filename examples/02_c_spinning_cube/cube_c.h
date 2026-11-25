@@ -11,7 +11,7 @@
 ZSDK_C_EXTERN_BEGIN
 
 int  cube_c_init(void* platform_ctx);
-void cube_c_update(float dt_sec);
+void cube_c_update(float dt_sec, const zsdk_input_t* input);
 void cube_c_render(int32_t* out_width, int32_t* out_height);
 void cube_c_swap(void);
 void cube_c_shutdown(void);
