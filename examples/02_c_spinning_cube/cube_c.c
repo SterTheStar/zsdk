@@ -59,17 +59,20 @@ int cube_c_init(void* platform_ctx) {
     zsdk_gl_config_t cfg = { 5u, 6u, 5u, 0u, 16u, 0u, 1u };
     g_gl = zsdk_gl_create();
     if (!g_gl || zsdk_gl_init(g_gl, platform_ctx, &cfg) != ZSDK_C_OK) {
-        ZSDK_C_LOG_ERROR("CUBE_C", "Failed to initialize GLContext");
+        ZSDK_C_LOG_ERROR("CUBE_C", "GLContext init failed");
         return -1;
     }
 
     zsdk_render_reset_state_cache();
     zsdk_render_set_depth_test(1);
     zsdk_render_set_cull_face(1);
+    zsdk_render_set_lighting(0);
     zsdk_debug_overlay_set_visible(1);
 
-    ZSDK_C_LOG_INFO("CUBE_C", "C99 spinning cube ready (%dx%d)",
-                    (int)zsdk_gl_get_width(g_gl), (int)zsdk_gl_get_height(g_gl));
+    ZSDK_C_LOG_INFO("CUBE_C", "Ready %dx%d (RAM=%u B)",
+                    (int)zsdk_gl_get_width(g_gl),
+                    (int)zsdk_gl_get_height(g_gl),
+                    (unsigned)zsdk_memory_ram_used());
     return 0;
 }
 
@@ -90,14 +93,18 @@ void cube_c_render(int32_t* out_width, int32_t* out_height) {
 
     zsdk_render_set_perspective(45.0f, aspect, 0.1f, 50.0f);
     zsdk_render_reset_modelview();
-    zsdk_render_look_at(0.0f, 1.2f, 3.6f,  0.0f, 0.0f, 0.0f,  0.0f, 1.0f, 0.0f);
+    zsdk_render_look_at(0.0f, 1.4f, 4.0f,  0.0f, 0.0f, 0.0f,  0.0f, 1.0f, 0.0f);
+
+    zsdk_render_draw_blob_shadow(0.0f, -1.25f, 0.0f, 1.15f, 0, 0, 0, 110);
+
+    zsdk_render_push_matrix();
     zsdk_render_rotate(g_angle, 0.0f, 1.0f, 0.0f);
     zsdk_render_rotate(g_angle * 0.5f, 1.0f, 0.0f, 0.0f);
-
     zsdk_render_bind_raw_vertex_arrays(&kCubeVertices[0].x, 3, NULL, &kCubeVertices[0].r,
                                        NULL, (int32_t)sizeof(CubeVertex));
     zsdk_render_draw_elements_u16(ZSDK_PRIM_TRIANGLES, 36, kCubeIndices);
     zsdk_render_unbind_vertex_attributes();
+    zsdk_render_pop_matrix();
 
     zsdk_debug_overlay_record_draw_call(24u);
 

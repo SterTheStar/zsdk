@@ -37,8 +37,9 @@ function zsdk_on_init(width, height)
     zsdk.graphics.reset_state_cache()
     zsdk.graphics.set_depth_test(true)
     zsdk.graphics.set_cull_face(true)
+    zsdk.graphics.set_lighting(false)
     zsdk.core.set_overlay_visible(true)
-    zsdk.log.info("LUA_CUBE", string.format("Initialized (%dx%d)", width, height))
+    zsdk.log.info("LUA_CUBE", string.format("Ready %dx%d (RAM=%d B)", width, height, zsdk.core.ram_used()))
 end
 
 function zsdk_on_update(dt_ms)
@@ -53,10 +54,15 @@ function zsdk_on_render(width, height)
 
     zsdk.graphics.set_perspective(45.0, aspect, 0.1, 50.0)
     zsdk.graphics.reset_modelview()
-    zsdk.graphics.look_at(0.0, 1.2, 3.6, 0.0, 0.0, 0.0)
+    zsdk.graphics.look_at(0.0, 1.4, 4.0, 0.0, 0.0, 0.0)
+
+    zsdk.graphics.draw_blob_shadow(0.0, -1.25, 0.0, 1.15, 0, 0, 0, 110)
+
+    zsdk.graphics.push_matrix()
     zsdk.graphics.rotate(angle, 0.0, 1.0, 0.0)
     zsdk.graphics.rotate(angle * 0.5, 1.0, 0.0, 0.0)
-
     zsdk.graphics.draw_colored_mesh(CUBE_VERTS, CUBE_INDICES)
+    zsdk.graphics.pop_matrix()
+
     zsdk.core.record_draw_call(24)
 end
