@@ -16,7 +16,43 @@
 namespace zsdk {
 namespace debug {
 
+namespace {
+struct SinkSlot { LogSinkFn fn; void* user; };
+SinkSlot g_sinks[kMaxLogSinks];
+LogLevel g_minLevel = LogLevel::Info;
+}
+
+bool Logger::AddSink(LogSinkFn fn, void* userData) {
+    if (!fn) return false;
+    int freeIdx = -1;
+    for (uint8_t i = 0u; i < kMaxLogSinks; ++i) {
+        if (g_sinks[i].fn == fn && g_sinks[i].user == userData) return false;
+        if (g_sinks[i].fn == nullptr && freeIdx < 0) freeIdx = i;
+    }
+    if (freeIdx < 0) return false;
+    g_sinks[freeIdx].fn = fn;
+    g_sinks[freeIdx].user = userData;
+    return true;
+}
+
+bool Logger::RemoveSink(LogSinkFn fn, void* userData) {
+    for (uint8_t i = 0u; i < kMaxLogSinks; ++i) {
+        if (g_sinks[i].fn == fn && g_sinks[i].user == userData) {
+            g_sinks[i].fn = nullptr;
+            g_sinks[i].user = nullptr;
+            return true;
+        }
+    }
+    return false;
+}
+
+void Logger::SetMinLevel(LogLevel level) { g_minLevel = level; }
+LogLevel Logger::GetMinLevel() { return g_minLevel; }
+
 void Logger::Log(LogLevel level, const char* tag, const char* fmt, ...) {
+    if (static_cast<uint8_t>(level) < static_cast<uint8_t>(g_minLevel)) {
+        return;
+    }
     char buffer[ZSDK_DEBUG_LOG_LINE_LEN];
     const char* prefix = "I";
     if (level == LogLevel::Warn) {
@@ -44,6 +80,12 @@ void Logger::Log(LogLevel level, const char* tag, const char* fmt, ...) {
 #endif
 
     DebugOverlay::PushLog(buffer);
+
+    for (uint8_t i = 0u; i < kMaxLogSinks; ++i) {
+        if (g_sinks[i].fn != nullptr) {
+            g_sinks[i].fn(level, buffer, g_sinks[i].user);
+        }
+    }
 }
 
 } // namespace debug

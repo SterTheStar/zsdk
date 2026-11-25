@@ -52,7 +52,19 @@ public:
                             uint32_t imageSize, const void* compressedData,
                             TextureFilter filter = TextureFilter::Linear);
 
-    /** @brief Updates a sub-rectangle of an existing texture without reallocating VRAM. */
+    /**
+     * @brief Creates a texture from an in-memory ATITC file (header + 4x4-block data), the
+     *        Adreno 130's native compressed format (GL_ATI_texture_compression_atitc).
+     *
+     * Header (5 x uint32, little endian): signature 0xCCC40002, width, height, flags
+     * (1 = RGB, 2 = RGBA, 4 = tiled), dataOffset. Tiled files are rejected (NotSupported).
+     * Check GLContext::HasExtension("GL_ATI_texture_compression_atitc") first and fall back
+     * to Create() when it returns false.
+     */
+    Result CreateFromAtitc(const void* fileData, uint32_t fileSize,
+                           TextureFilter filter = TextureFilter::Linear);
+
+    /** @brief Updates a sub-rectangle of an existing texture without reallocating VRAM (uncompressed textures only). */
     Result UpdateSubImage(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
                           const void* pixelData);
 

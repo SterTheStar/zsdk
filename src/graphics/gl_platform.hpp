@@ -151,4 +151,37 @@
     using zsdk_win_gl::glScalex;
 #endif
 
+
+namespace zsdk {
+namespace graphics {
+namespace glutil {
+
+/**
+ * @brief Clears any stale GL error so the next glGetError() reflects only the call under test.
+ *        (Zeebo platform notes: a stale error makes error-checking code take its failure path
+ *        with no other symptom.) Bounded loop: some drivers return the same error forever.
+ */
+inline void DrainErrors() {
+    for (int i = 0; i < 8 && glGetError() != GL_NO_ERROR; ++i) {}
+}
+
+/**
+ * @brief Forces byte alignment for pixel unpack (uploads) and restores the GL default (4).
+ *        The default of 4 shears Alpha8 / RGB888 textures whose width * bpp is not a multiple of 4.
+ */
+struct UnpackAlign1 {
+    UnpackAlign1()  { glPixelStorei(GL_UNPACK_ALIGNMENT, 1); }
+    ~UnpackAlign1() { glPixelStorei(GL_UNPACK_ALIGNMENT, 4); }
+};
+
+/** @brief Same for pixel pack (glReadPixels). */
+struct PackAlign1 {
+    PackAlign1()  { glPixelStorei(GL_PACK_ALIGNMENT, 1); }
+    ~PackAlign1() { glPixelStorei(GL_PACK_ALIGNMENT, 4); }
+};
+
+} // namespace glutil
+} // namespace graphics
+} // namespace zsdk
+
 #endif /* ZSDK_GRAPHICS_GL_PLATFORM_HPP */

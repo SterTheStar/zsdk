@@ -44,6 +44,7 @@ Result MeshBuffer::Create(BufferType type, BufferUsage usage, uint32_t sizeBytes
         return Result::OutOfMemory;
     }
 
+    glutil::DrainErrors();
     GLuint id = 0u;
     glGenBuffers(1, &id);
     if (id == 0u) {
@@ -72,6 +73,7 @@ Result MeshBuffer::UpdateData(uint32_t offsetBytes, uint32_t sizeBytes, const vo
     if (m_glId == 0u || !data || offsetBytes + sizeBytes > m_sizeBytes) {
         return Result::InvalidArg;
     }
+    glutil::DrainErrors();
     glBindBuffer(ToGlTarget(m_type), static_cast<GLuint>(m_glId));
     glBufferSubData(ToGlTarget(m_type), static_cast<GLintptr>(offsetBytes),
                     static_cast<GLsizeiptr>(sizeBytes), data);

@@ -15,7 +15,16 @@
 namespace zsdk {
 namespace fs {
 
-static const uint8_t kMaxSaveSlots = 16u;
+static const uint8_t  kMaxSaveSlots       = 16u;
+static const uint32_t kAsyncSaveMaxBytes  = 4096u;
+
+/** @brief State of the background (frame-budgeted) save started by BeginSaveSlot(). */
+enum class AsyncSaveStatus : uint8_t {
+    Idle = 0,   /**< Nothing started since Initialize()/last PollAsync() of a finished job. */
+    Pending,    /**< PumpAsync() still has bytes to write. */
+    Done,       /**< Last job finished OK (stays until the next BeginSaveSlot()). */
+    Failed      /**< Last job failed; the slot file is left invalid (magic cleared). */
+};
 
 /**
  * @brief Standardized `udata` directory & SaveGame slot manager.
@@ -51,7 +60,8 @@ public:
 
     /**
      * @brief Saves a structured savegame slot (`udata/save_XX.sav`) with magic,
-     *        version tag, and CRC32 integrity checksum.
+     *        version tag, and CRC32 integrity checksum. Writes `save_XX.tmp` first and swaps it
+     *        in only when complete; fails (IoError) if the volume lacks free space.
      */
     Result SaveSlot(uint8_t slotIndex, const void* data, uint32_t sizeBytes, uint32_t gameVersion = 1u);
 
@@ -61,6 +71,17 @@ public:
     Result LoadSlot(uint8_t slotIndex, void* outBuffer, uint32_t maxBytes,
                     uint32_t& outBytesRead, uint32_t expectedVersion = 1u);
 
+    /**
+     * @brief Starts a frame-budgeted save: copies @p data (<= kAsyncSaveMaxBytes) and returns at once.
+     *        Call PumpAsync() once per frame until it stops returning Pending. The header (magic) is
+     *        written last, so an interrupted save is detected as invalid by LoadSlot().
+     * @return WouldBlock if a previous job is still Pending.
+     */
+    Result          BeginSaveSlot(uint8_t slotIndex, const void* data, uint32_t sizeBytes, uint32_t gameVersion = 1u);
+    /** @brief Writes up to @p budgetBytes of the pending job. */
+    AsyncSaveStatus PumpAsync(uint32_t budgetBytes = 1024u);
+    AsyncSaveStatus GetAsyncStatus() const { return m_asyncStatus; }
+
     bool   HasSlot(uint8_t slotIndex) const;
     Result DeleteSlot(uint8_t slotIndex);
 
@@ -68,9 +89,27 @@ public:
     void BuildUdataPath(const char* filename, char* outPath, size_t maxLen) const;
 
 private:
-    FileSystem m_fs;
-    bool       m_initialized;
-    bool       m_useSdCard;
+    /** @brief Reads and validates one save file (magic, version, CRC32). */
+    Result LoadPath(const char* path, void* outBuffer, uint32_t maxBytes,
+                    uint32_t& outBytesRead, uint32_t expectedVersion);
+    /** @brief True if the volume has room for @p payloadBytes plus header and a safety margin. */
+    bool   HasRoomFor(uint32_t payloadBytes) const;
+    /** @brief Replaces @p finalPath with the fully written @p tmpPath (Remove + Rename). */
+    Result Commit(const char* tmpPath, const char* finalPath);
+
+    FileSystem      m_fs;
+    bool            m_initialized;
+    bool            m_useSdCard;
+
+    File            m_asyncFile;
+    AsyncSaveStatus m_asyncStatus;
+    uint32_t        m_asyncSize;
+    uint32_t        m_asyncOffset;
+    uint32_t        m_asyncVersion;
+    uint8_t         m_asyncSlot;
+    char            m_asyncTmpPath[128];
+    char            m_asyncPath[128];
+    uint8_t         m_asyncBuf[kAsyncSaveMaxBytes];
 };
 
 } // namespace fs

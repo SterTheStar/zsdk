@@ -92,3 +92,24 @@ Formatos prontos em `vertex_formats.hpp`: `VertexP3N3C4` (28B), `VertexP3N3U2` (
   * `Renderer::DrawBlobShadow(groundPos, radius, color)`: sombra circular suave em `GL_TRIANGLE_FAN` (8 segmentos, sem textura extra).
 * **`ImageDecoder` (`graphics/image_decoder.hpp`):** Decodifica PNG, JPEG e BMP nativos via `IImageDecoder`/`IForceFeed` (com fallback `IImage`) em buffers de pixels rastreados.
 * **`Display2D`, `Bitmap2D`, `SpriteEngine2D`, `Font2D`, `HardwareBlitter2D`:** Wrappers diretos para `IDisplay`, `IBitmap`, `ISprite`, `IFont` e `GL_OES_draw_texture` (`glDrawTexfOES`).
+
+
+## `graphics::Frame` (`zsdk/graphics/frame.hpp`)
+
+Helper RAII para `OnRender`: o construtor ajusta viewport e limpa; `Begin2D(batch, vw, vh)` abre um passe 2D virtual (sem depth test); o destrutor fecha o passe 2D e chama `SwapBuffers()`, mesmo com `return` antecipado.
+```cpp
+zsdk::graphics::Frame frame(m_gl, zsdk::Color::Rgba(16, 20, 32, 255));
+/* ... 3D ... */
+frame.Begin2D(m_batch, 640.0f, 480.0f);
+/* ... HUD ... */
+```
+
+
+## Robustez de GL
+
+* `Texture`/`MeshBuffer` esvaziam erros GL antigos antes de cada operação (um erro velho fazia a checagem falhar sem causa real) e usam alinhamento de 1 byte no upload/`glReadPixels` (o padrão 4 deformava `Alpha8` e `RGB888` com largura não múltipla de 4).
+* `GLContext::HasExtension("GL_OES_draw_texture")` consulta `GL_EXTENSIONS` (token inteiro). Teste antes de usar um caminho opcional e tenha fallback.
+
+## ATITC (`Texture::CreateFromAtitc`)
+
+Cria textura a partir de um arquivo ATITC em memória (cabeçalho de 5 `uint32`: assinatura `0xCCC40002`, largura, altura, flags 1=RGB / 2=RGBA / 4=tiled, offset dos dados). Blocos 4x4 de 8 bytes (RGB) ou 16 (RGBA); arquivos *tiled* retornam `NotSupported`. Verifique `GLContext::HasExtension("GL_ATI_texture_compression_atitc")` e use `Texture::Create` como fallback (o `02_lua_demo` faz isso).

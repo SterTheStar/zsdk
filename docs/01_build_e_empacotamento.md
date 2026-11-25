@@ -73,3 +73,22 @@ zsdk_add_brew_app(meu_jogo
 | `ZSDK_DEFAULT_MEMORY_LIMIT_BYTES` | `32 MiB` | Orçamento exibido na barra do profiler |
 | `ZSDK_NAND_WRITE_GUARD` | `1` | Bloqueia escritas fora de `fs:/~/` e `fs:/card0/` no Zeebo |
 | `ZSDK_MAX_GAMEPADS` | `4` | Quantidade máxima de controles simultâneos |
+
+
+## Opções CMake e exemplos
+
+| Opção | Padrão | Efeito |
+| :--- | :--- | :--- |
+| `ZSDK_BUILD_ZEEBO` | ON | ON = alvo Zeebo/BREW (ARM); OFF = backend Windows |
+| `ZSDK_BUILD_EXAMPLES` | ON | Compila `01_spinning_cube` e `02_lua_demo` |
+| `ZSDK_ENABLE_LUA` | ON | Embute o Lua 5.4 (`zsdk::script::LuaVM`) e habilita o exemplo 02 |
+| `ZSDK_ENABLE_DEBUG_OVERLAY` | ON | Overlay de debug e logs INFO/WARN |
+
+O `02_lua_demo` embute `examples/02_lua_demo/scripts/star_catcher.lua` no build (header gerado em `<build>/gen`) e prefere `script:/star_catcher.lua` (Zeebo: `fs:/~/scripts/`) se existir.
+
+### Build fora do Windows (Linux)
+
+* O pós-build chama `tools/elf2mod/elf2mod.exe` diretamente e falha com "Permission denied" no Linux; a biblioteca e o `.elf` linkam normalmente. Empacote à mão: `wine tools/elf2mod/elf2mod.exe -output X.mod X.elf` e `wine cifc.exe -mif X.mif X.cif`.
+* `AEERSA.h` inclui `..\..\inc\X.h` com barras invertidas: copie `AEEIBase.h` e `AEECallback.h` para `sdk/inc` com o nome literal.
+* Os headers `AEEHIDButtons.h`/`AEEHIDThumbsticks.h` não vêm no SDK que temos (veja `TODO.md`).
+* Build Windows com MinGW (só validação): `-DZSDK_BUILD_ZEEBO=OFF -DCMAKE_SYSTEM_NAME=Windows` com `x86_64-w64-mingw32-gcc/g++`.

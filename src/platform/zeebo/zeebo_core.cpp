@@ -61,6 +61,7 @@ public:
         if (!app->m_suspended && app->m_delegate) {
             const uint32_t dtMs = app->m_timer.Tick();
             app->m_input.Update(dtMs);
+            app->DispatchGamepadChanges();
             debug::DebugOverlay::Update(app->m_input, static_cast<float>(dtMs));
 
             app->m_delegate->OnUpdate(dtMs);

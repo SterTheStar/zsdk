@@ -17,12 +17,25 @@ enum class LogLevel : uint8_t {
     Error
 };
 
+/** @brief Extra log destination; receives the formatted line (no trailing newline). */
+typedef void (*LogSinkFn)(LogLevel level, const char* line, void* userData);
+
+static const uint8_t kMaxLogSinks = 4u;
+
 /**
- * @brief Static zero-allocation logger.
+ * @brief Static zero-allocation logger (BREW DBGPRINTF / stdout + DebugOverlay + optional sinks).
  */
 class Logger {
 public:
     static void Log(LogLevel level, const char* tag, const char* fmt, ...);
+
+    /** @brief Adds an extra log sink (max kMaxLogSinks). False if full or duplicate. */
+    static bool AddSink(LogSinkFn fn, void* userData);
+    static bool RemoveSink(LogSinkFn fn, void* userData);
+
+    /** @brief Lines below @p level are dropped everywhere (default: Info). */
+    static void     SetMinLevel(LogLevel level);
+    static LogLevel GetMinLevel();
 };
 
 } // namespace debug

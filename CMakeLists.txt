@@ -7,6 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(ZSDK_ENABLE_DEBUG_OVERLAY "Enable in-game OpenGL ES Debug & RAM/VRAM Overlay" ON)
 option(ZSDK_BUILD_ZEEBO "Build for Zeebo / Qualcomm BREW 4.0.2" ON)
+option(ZSDK_ENABLE_LUA "Embed the Lua 5.4 scripting VM (zsdk::script::LuaVM)" ON)
 option(ZSDK_BUILD_EXAMPLES "Build ZSDK sample applications" ON)
 
 set(BREW_SDK_ROOT "C:/Users/Esther/AppData/Local/Programs/brew-sdk" CACHE PATH "Path to BREW/Zeebo SDK")
@@ -26,8 +27,11 @@ set(ZSDK_SOURCES
     src/graphics/renderer_2d_vbo.cpp
     src/graphics/sprite_batch.cpp
     src/graphics/frustum.cpp
+    src/graphics/gl_extensions.cpp
     src/audio/audio_engine.cpp
     src/fs/savegame.cpp
+    src/fs/vfs.cpp
+    src/debug/file_log.cpp
 )
 
 if(ZSDK_BUILD_ZEEBO)
@@ -58,7 +62,25 @@ else()
     )
 endif()
 
+if(ZSDK_ENABLE_LUA)
+    list(APPEND ZSDK_SOURCES src/script/lua_vm.cpp)
+    file(GLOB ZSDK_LUA_SOURCES CONFIGURE_DEPENDS third_party/lua/*.c)
+    add_library(zsdk_lua STATIC ${ZSDK_LUA_SOURCES})
+    target_include_directories(zsdk_lua PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lua)
+    # LUAI_MAXCCALLS: Zeebo gives apps only 32 KB of stack; default 200 nested C calls could overflow it.
+    target_compile_definitions(zsdk_lua PUBLIC LUA_32BITS=1 LUA_USE_C89=1 LUAI_MAXCCALLS=48)
+    if(NOT MSVC)
+        target_compile_options(zsdk_lua PRIVATE -O2 -fno-unwind-tables -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections -w)
+        if(ZSDK_BUILD_ZEEBO)
+            target_compile_options(zsdk_lua PRIVATE -mlong-calls)
+        endif()
+    endif()
+endif()
+
 add_library(zsdk STATIC ${ZSDK_SOURCES})
+if(ZSDK_ENABLE_LUA)
+    target_link_libraries(zsdk PUBLIC zsdk_lua)
+endif()
 
 target_include_directories(zsdk
     PUBLIC
@@ -86,7 +108,10 @@ endif()
 if(MSVC)
     target_compile_options(zsdk PRIVATE /W4 /GR- /EHs-c-)
 else()
-    target_compile_options(zsdk PRIVATE -Wall -Wextra -fno-exceptions -fno-rtti -fno-use-cxa-atexit -fno-unwind-tables -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections -mlong-calls)
+    target_compile_options(zsdk PRIVATE -Wall -Wextra -fno-exceptions -fno-rtti -fno-use-cxa-atexit -fno-unwind-tables -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections)
+    if(ZSDK_BUILD_ZEEBO)
+        target_compile_options(zsdk PRIVATE -mlong-calls)   # ARM-only flag
+    endif()
 endif()
 
 include(cmake/ZsdkBrew.cmake)
@@ -95,4 +120,16 @@ if(ZSDK_BUILD_EXAMPLES)
     zsdk_add_brew_app(01_spinning_cube
         SOURCES examples/01_spinning_cube/main.cpp
     )
+    if(ZSDK_ENABLE_LUA)
+        # Embed scripts/star_catcher.lua as the fallback used when script:/ has no copy.
+        set(ZSDK_DEMO_LUA "${CMAKE_CURRENT_SOURCE_DIR}/examples/02_lua_demo/scripts/star_catcher.lua")
+        set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${ZSDK_DEMO_LUA}")
+        file(READ "${ZSDK_DEMO_LUA}" ZSDK_DEMO_LUA_TEXT)
+        file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/gen/star_catcher_lua.h"
+             "static const char kEmbeddedScript[] = R\"LUA(${ZSDK_DEMO_LUA_TEXT})LUA\";\n")
+        zsdk_add_brew_app(02_lua_demo
+            SOURCES examples/02_lua_demo/main.cpp
+        )
+        target_include_directories(02_lua_demo PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/gen")
+    endif()
 endif()

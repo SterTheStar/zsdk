@@ -119,6 +119,10 @@ uint32_t File::GetSize() const {
     return info.dwSize;
 }
 
+void File::Flush() {
+    /* IFILE_Write has no separate buffer layer; nothing to flush. */
+}
+
 void File::Close() {
     if (m_nativeFile) {
         IFILE_Release(static_cast<IFile*>(m_nativeFile));
@@ -209,6 +213,27 @@ Result FileSystem::Remove(const char* path) {
         return Result::IoError;
     }
     return (IFILEMGR_Remove(m_impl->fileMgr, path) == SUCCESS) ? Result::Ok : Result::IoError;
+}
+
+Result FileSystem::Rename(const char* srcPath, const char* dstPath) {
+    if (!m_impl || !m_impl->fileMgr || !srcPath || !dstPath) {
+        return Result::InvalidArg;
+    }
+    if (!IsWritePathAllowed(srcPath) || !IsWritePathAllowed(dstPath)) {
+        return Result::IoError;
+    }
+    return (IFILEMGR_Rename(m_impl->fileMgr, srcPath, dstPath) == SUCCESS) ? Result::Ok : Result::IoError;
+}
+
+uint32_t FileSystem::GetFreeBytes(uint32_t* outTotal) const {
+    uint32 total = 0u;
+    if (!m_impl || !m_impl->fileMgr) {
+        if (outTotal) *outTotal = 0u;
+        return 0u;
+    }
+    const uint32 freeBytes = IFILEMGR_GetFreeSpace(m_impl->fileMgr, &total);
+    if (outTotal) *outTotal = static_cast<uint32_t>(total);
+    return static_cast<uint32_t>(freeBytes);
 }
 
 Result FileSystem::MkDir(const char* path) {

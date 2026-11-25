@@ -36,3 +36,8 @@ audio.PlaySfx("fs:/~/audio/pulo.wav");         // Pool de 8 canais SFX
 * **`Cipher` (`security/crypto.hpp`):** Cifras simétricas AES-128/192/256, DES, 3DES e ARC4 sobre `ICipherFactory` / `ICipher1`.
 * **`Rsa` (`security/crypto.hpp`):** Exponenciação modular RSA (`ModExp`) sobre `IRSA`.
 * **`LicenseManager` (`security/license.hpp`):** Verificação de expiração e validade da licença BREW (`ILicense`).
+
+
+## Vozes de SFX
+
+`ZSDK_MAX_SFX_CHANNELS` (padrão **4** no Zeebo, 8 no PC) define `audio::kMaxSfxChannels`. No Zeebo a receita documentada do mixer BREW é 1 stream MIDI/MMF/PMD + até 4 de QCP/AMR/ADPCM (todos do mesmo tipo); não confirmado para PCM.

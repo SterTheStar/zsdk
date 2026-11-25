@@ -68,6 +68,8 @@ Result Texture::Create(uint16_t width, uint16_t height, TextureFormat format,
         return Result::OutOfMemory;
     }
 
+    glutil::DrainErrors();
+    glutil::UnpackAlign1 alignGuard;
     GLuint id = 0u;
     glGenTextures(1, &id);
     if (id == 0u) {
@@ -113,6 +115,8 @@ Result Texture::CreateCompressed(uint16_t width, uint16_t height, uint32_t glInt
         return Result::OutOfMemory;
     }
 
+    glutil::DrainErrors();
+    glutil::UnpackAlign1 alignGuard;
     GLuint id = 0u;
     glGenTextures(1, &id);
     if (id == 0u) {
@@ -145,6 +149,54 @@ Result Texture::CreateCompressed(uint16_t width, uint16_t height, uint32_t glInt
     return Result::Ok;
 }
 
+Result Texture::CreateFromAtitc(const void* fileData, uint32_t fileSize, TextureFilter filter) {
+    /* Layout from the BREW OpenGL ES extension header (glESext.h, ATITC_HEADER). */
+    static const uint32_t kSignature = 0xCCC40002u;
+    static const uint32_t kFlagRgb   = 0x1u;
+    static const uint32_t kFlagRgba  = 0x2u;
+    static const uint32_t kFlagTiled = 0x4u;
+    static const uint32_t kGlRgbAtc  = 0x8C92u;   /* GL_COMPRESSED_RGB_ATI_TC  */
+    static const uint32_t kGlRgbaAtc = 0x8C93u;   /* GL_COMPRESSED_RGBA_ATI_TC */
+
+    if (fileData == nullptr || fileSize < 20u) {
+        return Result::InvalidArg;
+    }
+    const uint8_t* p = static_cast<const uint8_t*>(fileData);
+    uint32_t hdr[5];
+    for (uint32_t i = 0u; i < 5u; ++i) {   /* byte-wise read: the buffer may be unaligned */
+        hdr[i] = static_cast<uint32_t>(p[i * 4u]) | (static_cast<uint32_t>(p[i * 4u + 1u]) << 8) |
+                 (static_cast<uint32_t>(p[i * 4u + 2u]) << 16) | (static_cast<uint32_t>(p[i * 4u + 3u]) << 24);
+    }
+    const uint32_t width = hdr[1];
+    const uint32_t height = hdr[2];
+    const uint32_t flags = hdr[3];
+    const uint32_t offset = hdr[4];
+
+    if (hdr[0] != kSignature || width == 0u || height == 0u || width > 2048u || height > 2048u) {
+        return Result::InvalidArg;
+    }
+    if ((flags & kFlagTiled) != 0u) {
+        return Result::NotSupported;
+    }
+    const bool rgba = (flags & kFlagRgba) != 0u;
+    if (!rgba && (flags & kFlagRgb) == 0u) {
+        return Result::InvalidArg;
+    }
+    /* 4x4 blocks: 8 bytes for RGB, 16 for RGBA. */
+    const uint32_t blocks = ((width + 3u) / 4u) * ((height + 3u) / 4u);
+    const uint32_t dataBytes = blocks * (rgba ? 16u : 8u);
+    if (offset < 20u || offset > fileSize || dataBytes > fileSize - offset) {
+        return Result::InvalidArg;
+    }
+
+    const Result r = CreateCompressed(static_cast<uint16_t>(width), static_cast<uint16_t>(height),
+                                      rgba ? kGlRgbaAtc : kGlRgbAtc, dataBytes, p + offset, filter);
+    if (Succeeded(r)) {
+        m_format = rgba ? TextureFormat::RGBA8888 : TextureFormat::RGB565;   /* nearest logical class */
+    }
+    return r;
+}
+
 Result Texture::UpdateSubImage(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
                                const void* pixelData) {
     if (m_glId == 0u || !pixelData) {
@@ -157,6 +209,8 @@ Result Texture::UpdateSubImage(uint16_t x, uint16_t y, uint16_t width, uint16_t 
     MapFormat(m_format, glFmt, glType, bpp);
     ZSDK_UNUSED(bpp);
 
+    glutil::DrainErrors();
+    glutil::UnpackAlign1 alignGuard;
     glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(m_glId));
     glTexSubImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(x), static_cast<GLint>(y),
                     static_cast<GLsizei>(width), static_cast<GLsizei>(height),
@@ -170,6 +224,7 @@ Result Texture::GenerateMipmaps(TextureFilter filter) {
         return Result::NotInitialized;
     }
 
+    glutil::DrainErrors();
     glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(m_glId));
 
     const GLint minFilter = (filter == TextureFilter::Nearest)
@@ -214,6 +269,8 @@ Result Texture::ReadFramebuffer(int32_t x, int32_t y, uint16_t width, uint16_t h
     MapFormat(format, glFmt, glType, bpp);
     ZSDK_UNUSED(bpp);
 
+    glutil::DrainErrors();
+    glutil::PackAlign1 packGuard;
     glReadPixels(static_cast<GLint>(x), static_cast<GLint>(y),
                  static_cast<GLsizei>(width), static_cast<GLsizei>(height),
                  glFmt, glType, outPixels);

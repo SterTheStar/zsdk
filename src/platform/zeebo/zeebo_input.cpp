@@ -76,7 +76,7 @@ bool MapAvkToLogical(uint16_t keyCode, GamepadButton& outBtn) {
         case AVK_LEFT:   outBtn = GamepadButton::DPadLeft;  return true;
         case AVK_RIGHT:  outBtn = GamepadButton::DPadRight; return true;
         case AVK_SELECT: outBtn = GamepadButton::Start;     return true;
-        case AVK_CLR:    outBtn = GamepadButton::Back;      return true;
+        case AVK_CLR:    outBtn = GamepadButton::Home;      return true;   /* Home short press = AVK_CLR (Zeebo guide 6.3.7/10.1); same logical button as the HID path */
         case AVK_SOFT1:  outBtn = GamepadButton::Action1;   return true;
         case AVK_SOFT2:  outBtn = GamepadButton::Action2;   return true;
         default:         return false;

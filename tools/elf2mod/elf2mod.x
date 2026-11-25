@@ -71,10 +71,6 @@ SECTIONS
   . = ALIGN(32 / 8);
 
   PROVIDE_HIDDEN (__exidx_start = .);
-  .ARM.exidx :
-  {
-    *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-  } 
   PROVIDE_HIDDEN (__exidx_end = .);
   . = ALIGN(32 / 8);
 
@@ -153,4 +149,5 @@ SECTIONS
   /DISCARD/ : {*(.stack)} : NONE            /* Leave out the stack */
   
   /DISCARD/ : {*(.stab* .comment*)} : NONE  /* Leave out stabs debug */
+  /DISCARD/ : {*(.ARM.exidx*)} : NONE        /* newlib/libgcc unwind index: unused (no exceptions) and breaks elf2mod relocs */
 }

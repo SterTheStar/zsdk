@@ -23,6 +23,7 @@ O **ZSDK** é uma camada de abstração de plataforma (*Platform Abstraction Lay
 | **Gráficos 3D & 2D** | [05_graficos_3d_e_2d.md](./05_graficos_3d_e_2d.md) | `GLContext`, `Renderer` (com State Cache), `SpriteBatch2D`, `Frustum`, `Texture`, `MeshBuffer`, `Display2D`, `ImageDecoder`, `Sprite2D` |
 | **Filesystem & Save** | [06_filesystem_e_savegame.md](./06_filesystem_e_savegame.md) | `FileSystem`, `ZSDK_NAND_WRITE_GUARD`, `SaveGameManager` (`udata` + CRC32), `Database`, `UnzipStream` |
 | **Áudio, Rede & Crypto** | [07_audio_rede_seguranca.md](./07_audio_rede_seguranca.md) | `AudioEngine`, `Socket`, `HttpClient`, `NetworkManager`, `BluetoothManager`, Crypto & `LicenseManager` |
+| **Scripting Lua** | [08_scripting_lua.md](./08_scripting_lua.md) | `LuaVM` (Lua 5.4 sandbox), API `gfx`/`input`/`save`/`app`, exemplo `02_lua_demo` |
 
 ---
 

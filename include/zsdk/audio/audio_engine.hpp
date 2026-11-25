@@ -11,10 +11,10 @@
 namespace zsdk {
 namespace audio {
 
-static const uint8_t kMaxSfxChannels = 8u;
+static const uint8_t kMaxSfxChannels = static_cast<uint8_t>(ZSDK_MAX_SFX_CHANNELS);
 
 /**
- * @brief Central audio mixer owning 1 BGM MediaStream + up to 8 SoundEffect channels.
+ * @brief Central audio mixer owning 1 BGM MediaStream + up to kMaxSfxChannels (ZSDK_MAX_SFX_CHANNELS) SoundEffect channels.
  */
 class AudioEngine : public NonCopyable {
 public:
