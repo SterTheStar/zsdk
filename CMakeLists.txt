@@ -11,6 +11,7 @@ option(ZSDK_BUILD_ZEEBO "Build for Zeebo / Qualcomm BREW 4.0.2" ON)
 option(ZSDK_ENABLE_LUA_VM "Embed the Lua 5.4 scripting VM (zsdk::script::LuaVM)" ON)
 option(ZSDK_BUILD_EXAMPLES "Build ZSDK sample applications" ON)
 option(ZSDK_BUILD_LUA_BINDINGS "Build modular Lua C bindings" ON)
+option(ZSDK_LUA_BYTECODE "Compile Lua app scripts to stripped .luac bytecode instead of copying .lua source" OFF)
 option(ZSDK_ENABLE_TESTS "Enable C ABI self-verification tests and bindings parity check" ON)
 
 set(BREW_SDK_ROOT "C:/Users/Esther/AppData/Local/Programs/brew-sdk" CACHE PATH "Path to BREW/Zeebo SDK")
@@ -87,6 +88,13 @@ if(ZSDK_ENABLE_LUA_VM)
         if(ZSDK_BUILD_ZEEBO)
             target_compile_options(zsdk_lua_runtime PRIVATE -mlong-calls)
         endif()
+    endif()
+    if(NOT ZSDK_BUILD_ZEEBO)
+        add_executable(zsdk_luac tools/zsdk_luac.c)
+        target_link_libraries(zsdk_luac PRIVATE zsdk_lua_runtime)
+        set_target_properties(zsdk_luac PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tools"
+        )
     endif()
 endif()
 

@@ -48,15 +48,21 @@ public:
         }
 
 #if ZSDK_PLATFORM_ZEEBO
-        const char* scriptPath = "fs:/~/main.lua";
+        const char* bytecodePath = "fs:/~/main.luac";
+        const char* sourcePath   = "fs:/~/main.lua";
 #else
-        const char* scriptPath = "main.lua";
+        const char* bytecodePath = "main.luac";
+        const char* sourcePath   = "main.lua";
 #endif
+        const char* scriptPath = bytecodePath;
         void* scriptBuf = nullptr;
         uint32_t scriptSize = 0u;
-        if (zsdk::Failed(fs.ReadAllBytes(scriptPath, &scriptBuf, scriptSize)) || !scriptBuf) {
-            ZSDK_LOG_ERROR("LUA", "Failed to load %s", scriptPath);
-            return zsdk::Result::NotFound;
+        if (zsdk::Failed(fs.ReadAllBytes(bytecodePath, &scriptBuf, scriptSize)) || !scriptBuf) {
+            scriptPath = sourcePath;
+            if (zsdk::Failed(fs.ReadAllBytes(sourcePath, &scriptBuf, scriptSize)) || !scriptBuf) {
+                ZSDK_LOG_ERROR("LUA", "Failed to load %s or %s", bytecodePath, sourcePath);
+                return zsdk::Result::NotFound;
+            }
         }
 
         m_L = luaL_newstate();

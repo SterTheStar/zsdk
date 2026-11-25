@@ -146,8 +146,9 @@ function(zsdk_add_brew_app TARGET_NAME)
 endfunction()
 
 # Builds a pure-Lua ZSDK application using the built-in zsdk_lua_host.cpp (no C/C++ boilerplate needed).
+# Pass BYTECODE (or configure with -DZSDK_LUA_BYTECODE=ON) to compile SCRIPT into stripped main.luac.
 function(zsdk_add_lua_app TARGET_NAME)
-    cmake_parse_arguments(ARG "" "SCRIPT;MIF_CLASS_ID;MIF_APP_NAME;MIF_COMPANY;MIF_COPYRIGHT;MIF_VERSION" "" ${ARGN})
+    cmake_parse_arguments(ARG "BYTECODE" "SCRIPT;MIF_CLASS_ID;MIF_APP_NAME;MIF_COMPANY;MIF_COPYRIGHT;MIF_VERSION" "" ${ARGN})
     if(NOT TARGET zsdk_lua)
         return()
     endif()
@@ -168,19 +169,59 @@ function(zsdk_add_lua_app TARGET_NAME)
 
     if(ARG_SCRIPT)
         get_filename_component(_SCRIPT_ABS "${ARG_SCRIPT}" ABSOLUTE)
-        if(ZSDK_BUILD_ZEEBO)
-            set(_SCRIPT_DEST "${CMAKE_BINARY_DIR}/apps/${TARGET_NAME}/mod/${TARGET_NAME}/main.lua")
-        else()
-            set(_SCRIPT_DEST "${CMAKE_BINARY_DIR}/apps/${TARGET_NAME}/main.lua")
+        set(_USE_BYTECODE FALSE)
+        if(ARG_BYTECODE OR ZSDK_LUA_BYTECODE)
+            set(_USE_BYTECODE TRUE)
         endif()
-        add_custom_command(
-            OUTPUT "${_SCRIPT_DEST}"
-            COMMAND ${CMAKE_COMMAND} -E make_directory "$<PATH:GET_PARENT_PATH,${_SCRIPT_DEST}>"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_SCRIPT_ABS}" "${_SCRIPT_DEST}"
-            DEPENDS "${_SCRIPT_ABS}"
-            COMMENT "Copying ${TARGET_NAME} Lua script (${_SCRIPT_ABS})"
-            VERBATIM
-        )
+
+        if(ZSDK_BUILD_ZEEBO)
+            set(_SCRIPT_DIR "${CMAKE_BINARY_DIR}/apps/${TARGET_NAME}/mod/${TARGET_NAME}")
+        else()
+            set(_SCRIPT_DIR "${CMAKE_BINARY_DIR}/apps/${TARGET_NAME}")
+        endif()
+
+        if(_USE_BYTECODE)
+            set(_SCRIPT_DEST "${_SCRIPT_DIR}/main.luac")
+            set(_SCRIPT_OLD  "${_SCRIPT_DIR}/main.lua")
+            if(TARGET zsdk_luac)
+                set(_LUAC_CMD $<TARGET_FILE:zsdk_luac>)
+                set(_LUAC_DEP zsdk_luac)
+            else()
+                find_program(ZSDK_LUAC_EXECUTABLE
+                    NAMES zsdk_luac zsdk_luac.exe
+                    HINTS
+                        "${CMAKE_BINARY_DIR}/tools"
+                        "${ZSDK_ROOT_DIR}/build_windows/tools"
+                        "${ZSDK_ROOT_DIR}/tools"
+                )
+                if(NOT ZSDK_LUAC_EXECUTABLE)
+                    message(FATAL_ERROR "ZSDK_LUA_BYTECODE is ON, but zsdk_luac was not found. Build the host zsdk_luac target (e.g. build_windows) first.")
+                endif()
+                set(_LUAC_CMD "${ZSDK_LUAC_EXECUTABLE}")
+                set(_LUAC_DEP "")
+            endif()
+            add_custom_command(
+                OUTPUT "${_SCRIPT_DEST}"
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${_SCRIPT_DIR}"
+                COMMAND ${CMAKE_COMMAND} -E rm -f "${_SCRIPT_OLD}"
+                COMMAND "${_LUAC_CMD}" -s "${_SCRIPT_ABS}" "${_SCRIPT_DEST}"
+                DEPENDS "${_SCRIPT_ABS}" ${_LUAC_DEP}
+                COMMENT "Compiling ${TARGET_NAME} Lua bytecode (${_SCRIPT_ABS} -> main.luac)"
+                VERBATIM
+            )
+        else()
+            set(_SCRIPT_DEST "${_SCRIPT_DIR}/main.lua")
+            set(_SCRIPT_OLD  "${_SCRIPT_DIR}/main.luac")
+            add_custom_command(
+                OUTPUT "${_SCRIPT_DEST}"
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${_SCRIPT_DIR}"
+                COMMAND ${CMAKE_COMMAND} -E rm -f "${_SCRIPT_OLD}"
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_SCRIPT_ABS}" "${_SCRIPT_DEST}"
+                DEPENDS "${_SCRIPT_ABS}"
+                COMMENT "Copying ${TARGET_NAME} Lua script (${_SCRIPT_ABS})"
+                VERBATIM
+            )
+        endif()
         add_custom_target(${TARGET_NAME}_script ALL DEPENDS "${_SCRIPT_DEST}")
         add_dependencies(${TARGET_NAME} ${TARGET_NAME}_script)
     endif()
