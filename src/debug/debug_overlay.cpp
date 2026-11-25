@@ -218,7 +218,7 @@ void DebugOverlay::Render(int32_t viewportWidth, int32_t viewportHeight) {
     glDisableClientState(GL_NORMAL_ARRAY);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, static_cast<GLfloat>(GL_MODULATE));
     glEnableClientState(GL_VERTEX_ARRAY);
 
     MemorySnapshot mem;

@@ -120,12 +120,12 @@ void Renderer::SetActiveTextureUnit(uint8_t unit) {
 
 void Renderer::SetTextureEnvMode(TexEnvMode mode) {
     if (mode == TexEnvMode::Combine) {
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, 0x8570 /* GL_COMBINE */);
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, static_cast<GLfloat>(0x8570 /* GL_COMBINE */));
     } else if (mode == TexEnvMode::Dot3) {
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, 0x8570 /* GL_COMBINE */);
-        glTexEnvi(GL_TEXTURE_ENV, 0x8571 /* GL_COMBINE_RGB */, 0x86AE /* GL_DOT3_RGB */);
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, static_cast<GLfloat>(0x8570 /* GL_COMBINE */));
+        glTexEnvf(GL_TEXTURE_ENV, 0x8571 /* GL_COMBINE_RGB */, static_cast<GLfloat>(0x86AE /* GL_DOT3_RGB */));
     } else {
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, ToGlTexEnvMode(mode));
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, static_cast<GLfloat>(ToGlTexEnvMode(mode)));
     }
 }
 
@@ -134,9 +134,9 @@ void Renderer::SetPointSpritesEnabled(bool enabled) {
     const GLenum kCoordReplace = 0x8862; /* GL_COORD_REPLACE_OES */
     if (enabled) {
         glEnable(kPointSprite);
-        glTexEnvi(kPointSprite, kCoordReplace, GL_TRUE);
+        glTexEnvf(kPointSprite, kCoordReplace, static_cast<GLfloat>(GL_TRUE));
     } else {
-        glTexEnvi(kPointSprite, kCoordReplace, GL_FALSE);
+        glTexEnvf(kPointSprite, kCoordReplace, static_cast<GLfloat>(GL_FALSE));
         glDisable(kPointSprite);
     }
 }
