@@ -4,7 +4,7 @@
 
 **SDK Base Multi-Linguagem para Zeebo & Qualcomm BREW 4.0.2**
 
-Camada de abstração de plataforma (*PAL*) leve, determinística e livre de headers BREW/GL no código do jogo — com suporte nativo a **C++14**, **C99**, **Lua 5.4** e **Rust (`#![no_std]`)**, gerando builds para **Zeebo (`.mod` + `.mif`)** e **Windows (`.exe`)**.
+Camada de abstração de plataforma (*PAL*) leve, determinística e livre de headers BREW/GL no código do jogo, com suporte nativo a **C++14**, **C99**, **Lua 5.4** e **Rust (`#![no_std]`)**, gerando builds para **Zeebo (`.mod` + `.mif`)** e **Windows (`.exe`)**.
 
 <p>
   <img src="https://img.shields.io/badge/C%2B%2B-14-00599C?style=flat-square&logo=cplusplus&logoColor=white" alt="C++14" />
@@ -20,8 +20,6 @@ Camada de abstração de plataforma (*PAL*) leve, determinística e livre de hea
 
 </div>
 
----
-
 ## Visão Geral
 
 O **ZSDK** abstrai o hardware do **Zeebo** (ARM11 @ 528 MHz, GPU Qualcomm Q3Dimension, 32 MB RAM/VRAM) mantendo paridade de código-fonte com **Windows** para desenvolvimento e depuração rápida.
@@ -31,20 +29,16 @@ O **ZSDK** abstrai o hardware do **Zeebo** (ARM11 @ 528 MHz, GPU Qualcomm Q3Dime
 * **Proteção da NAND:** trava `ZSDK_NAND_WRITE_GUARD` bloqueando escritas fora de `fs:/~/` e `fs:/card0/` (SD Card), com privilégios `.mif` seguros (`0x07AF` + `CARD0_ACCESS`).
 * **ABI C99 única:** `231` funções C estáveis servindo como base comum para **C**, **Lua** e **Rust**, verificadas automaticamente por `tools/check_bindings.py`.
 
----
-
 ## Linguagens & Exemplos
 
 Cada exemplo demonstra a mesma cena 3D (cubo colorido giratório com câmera, sombra e `DebugOverlay`) usando apenas a linguagem-alvo, sem boilerplate C++ no diretório do app:
 
 | Exemplo | Linguagem | Macro CMake | Ponto de Entrada |
 | :--- | :--- | :--- | :--- |
-| **01 — Spinning Cube** | C++14 (`1–1024` cubos, menu, `udata`) | `zsdk_add_brew_app` | [`examples/01_spinning_cube/main.cpp`](./examples/01_spinning_cube/main.cpp) |
-| **02 — C Spinning Cube** | C99 puro | `zsdk_add_c_app` | [`examples/02_c_spinning_cube/cube_c.c`](./examples/02_c_spinning_cube/cube_c.c) |
-| **03 — Lua Spinning Cube** | Lua 5.4 puro | `zsdk_add_lua_app` | [`examples/03_lua_spinning_cube/main.lua`](./examples/03_lua_spinning_cube/main.lua) |
-| **04 — Rust Spinning Cube** | Rust `#![no_std]` | `zsdk_add_rust_app` | [`examples/04_rust_spinning_cube/src/lib.rs`](./examples/04_rust_spinning_cube/src/lib.rs) |
-
----
+| **01: Spinning Cube** | C++14 (`1–1024` cubos, menu, `udata`) | `zsdk_add_brew_app` | [`examples/01_spinning_cube/main.cpp`](./examples/01_spinning_cube/main.cpp) |
+| **02: C Spinning Cube** | C99 puro | `zsdk_add_c_app` | [`examples/02_c_spinning_cube/cube_c.c`](./examples/02_c_spinning_cube/cube_c.c) |
+| **03: Lua Spinning Cube** | Lua 5.4 puro | `zsdk_add_lua_app` | [`examples/03_lua_spinning_cube/main.lua`](./examples/03_lua_spinning_cube/main.lua) |
+| **04: Rust Spinning Cube** | Rust `#![no_std]` | `zsdk_add_rust_app` | [`examples/04_rust_spinning_cube/src/lib.rs`](./examples/04_rust_spinning_cube/src/lib.rs) |
 
 ## Módulos & Documentação
 
@@ -59,8 +53,6 @@ Cada exemplo demonstra a mesma cena 3D (cubo colorido giratório com câmera, so
 | **Áudio, Rede & Segurança** | `AudioEngine`, `PcmMixer`, `MediaStream`, `Socket`, `HttpClient`, `NetworkManager`, Crypto & Licença | [07_audio_rede_seguranca.md](./docs/07_audio_rede_seguranca.md) |
 | **Scripting Lua** | `LuaVM` (Lua 5.4 em sandbox 32-bit), `require` via `Vfs` e `zsdk_lua` | [08_scripting_lua.md](./docs/08_scripting_lua.md) |
 | **C ABI & Bindings** | Headers C99 (`include/zsdk/c/`), bindings Lua (`228/231`) e Rust `zsdk-sys`/`zsdk` (`230/231`) | [bindings/README.md](./bindings/README.md) |
-
----
 
 ## Quick Start
 
@@ -81,8 +73,6 @@ ctest --test-dir build_windows --output-on-failure
 ```
 
 > Veja os pré-requisitos completos de toolchain ARM, BREW SDK, Rust e MSVC em [`docs/01_build_e_empacotamento.md`](./docs/01_build_e_empacotamento.md).
-
----
 
 ## Estrutura do Projeto
 
