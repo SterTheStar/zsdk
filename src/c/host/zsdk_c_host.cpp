@@ -1,16 +1,20 @@
 /**
- * @file main.cpp
- * @brief Thin C++ Application entry bridge forwarding to pure C99 cube_c.c.
+ * @file zsdk_c_host.cpp
+ * @brief Generic ZSDK C application host (used automatically by zsdk_add_c_app).
  */
 
 #include "zsdk/zsdk.hpp"
-#include "cube_c.h"
+#include "zsdk/c/zsdk_c_app.h"
 
-class CSpinningCubeApp : public zsdk::IAppDelegate {
+#ifndef ZSDK_C_APP_NAME
+    #define ZSDK_C_APP_NAME "ZSDK_C_App"
+#endif
+
+class ZsdkCHostApp : public zsdk::IAppDelegate {
 public:
     zsdk::Result OnInit() override {
         zsdk::Application* app = zsdk::Application::GetInstance();
-        if (!app || cube_c_init(app->GetNativePlatformContext()) != 0) {
+        if (!app || zsdk_c_app_init(app->GetNativePlatformContext()) != 0) {
             return zsdk::Result::GraphicsError;
         }
         return zsdk::Result::Ok;
@@ -25,24 +29,24 @@ public:
         const zsdk_input_t* inp = app
             ? reinterpret_cast<const zsdk_input_t*>(&app->GetInput())
             : nullptr;
-        cube_c_update(static_cast<float>(deltaTimeMs) * 0.001f, inp);
+        zsdk_c_app_update(deltaTimeMs, inp);
     }
 
     void OnRender() override {
         int32_t w = 640;
         int32_t h = 480;
-        cube_c_render(&w, &h);
+        zsdk_c_app_render(&w, &h);
         zsdk::debug::DebugOverlay::Render(w, h);
-        cube_c_swap();
+        zsdk_c_app_swap();
     }
 
     void OnShutdown() override {
-        cube_c_shutdown();
+        zsdk_c_app_shutdown();
     }
 };
 
 #if ZSDK_PLATFORM_ZEEBO
-ZSDK_IMPLEMENT_APP(CSpinningCubeApp, "ZSDK_C_Cube", 30, true)
+ZSDK_IMPLEMENT_APP(ZsdkCHostApp, ZSDK_C_APP_NAME, 30, true)
 #else
-ZSDK_IMPLEMENT_APP(CSpinningCubeApp, "ZSDK_C_Cube", 60, true)
+ZSDK_IMPLEMENT_APP(ZsdkCHostApp, ZSDK_C_APP_NAME, 60, true)
 #endif

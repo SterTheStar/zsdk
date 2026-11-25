@@ -3,7 +3,7 @@
  * @brief Minimal pure C99 example: 1 spinning colored cube + camera pan/zoom/spin + ZSDK Debug Panel.
  */
 
-#include "cube_c.h"
+#include "zsdk/c/zsdk_c.h"
 
 typedef struct CubeVertex {
     float   x, y, z;
@@ -66,7 +66,7 @@ static float clampf(float v, float lo, float hi) {
     return v;
 }
 
-int cube_c_init(void* platform_ctx) {
+int zsdk_c_app_init(void* platform_ctx) {
     zsdk_gl_config_t cfg = { 5u, 6u, 5u, 0u, 16u, 0u, 1u };
     g_gl = zsdk_gl_create();
     if (!g_gl || zsdk_gl_init(g_gl, platform_ctx, &cfg) != ZSDK_C_OK) {
@@ -87,7 +87,8 @@ int cube_c_init(void* platform_ctx) {
     return 0;
 }
 
-void cube_c_update(float dt_sec, const zsdk_input_t* input) {
+void zsdk_c_app_update(uint32_t delta_ms, const zsdk_input_t* input) {
+    float dt_sec = (float)delta_ms * 0.001f;
     if (g_autoSpin) {
         g_angleY += dt_sec * 48.0f;
         g_angleX += dt_sec * 24.0f;
@@ -130,7 +131,7 @@ void cube_c_update(float dt_sec, const zsdk_input_t* input) {
     if (g_angleX >= 360.0f) g_angleX -= 360.0f;
 }
 
-void cube_c_render(int32_t* out_width, int32_t* out_height) {
+void zsdk_c_app_render(int32_t* out_width, int32_t* out_height) {
     int32_t w = zsdk_gl_get_width(g_gl);
     int32_t h = zsdk_gl_get_height(g_gl);
     float aspect = (h > 0) ? ((float)w / (float)h) : 1.333f;
@@ -164,13 +165,13 @@ void cube_c_render(int32_t* out_width, int32_t* out_height) {
     if (out_height) *out_height = h;
 }
 
-void cube_c_swap(void) {
+void zsdk_c_app_swap(void) {
     if (g_gl) {
         zsdk_gl_swap_buffers(g_gl);
     }
 }
 
-void cube_c_shutdown(void) {
+void zsdk_c_app_shutdown(void) {
     if (g_gl) {
         zsdk_gl_shutdown(g_gl);
         zsdk_gl_destroy(g_gl);

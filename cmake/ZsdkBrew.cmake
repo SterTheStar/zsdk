@@ -183,3 +183,67 @@ function(zsdk_add_lua_app TARGET_NAME)
         endif()
     endif()
 endfunction()
+
+# Builds a pure-C99 ZSDK application using the built-in zsdk_c_host.cpp (no C++ boilerplate needed).
+function(zsdk_add_c_app TARGET_NAME)
+    cmake_parse_arguments(ARG "" "MIF_CLASS_ID;MIF_APP_NAME;MIF_COMPANY;MIF_COPYRIGHT;MIF_VERSION" "SOURCES" ${ARGN})
+    zsdk_add_brew_app(${TARGET_NAME}
+        SOURCES "${ZSDK_ROOT_DIR}/src/c/host/zsdk_c_host.cpp" ${ARG_SOURCES}
+        MIF_CLASS_ID "${ARG_MIF_CLASS_ID}"
+        MIF_APP_NAME "${ARG_MIF_APP_NAME}"
+        MIF_COMPANY "${ARG_MIF_COMPANY}"
+        MIF_COPYRIGHT "${ARG_MIF_COPYRIGHT}"
+        MIF_VERSION "${ARG_MIF_VERSION}"
+    )
+    if(ARG_MIF_APP_NAME)
+        target_compile_definitions(${TARGET_NAME} PRIVATE ZSDK_C_APP_NAME="${ARG_MIF_APP_NAME}")
+    endif()
+endfunction()
+
+# Builds a pure-Rust ZSDK application using Cargo staticlib + built-in zsdk_rust_host.cpp (no C/C++ boilerplate needed).
+function(zsdk_add_rust_app TARGET_NAME)
+    cmake_parse_arguments(ARG "" "MANIFEST;LIB_NAME;MIF_CLASS_ID;MIF_APP_NAME;MIF_COMPANY;MIF_COPYRIGHT;MIF_VERSION" "" ${ARGN})
+    find_program(ZSDK_CARGO cargo)
+    if(NOT ZSDK_CARGO)
+        return()
+    endif()
+    if(ZSDK_BUILD_ZEEBO AND NOT ZSDK_RUST_TARGET)
+        return()
+    endif()
+
+    get_filename_component(_MANIFEST_ABS "${ARG_MANIFEST}" ABSOLUTE)
+    get_filename_component(_CRATE_DIR "${_MANIFEST_ABS}" DIRECTORY)
+    if(ZSDK_RUST_TARGET)
+        set(_CARGO_TARGET_FLAG --target "${ZSDK_RUST_TARGET}")
+        set(_RUST_LIB_PATH "${_CRATE_DIR}/target/${ZSDK_RUST_TARGET}/release/lib${ARG_LIB_NAME}.a")
+    elseif(MSVC)
+        set(_CARGO_TARGET_FLAG "")
+        set(_RUST_LIB_PATH "${_CRATE_DIR}/target/release/${ARG_LIB_NAME}.lib")
+    else()
+        set(_CARGO_TARGET_FLAG "")
+        set(_RUST_LIB_PATH "${_CRATE_DIR}/target/release/lib${ARG_LIB_NAME}.a")
+    endif()
+
+    add_custom_command(
+        OUTPUT "${_RUST_LIB_PATH}"
+        COMMAND "${ZSDK_CARGO}" build --manifest-path "${_MANIFEST_ABS}" --release ${_CARGO_TARGET_FLAG}
+        WORKING_DIRECTORY "${_CRATE_DIR}"
+        COMMENT "Building Rust staticlib ${ARG_LIB_NAME}"
+        USES_TERMINAL
+    )
+    add_custom_target(${TARGET_NAME}_rust_lib DEPENDS "${_RUST_LIB_PATH}")
+
+    zsdk_add_brew_app(${TARGET_NAME}
+        SOURCES "${ZSDK_ROOT_DIR}/bindings/rust/host/zsdk_rust_host.cpp"
+        MIF_CLASS_ID "${ARG_MIF_CLASS_ID}"
+        MIF_APP_NAME "${ARG_MIF_APP_NAME}"
+        MIF_COMPANY "${ARG_MIF_COMPANY}"
+        MIF_COPYRIGHT "${ARG_MIF_COPYRIGHT}"
+        MIF_VERSION "${ARG_MIF_VERSION}"
+    )
+    if(ARG_MIF_APP_NAME)
+        target_compile_definitions(${TARGET_NAME} PRIVATE ZSDK_RUST_APP_NAME="${ARG_MIF_APP_NAME}")
+    endif()
+    add_dependencies(${TARGET_NAME} ${TARGET_NAME}_rust_lib)
+    target_link_libraries(${TARGET_NAME} PRIVATE "${_RUST_LIB_PATH}")
+endfunction()

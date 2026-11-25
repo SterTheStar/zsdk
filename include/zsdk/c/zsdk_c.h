@@ -15,5 +15,6 @@
 #include "zsdk/c/zsdk_c_fs.h"
 #include "zsdk/c/zsdk_c_net.h"
 #include "zsdk/c/zsdk_c_security.h"
+#include "zsdk/c/zsdk_c_app.h"
 
 #endif /* ZSDK_C_H */
