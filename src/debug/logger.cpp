@@ -50,6 +50,13 @@ void Logger::SetMinLevel(LogLevel level) { g_minLevel = level; }
 LogLevel Logger::GetMinLevel() { return g_minLevel; }
 
 void Logger::Log(LogLevel level, const char* tag, const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    LogV(level, tag, fmt, args);
+    va_end(args);
+}
+
+void Logger::LogV(LogLevel level, const char* tag, const char* fmt, va_list args) {
     if (static_cast<uint8_t>(level) < static_cast<uint8_t>(g_minLevel)) {
         return;
     }
@@ -66,10 +73,7 @@ void Logger::Log(LogLevel level, const char* tag, const char* fmt, ...) {
         written = 0;
     }
     if (static_cast<size_t>(written) < sizeof(buffer) - 1u) {
-        va_list args;
-        va_start(args, fmt);
-        vsnprintf(buffer + written, sizeof(buffer) - static_cast<size_t>(written), fmt, args);
-        va_end(args);
+        vsnprintf(buffer + written, sizeof(buffer) - static_cast<size_t>(written), fmt ? fmt : "", args);
     }
     buffer[sizeof(buffer) - 1u] = '\0';
 

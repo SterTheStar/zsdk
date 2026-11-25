@@ -23,6 +23,7 @@
 #include "zsdk/input/input_types.hpp"
 #include "zsdk/input/input.hpp"
 #include "zsdk/input/keyboard_mouse.hpp"
+#include "zsdk/input/virtual_keyboard.hpp"
 
 #include "zsdk/graphics/gl_context.hpp"
 #include "zsdk/graphics/texture.hpp"
@@ -47,6 +48,7 @@
 
 #include "zsdk/audio/audio.hpp"
 #include "zsdk/audio/audio_engine.hpp"
+#include "zsdk/audio/pcm_mixer.hpp"
 
 #include "zsdk/net/socket.hpp"
 #include "zsdk/net/http_client.hpp"

@@ -6,6 +6,7 @@
  */
 
 #include "zsdk/graphics/gl_context.hpp"
+#include "zsdk/graphics/renderer.hpp"
 #include "zsdk/debug/debug_overlay.hpp"
 #include "zsdk/debug/memory_tracker.hpp"
 #include "zsdk/debug/logger.hpp"
@@ -182,6 +183,19 @@ void GLContext::Shutdown() {
         return;
     }
 
+    if (m_impl->eglDisplay != EGL_NO_DISPLAY &&
+        m_impl->eglContext != EGL_NO_CONTEXT &&
+        m_impl->eglSurface != EGL_NO_SURFACE) {
+        Renderer::ReleaseSharedFontTexture();
+    }
+
+    /* Zeebo Developer Guide 7.3.1: release GLES before EGL teardown/IEGL10_Release
+     * so IGLES10/IGLES11 remain valid when Released (before eglDestroyContext/eglTerminate). */
+    if (m_impl->glesBindingsLoaded) {
+        GLES_Release();
+        m_impl->glesBindingsLoaded = false;
+    }
+
     if (m_impl->eglDisplay != EGL_NO_DISPLAY) {
         eglMakeCurrent(m_impl->eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         if (m_impl->eglContext != EGL_NO_CONTEXT) {
@@ -204,12 +218,11 @@ void GLContext::Shutdown() {
     }
     if (m_impl->iegl) {
         IEGL10_Release(m_impl->iegl);
-    }
-    if (m_impl->glesBindingsLoaded) {
-        GLES_Release();
+        m_impl->iegl = nullptr;
     }
     if (m_impl->eglBindingsLoaded) {
         EGL_Release();
+        m_impl->eglBindingsLoaded = false;
     }
 
     debug::MemoryTracker::Free(debug::MemorySubsystem::Graphics, m_impl);
@@ -292,6 +305,9 @@ Result GLContext::SetSurfaceScale(const Rect& srcRect, const Rect& dstRect, bool
         static_cast<AEEEGLint>(dstRect.height)
     };
 
+    /* Zeebo Developer Guide 8.3: QUALCOMM_surface_scale only applies to non-current surfaces */
+    eglMakeCurrent(m_impl->eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+
     AEEEGLBoolean ok = EGL_FALSE;
     IEGLSURFACEMANIP_SetSurfaceScale(manip,
                                      reinterpret_cast<AEEEGLDisplay>(m_impl->eglDisplay),
@@ -303,6 +319,8 @@ Result GLContext::SetSurfaceScale(const Rect& srcRect, const Rect& dstRect, bool
                                             reinterpret_cast<AEEEGLSurface>(m_impl->eglSurface),
                                             enable ? EGL_TRUE : EGL_FALSE, &ok);
     }
+
+    eglMakeCurrent(m_impl->eglDisplay, m_impl->eglSurface, m_impl->eglSurface, m_impl->eglContext);
     IEGLSURFACEMANIP_Release(manip);
     return (ok != EGL_FALSE) ? Result::Ok : Result::GraphicsError;
 }
@@ -315,11 +333,13 @@ Result GLContext::EnableSurfaceScale(bool enable) {
     if (!manip) {
         return Result::NotSupported;
     }
+    eglMakeCurrent(m_impl->eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     AEEEGLBoolean ok = EGL_FALSE;
     IEGLSURFACEMANIP_SurfaceScaleEnable(manip,
                                         reinterpret_cast<AEEEGLDisplay>(m_impl->eglDisplay),
                                         reinterpret_cast<AEEEGLSurface>(m_impl->eglSurface),
                                         enable ? EGL_TRUE : EGL_FALSE, &ok);
+    eglMakeCurrent(m_impl->eglDisplay, m_impl->eglSurface, m_impl->eglSurface, m_impl->eglContext);
     IEGLSURFACEMANIP_Release(manip);
     return (ok != EGL_FALSE) ? Result::Ok : Result::GraphicsError;
 }
@@ -332,6 +352,7 @@ Result GLContext::SetSurfaceRotate(bool rot90, bool hMirror, bool vMirror, bool 
     if (!manip) {
         return Result::NotSupported;
     }
+    eglMakeCurrent(m_impl->eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     AEEEGLBoolean ok = EGL_FALSE;
     IEGLSURFACEMANIP_SetSurfaceRotate(manip,
                                       reinterpret_cast<AEEEGLDisplay>(m_impl->eglDisplay),
@@ -346,6 +367,7 @@ Result GLContext::SetSurfaceRotate(bool rot90, bool hMirror, bool vMirror, bool 
                                              reinterpret_cast<AEEEGLSurface>(m_impl->eglSurface),
                                              enable ? EGL_TRUE : EGL_FALSE, &ok);
     }
+    eglMakeCurrent(m_impl->eglDisplay, m_impl->eglSurface, m_impl->eglSurface, m_impl->eglContext);
     IEGLSURFACEMANIP_Release(manip);
     return (ok != EGL_FALSE) ? Result::Ok : Result::GraphicsError;
 }

@@ -5,8 +5,12 @@
 
 #include "zsdk/graphics/renderer.hpp"
 #include "zsdk/graphics/renderer_types.hpp"
+#include "zsdk/graphics/mesh_buffer.hpp"
 #include "zsdk/core/math_fixed.hpp"
 #include "gl_platform.hpp"
+#if ZSDK_PLATFORM_ZEEBO
+    #include <gles/egl.h>
+#endif
 
 namespace zsdk {
 namespace graphics {
@@ -80,6 +84,15 @@ void Renderer::SetFrontFace(FrontFace face) {
 }
 
 void Renderer::SetClipPlane(uint8_t planeIndex, bool enabled, float a, float b, float c, float d) {
+#if ZSDK_PLATFORM_ZEEBO
+    /* Zeebo Developer Guide Table 7-1: User Clip Planes are not supported on Q3Dimension. */
+    ZSDK_UNUSED(planeIndex);
+    ZSDK_UNUSED(enabled);
+    ZSDK_UNUSED(a);
+    ZSDK_UNUSED(b);
+    ZSDK_UNUSED(c);
+    ZSDK_UNUSED(d);
+#else
     if (planeIndex >= 6u) {
         return;
     }
@@ -96,6 +109,7 @@ void Renderer::SetClipPlane(uint8_t planeIndex, bool enabled, float a, float b, 
     } else {
         glDisable(plane);
     }
+#endif
 }
 
 void Renderer::SetActiveTextureUnit(uint8_t unit) {
@@ -105,7 +119,26 @@ void Renderer::SetActiveTextureUnit(uint8_t unit) {
 }
 
 void Renderer::SetTextureEnvMode(TexEnvMode mode) {
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, ToGlTexEnvMode(mode));
+    if (mode == TexEnvMode::Combine) {
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, 0x8570 /* GL_COMBINE */);
+    } else if (mode == TexEnvMode::Dot3) {
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, 0x8570 /* GL_COMBINE */);
+        glTexEnvi(GL_TEXTURE_ENV, 0x8571 /* GL_COMBINE_RGB */, 0x86AE /* GL_DOT3_RGB */);
+    } else {
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, ToGlTexEnvMode(mode));
+    }
+}
+
+void Renderer::SetPointSpritesEnabled(bool enabled) {
+    const GLenum kPointSprite = 0x8861; /* GL_POINT_SPRITE_OES */
+    const GLenum kCoordReplace = 0x8862; /* GL_COORD_REPLACE_OES */
+    if (enabled) {
+        glEnable(kPointSprite);
+        glTexEnvi(kPointSprite, kCoordReplace, GL_TRUE);
+    } else {
+        glTexEnvi(kPointSprite, kCoordReplace, GL_FALSE);
+        glDisable(kPointSprite);
+    }
 }
 
 void Renderer::ResetTextureMatrix() {
@@ -136,6 +169,149 @@ void Renderer::RotateFx(Fixed16 angleDeg, Fixed16 x, Fixed16 y, Fixed16 z) {
 
 void Renderer::ScaleFx(Fixed16 x, Fixed16 y, Fixed16 z) {
     glScalex(x, y, z);
+}
+
+void Renderer::SetDither(bool enabled) {
+    if (enabled) glEnable(GL_DITHER);
+    else         glDisable(GL_DITHER);
+}
+
+void Renderer::SetPerspectiveCorrectionFast(bool fast) {
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, fast ? GL_FASTEST : GL_NICEST);
+}
+
+void Renderer::SetBlendEquation(BlendEquationMode mode) {
+    GLenum glMode = 0x8006u; /* GL_FUNC_ADD */
+    switch (mode) {
+        case BlendEquationMode::Subtract:        glMode = 0x800Au; break; /* GL_FUNC_SUBTRACT */
+        case BlendEquationMode::ReverseSubtract: glMode = 0x800Bu; break; /* GL_FUNC_REVERSE_SUBTRACT */
+        case BlendEquationMode::Min:             glMode = 0x8007u; break; /* GL_MIN */
+        case BlendEquationMode::Max:             glMode = 0x8008u; break; /* GL_MAX */
+        case BlendEquationMode::Add:
+        default:                                 glMode = 0x8006u; break;
+    }
+
+#if ZSDK_PLATFORM_ZEEBO
+    typedef void (*PfnBlendEq)(GLenum);
+    static bool s_resolved = false;
+    static PfnBlendEq s_fn = nullptr;
+    if (!s_resolved) {
+        s_fn = reinterpret_cast<PfnBlendEq>(eglGetProcAddress("glBlendEquationOES"));
+        if (!s_fn) {
+            s_fn = reinterpret_cast<PfnBlendEq>(eglGetProcAddress("glBlendEquationEXT"));
+        }
+        s_resolved = true;
+    }
+    if (s_fn) {
+        s_fn(glMode);
+    }
+#else
+    typedef void (APIENTRY *PfnBlendEq)(GLenum);
+    static bool s_resolved = false;
+    static PfnBlendEq s_fn = nullptr;
+    if (!s_resolved) {
+        s_fn = reinterpret_cast<PfnBlendEq>(wglGetProcAddress("glBlendEquation"));
+        if (!s_fn) {
+            s_fn = reinterpret_cast<PfnBlendEq>(wglGetProcAddress("glBlendEquationEXT"));
+        }
+        s_resolved = true;
+    }
+    if (s_fn) {
+        s_fn(glMode);
+    }
+#endif
+}
+
+void Renderer::SetMatrixPaletteEnabled(bool enabled) {
+    const GLenum kMatrixPalette = 0x8840u; /* GL_MATRIX_PALETTE_OES */
+    if (enabled) glEnable(kMatrixPalette);
+    else         glDisable(kMatrixPalette);
+}
+
+void Renderer::LoadPaletteMatrixFromModelView(uint32_t matrixIndex) {
+#if ZSDK_PLATFORM_ZEEBO
+    typedef void (*PfnCurrPal)(GLuint);
+    typedef void (*PfnLoadPal)(void);
+    static bool s_resolved = false;
+    static PfnCurrPal s_curr = nullptr;
+    static PfnLoadPal s_load = nullptr;
+    if (!s_resolved) {
+        s_curr = reinterpret_cast<PfnCurrPal>(eglGetProcAddress("glCurrentPaletteMatrixOES"));
+        s_load = reinterpret_cast<PfnLoadPal>(eglGetProcAddress("glLoadPaletteFromModelViewMatrixOES"));
+        s_resolved = true;
+    }
+    if (s_curr && s_load) {
+        s_curr(static_cast<GLuint>(matrixIndex));
+        s_load();
+    }
+#else
+    ZSDK_UNUSED(matrixIndex);
+#endif
+}
+
+void Renderer::BindSkinningBuffers(const MeshBuffer& weightVbo, uint8_t weightsPerVertex,
+                                   const MeshBuffer& indexVbo, uint8_t indicesPerVertex) {
+#if ZSDK_PLATFORM_ZEEBO
+    typedef void (*PfnWeightPtr)(GLint, GLenum, GLsizei, const GLvoid*);
+    typedef void (*PfnIdxPtr)(GLint, GLenum, GLsizei, const GLvoid*);
+    static bool s_resolved = false;
+    static PfnWeightPtr s_weight = nullptr;
+    static PfnIdxPtr    s_idx    = nullptr;
+    if (!s_resolved) {
+        s_weight = reinterpret_cast<PfnWeightPtr>(eglGetProcAddress("glWeightPointerOES"));
+        s_idx    = reinterpret_cast<PfnIdxPtr>(eglGetProcAddress("glMatrixIndexPointerOES"));
+        s_resolved = true;
+    }
+    if (s_weight && weightVbo.IsValid() && weightsPerVertex > 0u) {
+        weightVbo.Bind();
+        glEnableClientState(0x86ADu /* GL_WEIGHT_ARRAY_OES */);
+        s_weight(static_cast<GLint>(weightsPerVertex), GL_FLOAT, 0, nullptr);
+    }
+    if (s_idx && indexVbo.IsValid() && indicesPerVertex > 0u) {
+        indexVbo.Bind();
+        glEnableClientState(0x8844u /* GL_MATRIX_INDEX_ARRAY_OES */);
+        s_idx(static_cast<GLint>(indicesPerVertex), GL_UNSIGNED_BYTE, 0, nullptr);
+    }
+    MeshBuffer::Unbind(BufferType::Vertex);
+#else
+    ZSDK_UNUSED(weightVbo);
+    ZSDK_UNUSED(weightsPerVertex);
+    ZSDK_UNUSED(indexVbo);
+    ZSDK_UNUSED(indicesPerVertex);
+#endif
+}
+
+void Renderer::UnbindSkinningBuffers() {
+#if ZSDK_PLATFORM_ZEEBO
+    glDisableClientState(0x86ADu /* GL_WEIGHT_ARRAY_OES */);
+    glDisableClientState(0x8844u /* GL_MATRIX_INDEX_ARRAY_OES */);
+#endif
+}
+
+void Renderer::BindPointSizeBuffer(const MeshBuffer& vbo) {
+#if ZSDK_PLATFORM_ZEEBO
+    typedef void (*PfnPointSizePtr)(GLenum, GLsizei, const GLvoid*);
+    static bool s_resolved = false;
+    static PfnPointSizePtr s_fn = nullptr;
+    if (!s_resolved) {
+        s_fn = reinterpret_cast<PfnPointSizePtr>(eglGetProcAddress("glPointSizePointerOES"));
+        s_resolved = true;
+    }
+    if (s_fn && vbo.IsValid()) {
+        vbo.Bind();
+        glEnableClientState(0x8B9Cu /* GL_POINT_SIZE_ARRAY_OES */);
+        s_fn(GL_FLOAT, 0, nullptr);
+        MeshBuffer::Unbind(BufferType::Vertex);
+    }
+#else
+    ZSDK_UNUSED(vbo);
+#endif
+}
+
+void Renderer::UnbindPointSizeBuffer() {
+#if ZSDK_PLATFORM_ZEEBO
+    glDisableClientState(0x8B9Cu /* GL_POINT_SIZE_ARRAY_OES */);
+#endif
 }
 
 } // namespace graphics

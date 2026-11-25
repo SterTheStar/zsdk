@@ -42,7 +42,7 @@ O **ZSDK** foi projetado para desenvolvimento de jogos e aplicações de alta pe
 | **Gráficos 3D & 2D** | `GLContext` (EGL/WGL), `Renderer` com State Cache, `SpriteBatch2D`, `Frustum` Culling, `Texture`, `MeshBuffer`, `ImageDecoder` | [05_graficos_3d_e_2d.md](./docs/05_graficos_3d_e_2d.md) |
 | **Filesystem & SaveGame** | `FileSystem` com `ZSDK_NAND_WRITE_GUARD`, `SaveGameManager` (`udata` + CRC32), `UnzipStream`, `LocalStorage`, `Database` | [06_filesystem_e_savegame.md](./docs/06_filesystem_e_savegame.md) |
 | **Áudio, Rede & Segurança** | `MediaStream`, `SoundEffect`, `AudioEngine`, `Socket`, `HttpClient`, `NetworkManager`, `BluetoothManager`, Crypto & `LicenseManager` | [07_audio_rede_seguranca.md](./docs/07_audio_rede_seguranca.md) |
-| **Scripting Lua** | `LuaVM` (Lua 5.4 em sandbox, 32 bits), API `gfx`/`input`/`save`/`app`, exemplo `02_lua_demo` | [08_scripting_lua.md](./docs/08_scripting_lua.md) |
+| **Scripting Lua** | `LuaVM` (Lua 5.4 em sandbox, 32 bits), API `gfx`/`input`/`save`/`app`, exemplo `04_lua_vm_demo` | [08_scripting_lua.md](./docs/08_scripting_lua.md) |
 
 ---
 
@@ -79,7 +79,7 @@ cmake --build build_windows
 ZSDK/
 ├── cmake/                  # Toolchain BREW ARM & macro zsdk_add_brew_app
 ├── docs/                   # Documentação modularizada completa em PT-BR
-├── examples/               # 01_spinning_cube (3D) e 02_lua_demo (jogo em Lua)
+├── examples/               # 01 cubo C++, 02 cubo C99, 03 cubo Lua (bindings), 04 jogo em Lua (LuaVM)
 ├── include/zsdk/           # Headers públicos C++14 (100% isolados de BREW/GL)
 ├── src/                    # Implementações core e backends (zeebo / windows)
 ├── third_party/brew_crt/   # Runtime C oficial BREW (AEEModGen, EGL_1x, GLES_1x)

@@ -15,7 +15,7 @@ O **DebugOverlay** é um painel renderizado diretamente via OpenGL ES 1.x / Open
   * Uso total de memória (`RAM + VRAM`), percentual em relação ao limite configurável (padrão `32 MB`) com barra colorida (verde/amarelo/vermelho) e pico de RAM.
   * Uso de VRAM (texturas + VBOs) e quebra por subsistema (`CORE`, `GFX`, `AUD`, `FS`).
   * Console com as últimas linhas de log.
-* **Compilação Condicional:** Defina `ZSDK_ENABLE_DEBUG_OVERLAY=0` em builds finais de produção para remover todo o código do painel e os logs `INFO`/`WARN` com zero overhead.
+* **Compilação Condicional:** Defina `ZSDK_ENABLE_DEBUG_OVERLAY=0` para remover o código do painel visual, e `ZSDK_ENABLE_LOGGING=0` em builds finais de produção para remover os logs `INFO`/`WARN` com zero overhead (mantendo `ZSDK_LOG_ERROR`).
 
 ```cpp
 zsdk::debug::DebugOverlay::SetVisible(true);
@@ -63,6 +63,8 @@ ZSDK_LOG_INFO("GAME", "Fase %d carregada (%u objetos)", faseId, totalObjetos);
 ZSDK_LOG_WARN("AUD",  "Canal ocupado");
 ZSDK_LOG_ERROR("FS",  "Falha ao abrir arquivo");
 ```
+
+* **Uso em C / Lua / FFI:** Use a ABI C99 em `zsdk/c/zsdk_c.h` (`ZSDK_C_LOG_INFO`, `zsdk_log`, `zsdk_log_msg`) ou os bindings em `bindings/lua/` (`zsdk.log.info/warn/error`). Consulte [bindings/README.md](../bindings/README.md).
 
 > **Nota técnica:** O `Logger` e o `DebugOverlay` evitam `VSNPRINTF` e `%f` da `AEEStdLib.h` do BREW (que usa `AEEVaList` proprietária e não formata ponto flutuante), garantindo saída limpa no console do Zeebo.
 

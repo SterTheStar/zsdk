@@ -69,6 +69,11 @@ IGLES11 *gpIGLES11 = NULL;
 GV_DECLARE(GLboolean, gbGLInitDone, GL_FALSE);
 #define GBGLINITDONE GV_ACCESS(GLboolean, gbGLInitDone)
 
+static void *g_gles10Vtbl = NULL;
+static void *g_gles10Release = NULL;
+static void *g_gles11Vtbl = NULL;
+static void *g_gles11Release = NULL;
+
 
 /*----------------------------------------------------------------------------*
  *                            T Y P E D E F S                                 *
@@ -155,6 +160,11 @@ int GLES_Init(IShell *pIShell)
                           (void **)&(GPIGLES10));
     IEGL10_QueryInterface(EGL_GetQEGLInterfacePtr(), AEEIID_GLES11,
                           (void **)&(GPIGLES11));
+
+    g_gles10Vtbl = (GPIGLES10 && AEEGETPVTBL(GPIGLES10, IGLES10)) ? (void *)AEEGETPVTBL(GPIGLES10, IGLES10) : NULL;
+    g_gles10Release = g_gles10Vtbl ? (void *)AEEGETPVTBL(GPIGLES10, IGLES10)->Release : NULL;
+    g_gles11Vtbl = (GPIGLES11 && AEEGETPVTBL(GPIGLES11, IGLES11)) ? (void *)AEEGETPVTBL(GPIGLES11, IGLES11) : NULL;
+    g_gles11Release = g_gles11Vtbl ? (void *)AEEGETPVTBL(GPIGLES11, IGLES11)->Release : NULL;
 
 #ifdef OES_OBI_WRAPPER
     // Create 'fake' old interface
@@ -316,13 +326,32 @@ void GLES_Release(void)
   }
   if (NULL != GPIGLES11)
   {
-    IGLES11_Release(GPIGLES11);
+    AEEVTBL(IGLES11) *pvt11 = AEEGETPVTBL(GPIGLES11, IGLES11);
+    if (NULL != pvt11 &&
+        (void *)pvt11 == g_gles11Vtbl &&
+        NULL != pvt11->Release &&
+        (void *)pvt11->Release == g_gles11Release &&
+        (void *)pvt11->Release != (void *)pvt11->ClipPlanef)
+    {
+      IGLES11_Release(GPIGLES11);
+    }
     GPIGLES11 = NULL;
+    g_gles11Vtbl = NULL;
+    g_gles11Release = NULL;
   }
   if (NULL != GPIGLES10)
   {
-    IGLES10_Release(GPIGLES10);
+    AEEVTBL(IGLES10) *pvt10 = AEEGETPVTBL(GPIGLES10, IGLES10);
+    if (NULL != pvt10 &&
+        (void *)pvt10 == g_gles10Vtbl &&
+        NULL != pvt10->Release &&
+        (void *)pvt10->Release == g_gles10Release)
+    {
+      IGLES10_Release(GPIGLES10);
+    }
     GPIGLES10 = NULL;
+    g_gles10Vtbl = NULL;
+    g_gles10Release = NULL;
   }
   GBGLINITDONE = GL_FALSE;
 

@@ -1,6 +1,6 @@
 # 08 — Scripting Lua (`zsdk::script::LuaVM`)
 
-VM Lua 5.4.7 embutida (`third_party/lua`, licença MIT), compilada com `LUA_32BITS` (inteiros e floats de 32 bits, mais leve no ARM11). Habilitada por `ZSDK_ENABLE_LUA` (ON por padrão).
+VM Lua 5.4.7 embutida (`third_party/lua`, licença MIT), compilada com `LUA_32BITS` (inteiros e floats de 32 bits, mais leve no ARM11). Habilitada por `ZSDK_ENABLE_LUA_VM` (ON por padrão).
 
 ## Sandbox
 * Bibliotecas abertas: base, `table`, `string`, `math`, `utf8`, `coroutine`. **Sem** `io`, `os`, `package`, `debug`; `dofile`, `loadfile` e `require` removidos.
@@ -34,13 +34,19 @@ vm.LoadString("game.lua", src, len);   // OnInit
 vm.Update(dt);                        // OnUpdate
 batch.BeginVirtual(640, 480, w, h); vm.Draw(); batch.End();   // OnRender
 ```
-Exemplo completo: [`examples/02_lua_demo/main.cpp`](../examples/02_lua_demo/main.cpp) (jogo "Star Catcher" inteiro em Lua, melhor pontuação salva em slot).
+Exemplo completo: [`examples/04_lua_vm_demo/main.cpp`](../examples/04_lua_vm_demo/main.cpp) (jogo "Star Catcher" inteiro em Lua, melhor pontuação salva em slot).
 
 ## Scripts em arquivo, `require` e `print`
 
 * `vm.SetVfs(&vfs); vm.LoadFile("script:/main.lua");` carrega o script pelo `Vfs` (Zeebo: `fs:/~/scripts/main.lua`).
 * `require("sub.util")` carrega `script:/sub/util.lua` uma vez (cache); pontos viram subpastas. Só aceita `[A-Za-z0-9_.-]` e rejeita `..`. Exige `SetVfs()`.
 * `print(...)` vai para o `Logger` (tag `LUA`). O `print` padrão do Lua escreve em stdout, que não existe no Zeebo e travava o app (o stub `abort()` do CRT é um laço infinito).
-* O `02_lua_demo` embute `scripts/star_catcher.lua` no build (CMake gera `star_catcher_lua.h`) e o usa se `script:/star_catcher.lua` não existir.
+* O `04_lua_vm_demo` embute `scripts/star_catcher.lua` no build (CMake gera `star_catcher_lua.h`) e o usa se `script:/star_catcher.lua` não existir.
 
 Hook opcional `function on_pad(index, connected)`: chamado quando um gamepad entra ou sai (encaminhe `IAppDelegate::OnGamepadConnected/Disconnected` para `LuaVM::NotifyGamepad`). O `star_catcher.lua` pausa e mostra "CONNECT A CONTROLLER" sem o pad 0.
+
+## Relação com os bindings `bindings/lua`
+
+* `bindings/lua` (`zsdk_lua`) expõe a C ABI para um `lua_State` do próprio jogo (`luaopen_zsdk`); `LuaVM` (`zsdk_lua_runtime` + `src/script`) é o *host*: traz o Lua 5.4 vendorizado, sandbox, limite de memória, `require` por `script:/` e o carregamento de arquivos. São complementares.
+* Com `-DZSDK_BUILD_LUA_BINDINGS=ON` e `ZSDK_ENABLE_LUA_VM=ON`, `bindings/lua` usa os headers do Lua vendorizado (`third_party/lua`) se `ZSDK_LUA_INCLUDE_DIR` estiver vazio.
+* A API `gfx`/`input`/`save`/`app` do `LuaVM` é enxuta e própria; unificá-la com o módulo `zsdk.*` (registrar `luaopen_zsdk` no `LuaVM`) está no `TODO.md`.

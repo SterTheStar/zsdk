@@ -27,8 +27,8 @@ public:
         // Comandos Renderer + m_gl.SwapBuffers()
     }
 
-    void OnSuspend() override { /* Pausa música/jogo quando BREW suspender */ }
-    void OnResume() override  { /* Retoma quando voltar */ }
+    void OnSuspend() override { /* Pausa música/jogo quando BREW suspender (IHID é liberado automaticamente) */ }
+    void OnResume() override  { /* Retoma quando voltar (IHID é recriado automaticamente) */ }
 
     void OnShutdown() override {
         // Liberar recursos determinísticos
@@ -40,7 +40,7 @@ ZSDK_IMPLEMENT_APP(MeuJogo, "MeuJogo", 60, true)
 ```
 
 ### Controle de FPS (`FpsCap`)
-O Zeebo suporta **30 FPS** e **60 FPS** (o modo *Uncapped* foi removido por incompatibilidade prática com o timer cooperativo/VSync do BREW):
+O Zeebo suporta **30 FPS** e **60 FPS** (o modo *Uncapped* foi removido por incompatibilidade prática com o timer cooperativo/VSync do BREW). Para saída de TV CRT no console real, o Developer Guide 0.97 (Seção 11.9) recomenda **30 FPS** (`FpsCap::Fps30`, usado como padrão no exemplo `01_spinning_cube` no Zeebo):
 
 ```cpp
 auto* app = zsdk::Application::GetInstance();
@@ -48,7 +48,7 @@ app->SetFpsCap(zsdk::FpsCap::Fps30); // ou FpsCap::Fps60
 uint16_t atual = app->GetTargetFps();
 ```
 
-> No Zeebo (`zeebo_core.cpp`), o agendador desconta automaticamente o tempo gasto em `OnUpdate` + `OnRender` (`workMs`) antes de chamar `ISHELL_SetTimer`. No Windows (`windows_backend.cpp`), o loop usa `timeBeginPeriod(1)` + *deadline* contínuo via `QueryPerformanceCounter` para travar exatamente em 30/60 FPS.
+> No Zeebo (`zeebo_core.cpp`), o agendador desconta automaticamente o tempo gasto em `OnUpdate` + `OnRender` (`workMs`) antes de chamar `ISHELL_SetTimer`, trata `EVT_APP_NO_SLEEP` (evitando *throttling* de energia), trata o botão Power (`AVK_END` -> `RequestQuit()`), e libera/recria o `IHID` em `EVT_APP_SUSPEND`/`EVT_APP_RESUME` conforme o Zeebo Developer Guide 0.97 (Seções 4.2, 11.8 e 11.9). No Windows (`windows_backend.cpp`), o loop usa `timeBeginPeriod(1)` + *deadline* contínuo via `QueryPerformanceCounter` para travar exatamente em 30/60 FPS.
 
 ---
 
@@ -68,6 +68,8 @@ Para máxima performance no ARM11 sem FPU pesada:
 zsdk::Fixed16 a = zsdk::FloatToFixed(2.5f);
 zsdk::Fixed16 b = zsdk::IntToFixed(3);
 zsdk::Fixed16 c = zsdk::FixedMul(a, b); // 7.5 em 16.16
+zsdk::Fixed16 s = zsdk::FixedSinDeg(zsdk::IntToFixed(30)); // 0.5 em 16.16 (zero float)
+zsdk::Fixed16 cs = zsdk::FixedCosDeg(zsdk::IntToFixed(60));
 float f = zsdk::FixedToFloat(c);
 ```
 

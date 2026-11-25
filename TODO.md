@@ -2,12 +2,18 @@
 
 Itens abertos após Lua, Vfs, save assíncrono, Frame e sinks de log. Prioridade: A = bloqueia validação real, B = importante, C = melhoria.
 
+## Integração com o trabalho da Esther (C ABI / bindings Lua)
+
+- [ ] Registrar `luaopen_zsdk` dentro do `LuaVM` (quando `ZSDK_BUILD_LUA_BINDINGS=ON`), para scripts usarem `zsdk.*` e o sandbox/`require` do `LuaVM` juntos; hoje a API `gfx`/`input`/`save`/`app` do `LuaVM` é separada.
+- [ ] C ABI + Lua ainda faltam para: `fs::Vfs`, `debug::FileLogSink`/sinks de log, `graphics::Frame` (RAII; pode não fazer sentido em C), hooks `OnGamepadConnected/Disconnected`. Já expostos neste PR: `zsdk_fs_rename`, `zsdk_fs_get_free_bytes`, `zsdk_savegame_{begin_save_slot,pump_async,async_status}`, `zsdk_gl_has_extension`.
+- [ ] `Texture::CreateFromAtitc`: o mapeamento de flags da versão anterior (RGB→`0x8C93`, RGBA→`0x87EE`) contradizia o header do SDK (`GL_COMPRESSED_RGB_ATI_TC`=0x8C92, `RGBA`=0x8C93) e o guia; a versão mantida valida assinatura/flags/tamanho.
+
 ## A — Bloqueia validação em hardware / SDK real
 
 - [ ] **Headers HID reais.** `AEEHIDButtons.h` e `AEEHIDThumbsticks.h` não existem em nenhum SDK que temos. Os testes usaram shims provisórios no scratch (IDs `ZEEBO_BUTTON_*` = 101..111 inventados; `HID_THUMBSTICK_MIN/MAX` = int16). O mapeamento real de botões e a normalização dos sticks nunca foram validados. Pedir os headers à dona do SDK Zeebo (Esther) e conferir `MapHidButtonToLogical` em `src/platform/zeebo/zeebo_input.cpp` (inclui os `AEEHIDBUTTON_7/8/10/11/12` usados como TriggerLeft/Right, Start e thumbs).
 - [ ] **Nada foi testado em hardware Zeebo.** Só no zeebx-emu (HLE). Os "60 FPS" vêm do `FrameTimer` dentro do emulador, não medem o console.
 - [ ] **SD card em `fs:/card0/`.** *(wiki: o firmware referencia `fs:/card0/longcheerzeebo/autocopysdcardinfotoenand.dat`, então o mount existe; que apps possam **gravar** nele continua sem prova, e o wiki indica que só o diretório privado do app é gravável.)* O `SaveGameManager`/`Vfs` assumem esse caminho, mas não está confirmado que o BREW do Zeebo monte o cartão ali. Verificar nos docs do SDK ou em dumps; hoje `preferSdCard` nunca foi exercitado.
-- [ ] **Build Windows com MSVC não testado.** Cross-compilado com MinGW-w64 (`-DZSDK_BUILD_ZEEBO=OFF`, 0 erros, `01` e `02` linkam) e o `02_lua_demo.exe` roda sob wine (Vfs, `script:`, log em arquivo OK; gráficos não conferidos). Falta MSVC de verdade. `windows_backend.cpp` tem `Thread` e outros stubs.
+- [ ] **Build Windows com MSVC não testado.** Cross-compilado com MinGW-w64 (`-DZSDK_BUILD_ZEEBO=OFF`, 0 erros, `01` e `02` linkam) e o `04_lua_vm_demo.exe` roda sob wine (Vfs, `script:`, log em arquivo OK; gráficos não conferidos). Falta MSVC de verdade. `windows_backend.cpp` tem `Thread` e outros stubs.
 
 ## A — Achados da auditoria contra o Zeebo Developer Guide 0.97 (§5.1, §4.3, §11.3, §11.7)
 
@@ -30,7 +36,7 @@ Fonte: `~/projects/zeebo-emulator/research/docs/sdk-extract/Zeebo SDK + BREW SDK
 - [ ] **Include dirs do SDK BREW.** `AEERSA.h` inclui `..\..\inc\X.h` com barras invertidas; no Linux precisa de cópias com o nome literal. Resolver no CMake (ou doc) em vez de gambiarra no scratch. O SDK montado no scratch é uma mescla BREW 4.0.2 + BREW MP SDK 7.12.5; documentar a receita exata.
 - [ ] **`elf2mod.x`:** a seção `.ARM.exidx` foi removida e descartada. Revisar se algum código C/C++ futuro precisa de unwind. O passo de link não rastreia o script (precisa `rm *.elf` ao editar).
 - [ ] **`third_party/lua/luaconf.h`** tem uma edição local (guard de `LUA_32BITS`). Reaplicar ao atualizar o Lua; nota em `third_party/lua/README.zsdk.md`.
-- [ ] **Tamanho do `.mod`:** o `02_lua_demo` tem ~398 KB (vs ~169 KB do cubo). Medir quanto é Lua (`-Os`, remover libs não usadas como `utf8`/`coroutine` se não forem necessárias).
+- [ ] **Tamanho do `.mod`:** o `04_lua_vm_demo` tem ~398 KB (vs ~169 KB do cubo). Medir quanto é Lua (`-Os`, remover libs não usadas como `utf8`/`coroutine` se não forem necessárias).
 
 ## B — Lua / scripting
 
@@ -72,5 +78,5 @@ Lidas: `AGENTS.md`, páginas 3 (runtime AEE), 6 (input), 8 (vídeo), 9 (áudio),
 
 - [ ] **Sem suíte de testes automatizados.** O que existe é manual: teste de host do `Vfs::Resolve` (scratch, não versionado), execuções no zeebx-emu com `--keys`. Criar `tests/` (host, stubs de `FileSystem`/`Logger`) e um smoke test no emulador (frames, log, persistência de save).
 - [ ] **Avisos de compilação** do código novo não foram revisados com `-Wall -Wextra` em modo estrito; o Lua é compilado com `-w`.
-- [ ] **`examples/02_lua_demo`:** jogo mínimo ("Star Catcher"); ainda não é uma demo apresentável (sem áudio, sem sprites, sem tela de config).
-- [x] *(feito)* Docs 01 e README citam o exemplo 02, `ZSDK_ENABLE_LUA` e o build Linux. `lua_vm.hpp` fica fora do `zsdk.hpp` de propósito (opcional).
+- [ ] **`examples/04_lua_vm_demo`:** jogo mínimo ("Star Catcher"); ainda não é uma demo apresentável (sem áudio, sem sprites, sem tela de config).
+- [x] *(feito)* Docs 01 e README citam o exemplo 02, `ZSDK_ENABLE_LUA_VM` e o build Linux. `lua_vm.hpp` fica fora do `zsdk.hpp` de propósito (opcional).

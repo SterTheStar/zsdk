@@ -50,19 +50,6 @@
     #define ZSDK_MAX_GAMEPADS 4u
 #endif
 
-#ifndef ZSDK_MAX_SFX_CHANNELS
-    /**
-     * @brief Concurrent SFX voices in AudioEngine. The documented BREW mixer recipe is
-     *        1 MIDI/MMF/PMD stream + up to 4 QCP/AMR/ADPCM streams (all 4 of the same type),
-     *        so Zeebo defaults to 4; the PC backend can mix more.
-     */
-    #if ZSDK_PLATFORM_ZEEBO
-        #define ZSDK_MAX_SFX_CHANNELS 4u
-    #else
-        #define ZSDK_MAX_SFX_CHANNELS 8u
-    #endif
-#endif
-
 #ifndef ZSDK_NAND_WRITE_GUARD
     /**
      * @brief Blocks write/delete/mkdir operations outside fs:/card0/ and fs:/~/
@@ -85,6 +72,10 @@
 
 #ifndef ZSDK_ENABLE_MEMORY_TRACKING
     #define ZSDK_ENABLE_MEMORY_TRACKING ZSDK_ENABLE_DEBUG_OVERLAY
+#endif
+
+#ifndef ZSDK_ENABLE_LOGGING
+    #define ZSDK_ENABLE_LOGGING 1
 #endif
 
 #ifndef ZSDK_DEBUG_LOG_CAPACITY

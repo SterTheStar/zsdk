@@ -6,9 +6,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(ZSDK_ENABLE_DEBUG_OVERLAY "Enable in-game OpenGL ES Debug & RAM/VRAM Overlay" ON)
+option(ZSDK_ENABLE_LOGGING "Enable ZSDK_LOG_INFO and ZSDK_LOG_WARN logging" ON)
 option(ZSDK_BUILD_ZEEBO "Build for Zeebo / Qualcomm BREW 4.0.2" ON)
-option(ZSDK_ENABLE_LUA "Embed the Lua 5.4 scripting VM (zsdk::script::LuaVM)" ON)
+option(ZSDK_ENABLE_LUA_VM "Embed the Lua 5.4 scripting VM (zsdk::script::LuaVM)" ON)
 option(ZSDK_BUILD_EXAMPLES "Build ZSDK sample applications" ON)
+option(ZSDK_BUILD_LUA_BINDINGS "Build modular Lua C bindings (requires ZSDK_LUA_INCLUDE_DIR)" OFF)
+option(ZSDK_ENABLE_TESTS "Enable C ABI self-verification tests and bindings parity check" ON)
 
 set(BREW_SDK_ROOT "C:/Users/Esther/AppData/Local/Programs/brew-sdk" CACHE PATH "Path to BREW/Zeebo SDK")
 
@@ -19,6 +22,7 @@ set(ZSDK_SOURCES
     src/debug/logger.cpp
     src/debug/debug_overlay.cpp
     src/input/input.cpp
+    src/input/virtual_keyboard.cpp
     src/graphics/texture.cpp
     src/graphics/mesh_buffer.cpp
     src/graphics/renderer.cpp
@@ -29,6 +33,15 @@ set(ZSDK_SOURCES
     src/graphics/frustum.cpp
     src/graphics/gl_extensions.cpp
     src/audio/audio_engine.cpp
+    src/audio/pcm_mixer.cpp
+    src/c/zsdk_c_log.cpp
+    src/c/zsdk_c_core.cpp
+    src/c/zsdk_c_input.cpp
+    src/c/zsdk_c_audio.cpp
+    src/c/zsdk_c_graphics.cpp
+    src/c/zsdk_c_fs.cpp
+    src/c/zsdk_c_net.cpp
+    src/c/zsdk_c_security.cpp
     src/fs/savegame.cpp
     src/fs/vfs.cpp
     src/debug/file_log.cpp
@@ -62,24 +75,24 @@ else()
     )
 endif()
 
-if(ZSDK_ENABLE_LUA)
+if(ZSDK_ENABLE_LUA_VM)
     list(APPEND ZSDK_SOURCES src/script/lua_vm.cpp)
     file(GLOB ZSDK_LUA_SOURCES CONFIGURE_DEPENDS third_party/lua/*.c)
-    add_library(zsdk_lua STATIC ${ZSDK_LUA_SOURCES})
-    target_include_directories(zsdk_lua PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lua)
+    add_library(zsdk_lua_runtime STATIC ${ZSDK_LUA_SOURCES})
+    target_include_directories(zsdk_lua_runtime PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/lua)
     # LUAI_MAXCCALLS: Zeebo gives apps only 32 KB of stack; default 200 nested C calls could overflow it.
-    target_compile_definitions(zsdk_lua PUBLIC LUA_32BITS=1 LUA_USE_C89=1 LUAI_MAXCCALLS=48)
+    target_compile_definitions(zsdk_lua_runtime PUBLIC LUA_32BITS=1 LUA_USE_C89=1 LUAI_MAXCCALLS=48)
     if(NOT MSVC)
-        target_compile_options(zsdk_lua PRIVATE -O2 -fno-unwind-tables -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections -w)
+        target_compile_options(zsdk_lua_runtime PRIVATE -O2 -fno-unwind-tables -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections -w)
         if(ZSDK_BUILD_ZEEBO)
-            target_compile_options(zsdk_lua PRIVATE -mlong-calls)
+            target_compile_options(zsdk_lua_runtime PRIVATE -mlong-calls)
         endif()
     endif()
 endif()
 
 add_library(zsdk STATIC ${ZSDK_SOURCES})
-if(ZSDK_ENABLE_LUA)
-    target_link_libraries(zsdk PUBLIC zsdk_lua)
+if(ZSDK_ENABLE_LUA_VM)
+    target_link_libraries(zsdk PUBLIC zsdk_lua_runtime)
 endif()
 
 target_include_directories(zsdk
@@ -105,31 +118,74 @@ else()
     target_compile_definitions(zsdk PUBLIC ZSDK_ENABLE_DEBUG_OVERLAY=0)
 endif()
 
+if(ZSDK_ENABLE_LOGGING)
+    target_compile_definitions(zsdk PUBLIC ZSDK_ENABLE_LOGGING=1)
+else()
+    target_compile_definitions(zsdk PUBLIC ZSDK_ENABLE_LOGGING=0)
+endif()
+
 if(MSVC)
     target_compile_options(zsdk PRIVATE /W4 /GR- /EHs-c-)
 else()
-    target_compile_options(zsdk PRIVATE -Wall -Wextra -fno-exceptions -fno-rtti -fno-use-cxa-atexit -fno-unwind-tables -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections)
+    target_compile_options(zsdk PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions -fno-rtti -fno-use-cxa-atexit -fno-threadsafe-statics>
+        -Wall -Wextra -fno-unwind-tables -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections
+    )
     if(ZSDK_BUILD_ZEEBO)
-        target_compile_options(zsdk PRIVATE -mlong-calls)   # ARM-only flag
+        target_compile_options(zsdk PRIVATE -mlong-calls)   # ARM-only flag; breaks MinGW/Clang Windows builds
     endif()
 endif()
 
 include(cmake/ZsdkBrew.cmake)
 
+if(ZSDK_BUILD_LUA_BINDINGS)
+    add_subdirectory(bindings/lua)
+endif()
+
 if(ZSDK_BUILD_EXAMPLES)
     zsdk_add_brew_app(01_spinning_cube
         SOURCES examples/01_spinning_cube/main.cpp
     )
-    if(ZSDK_ENABLE_LUA)
+    zsdk_add_brew_app(02_c_spinning_cube
+        SOURCES
+            examples/02_c_spinning_cube/main.cpp
+            examples/02_c_spinning_cube/cube_c.c
+        MIF_CLASS_ID 0x01099002
+        MIF_APP_NAME "ZSDK_C_Cube"
+    )
+    if(ZSDK_ENABLE_LUA_VM)
         # Embed scripts/star_catcher.lua as the fallback used when script:/ has no copy.
-        set(ZSDK_DEMO_LUA "${CMAKE_CURRENT_SOURCE_DIR}/examples/02_lua_demo/scripts/star_catcher.lua")
+        set(ZSDK_DEMO_LUA "${CMAKE_CURRENT_SOURCE_DIR}/examples/04_lua_vm_demo/scripts/star_catcher.lua")
         set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${ZSDK_DEMO_LUA}")
         file(READ "${ZSDK_DEMO_LUA}" ZSDK_DEMO_LUA_TEXT)
         file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/gen/star_catcher_lua.h"
              "static const char kEmbeddedScript[] = R\"LUA(${ZSDK_DEMO_LUA_TEXT})LUA\";\n")
-        zsdk_add_brew_app(02_lua_demo
-            SOURCES examples/02_lua_demo/main.cpp
+        zsdk_add_brew_app(04_lua_vm_demo
+            SOURCES examples/04_lua_vm_demo/main.cpp
+            MIF_CLASS_ID 0x01099004
+            MIF_APP_NAME "ZSDK_LuaVmDemo"
         )
-        target_include_directories(02_lua_demo PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/gen")
+        target_include_directories(04_lua_vm_demo PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/gen")
     endif()
+endif()
+
+if(ZSDK_ENABLE_TESTS)
+    enable_testing()
+
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(Python3_Interpreter_FOUND)
+        add_custom_target(zsdk_check_bindings ALL
+            COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/check_bindings.py"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+            COMMENT "Verifying ZSDK C ABI & Lua bindings parity"
+        )
+        add_test(NAME zsdk_bindings_parity
+            COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/check_bindings.py"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        )
+    endif()
+
+    add_library(zsdk_c_abi_compile_test OBJECT tests/c_abi_smoke_test.c)
+    set_target_properties(zsdk_c_abi_compile_test PROPERTIES C_STANDARD 99 C_STANDARD_REQUIRED ON)
+    target_include_directories(zsdk_c_abi_compile_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 endif()

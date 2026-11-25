@@ -169,7 +169,7 @@ void Renderer::Begin2D(int32_t viewportWidth, int32_t viewportHeight) {
     EnsureRendererFontTexture();
     MeshBuffer::Unbind(BufferType::Vertex);
 
-    glViewport(0, 0, static_cast<GLsizei>(viewportWidth), static_cast<GLsizei>(viewportHeight));
+    SetViewport(0, 0, viewportWidth, viewportHeight);
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -221,8 +221,7 @@ void Renderer::Begin2DVirtual(float virtualWidth, float virtualHeight,
         vpY = (realHeight - vpH) / 2;
     }
 
-    glViewport(static_cast<GLint>(vpX), static_cast<GLint>(vpY),
-               static_cast<GLsizei>(vpW), static_cast<GLsizei>(vpH));
+    SetViewport(vpX, vpY, vpW, vpH);
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -258,6 +257,15 @@ void Renderer::End2D() {
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
     ResetStateCache();
+}
+
+Rect Renderer::GetSafeAreaRect(int32_t viewportWidth, int32_t viewportHeight, int32_t marginPx) {
+    if (marginPx < 0) {
+        marginPx = 0;
+    }
+    const int32_t w = (viewportWidth > marginPx * 2) ? (viewportWidth - marginPx * 2) : 0;
+    const int32_t h = (viewportHeight > marginPx * 2) ? (viewportHeight - marginPx * 2) : 0;
+    return Rect{marginPx, marginPx, w, h};
 }
 
 void Renderer::DrawRect2D(float x, float y, float width, float height, const Color& color) {

@@ -1,13 +1,14 @@
 # 07 — Áudio, Rede, Bluetooth e Criptografia
 
-Headers incluídos: `audio/audio.hpp`, `audio/audio_engine.hpp`, `net/socket.hpp`, `net/http_client.hpp`, `net/network_mgr.hpp`, `net/bluetooth.hpp`, `security/crypto.hpp`, `security/license.hpp`.
+Headers incluídos: `audio/audio.hpp`, `audio/audio_engine.hpp`, `audio/pcm_mixer.hpp`, `net/socket.hpp`, `net/http_client.hpp`, `net/network_mgr.hpp`, `net/bluetooth.hpp`, `security/crypto.hpp`, `security/license.hpp`.
 
 ---
 
 ## 1. Áudio & Streaming (`MediaStream`, `SoundEffect`, `AudioEngine`)
 
-* **Zeebo:** Encapsula `IMedia` (`AEEMediaUtil_CreateMedia`) e `ISoundPlayer` (`AEECLSID_SOUNDPLAYER`).
+* **Zeebo:** Tanto `MediaStream` quanto `SoundEffect` encapsulam `IMedia` (`AEEMediaUtil_CreateMedia` com `IMEDIA_EnableChannelShare(TRUE)` obrigatório para *multisequencing* — Developer Guide 9.5.1.1), evitando `AEECLSID_SOUNDPLAYER` (`0x01002000`) que falha em múltiplas instâncias no console.
 * **Windows:** Implementado com `winmm` (`mciSendStringA` para `MediaStream` MP3/WAV/MIDI e `PlaySoundA` + `waveOutSetVolume` para `SoundEffect`).
+* **Limites de Hardware no `AudioEngine` (Seção 9.2):** Pool de **4 canais SFX** simultâneos (`kMaxSfxChannels = 4`, correspondente aos 4 decodificadores ADPCM/PCM/QCP do MSM7201A) e bloqueio automático de um segundo MP3 caso a BGM já esteja tocando MP3 no Decoder #1.
 
 ```cpp
 zsdk::audio::AudioEngine audio;
@@ -15,8 +16,12 @@ audio.Initialize(app->GetNativePlatformContext());
 
 audio.SetMasterVolume(90);
 audio.PlayMusic("fs:/~/audio/tema.mp3", true); // BGM em loop
-audio.PlaySfx("fs:/~/audio/pulo.wav");         // Pool de 8 canais SFX
+audio.PlaySfx("fs:/~/audio/pulo.wav");         // Pool de 4 canais SFX (limite MSM7201A)
 ```
+
+* **Mixer PCM em Software com Pitch/Sample-Rate ao Vivo (`PcmMixer` em `audio/pcm_mixer.hpp`):**
+  * Como o `IMedia` do BREW não suporta alteração de *sample-rate* ou *pitch* em tempo real sem esperar o próximo buffer, o `PcmMixer` fornece até **16 vozes PCM 16-bit** (mono ou estéreo) com acumulador de fase em ponto fixo 16.16 e interpolação linear.
+  * `SetVoiceSampleRate(voice, hz)` e `SetVoicePitch(voice, pitchQ16)` têm efeito imediato na próxima chamada de `Mix(outStereo, frames)`.
 
 ---
 
@@ -38,6 +43,3 @@ audio.PlaySfx("fs:/~/audio/pulo.wav");         // Pool de 8 canais SFX
 * **`LicenseManager` (`security/license.hpp`):** Verificação de expiração e validade da licença BREW (`ILicense`).
 
 
-## Vozes de SFX
-
-`ZSDK_MAX_SFX_CHANNELS` (padrão **4** no Zeebo, 8 no PC) define `audio::kMaxSfxChannels`. No Zeebo a receita documentada do mixer BREW é 1 stream MIDI/MMF/PMD + até 4 de QCP/AMR/ADPCM (todos do mesmo tipo); não confirmado para PCM.

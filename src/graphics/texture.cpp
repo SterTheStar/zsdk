@@ -5,6 +5,7 @@
 
 #include "zsdk/graphics/texture.hpp"
 #include "zsdk/debug/memory_tracker.hpp"
+#include "zsdk/debug/logger.hpp"
 #include "gl_platform.hpp"
 
 #if ZSDK_PLATFORM_ZEEBO
@@ -16,6 +17,15 @@ namespace zsdk {
 namespace graphics {
 
 namespace {
+
+void WarnIfNonZeeboTextureDims(uint16_t width, uint16_t height) {
+    /* Zeebo Developer Guide 7.1.3: textures must be power-of-2 and at most 1024x1024 */
+    if (!Texture::IsPowerOfTwo(width) || !Texture::IsPowerOfTwo(height) ||
+        width > 1024u || height > 1024u) {
+        ZSDK_LOG_WARN("GFX", "Texture %ux%u is not power-of-2 or >1024 (required on Zeebo)",
+                      static_cast<unsigned>(width), static_cast<unsigned>(height));
+    }
+}
 
 void MapFormat(TextureFormat fmt, GLenum& outGlFormat, GLenum& outGlType, uint32_t& outBpp) {
     switch (fmt) {
@@ -54,6 +64,7 @@ Result Texture::Create(uint16_t width, uint16_t height, TextureFormat format,
     if (width == 0u || height == 0u) {
         return Result::InvalidArg;
     }
+    WarnIfNonZeeboTextureDims(width, height);
     if (m_glId != 0u) {
         Destroy();
     }
@@ -108,6 +119,7 @@ Result Texture::CreateCompressed(uint16_t width, uint16_t height, uint32_t glInt
     if (width == 0u || height == 0u || imageSize == 0u || !compressedData) {
         return Result::InvalidArg;
     }
+    WarnIfNonZeeboTextureDims(width, height);
     if (m_glId != 0u) {
         Destroy();
     }
@@ -199,7 +211,10 @@ Result Texture::CreateFromAtitc(const void* fileData, uint32_t fileSize, Texture
 
 Result Texture::UpdateSubImage(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
                                const void* pixelData) {
-    if (m_glId == 0u || !pixelData) {
+    if (m_glId == 0u) {
+        return Result::NotInitialized;
+    }
+    if (!pixelData || width == 0u || height == 0u) {
         return Result::InvalidArg;
     }
 
@@ -227,9 +242,11 @@ Result Texture::GenerateMipmaps(TextureFilter filter) {
     glutil::DrainErrors();
     glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(m_glId));
 
+    /* Zeebo Developer Guide 7.1.3: trilinear (GL_LINEAR_MIPMAP_LINEAR) is software-emulated;
+       use GL_LINEAR_MIPMAP_NEAREST for hardware-accelerated mipmapping. */
     const GLint minFilter = (filter == TextureFilter::Nearest)
         ? GL_NEAREST_MIPMAP_NEAREST
-        : GL_LINEAR_MIPMAP_LINEAR;
+        : GL_LINEAR_MIPMAP_NEAREST;
     const GLint magFilter = (filter == TextureFilter::Nearest) ? GL_NEAREST : GL_LINEAR;
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
@@ -255,6 +272,63 @@ Result Texture::GenerateMipmaps(TextureFilter filter) {
 #endif
 
     return (glGetError() == GL_NO_ERROR) ? Result::Ok : Result::GraphicsError;
+}
+
+Result Texture::SetWrap(TextureWrap wrapS, TextureWrap wrapT) {
+    if (m_glId == 0u) {
+        return Result::NotInitialized;
+    }
+    const GLint glS = (wrapS == TextureWrap::Repeat) ? GL_REPEAT : GL_CLAMP_TO_EDGE;
+    const GLint glT = (wrapT == TextureWrap::Repeat) ? GL_REPEAT : GL_CLAMP_TO_EDGE;
+    glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(m_glId));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glS);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glT);
+    return (glGetError() == GL_NO_ERROR) ? Result::Ok : Result::GraphicsError;
+}
+
+Result Texture::CopyFromFramebuffer(int32_t x, int32_t y, uint16_t width, uint16_t height,
+                                    TextureFilter filter) {
+    if (width == 0u || height == 0u) {
+        return Result::InvalidArg;
+    }
+    WarnIfNonZeeboTextureDims(width, height);
+
+    const uint32_t newVramBytes = static_cast<uint32_t>(width) * static_cast<uint32_t>(height) * 2u;
+    if (m_glId != 0u) {
+        Destroy();
+    }
+    if (!debug::MemoryTracker::CanAllocateVram(newVramBytes)) {
+        return Result::OutOfMemory;
+    }
+
+    GLuint id = 0u;
+    glGenTextures(1, &id);
+    if (id == 0u) {
+        return Result::GraphicsError;
+    }
+
+    const GLint glFilter = (filter == TextureFilter::Nearest) ? GL_NEAREST : GL_LINEAR;
+    glBindTexture(GL_TEXTURE_2D, id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                     static_cast<GLint>(x), static_cast<GLint>(y),
+                     static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0);
+
+    if (glGetError() != GL_NO_ERROR) {
+        glDeleteTextures(1, &id);
+        return Result::GraphicsError;
+    }
+
+    m_glId      = static_cast<uint32_t>(id);
+    m_width     = width;
+    m_height    = height;
+    m_format    = TextureFormat::RGB565;
+    m_vramBytes = newVramBytes;
+    debug::MemoryTracker::RecordVramAlloc(m_vramBytes);
+    return Result::Ok;
 }
 
 Result Texture::ReadFramebuffer(int32_t x, int32_t y, uint16_t width, uint16_t height,

@@ -278,7 +278,9 @@ public:
                 debug::DebugOverlay::Update(app.m_input, static_cast<float>(dtMs));
 
                 delegate->OnUpdate(dtMs);
-                delegate->OnRender();
+                if (!app.IsQuitRequested()) {
+                    delegate->OnRender();
+                }
             }
 
             const uint16_t curTargetFps = app.GetTargetFps();
@@ -684,6 +686,7 @@ void GLContext::Shutdown() {
         return;
     }
     if (m_impl->hglrc) {
+        graphics::Renderer::ReleaseSharedFontTexture();
         if (m_impl->stretchTex != 0u) {
             ::glDeleteTextures(1, &m_impl->stretchTex);
             m_impl->stretchTex = 0u;

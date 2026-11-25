@@ -13,7 +13,6 @@
 #include "AEEStdLib.h"
 #include "AEEMedia.h"
 #include "AEEMediaUtil.h"
-#include "AEESoundPlayer.h"
 
 namespace zsdk {
 namespace audio {
@@ -77,6 +76,8 @@ Result MediaStream::LoadFromFile(void* platformContext, const char* filePath) {
         return Result::AudioError;
     }
 
+    /* Zeebo Developer Guide 9.5.1.1: required for concurrent playback with other IMedia objects */
+    IMEDIA_EnableChannelShare(m_impl->media, TRUE);
     IMEDIA_RegisterNotify(m_impl->media, MediaNotifyCallback, &m_impl->playing);
     return Result::Ok;
 }
@@ -108,6 +109,8 @@ Result MediaStream::LoadFromMemory(void* platformContext, const void* data, uint
         return Result::AudioError;
     }
 
+    /* Zeebo Developer Guide 9.5.1.1: required for concurrent playback with other IMedia objects */
+    IMEDIA_EnableChannelShare(m_impl->media, TRUE);
     IMEDIA_RegisterNotify(m_impl->media, MediaNotifyCallback, &m_impl->playing);
     return Result::Ok;
 }
@@ -187,7 +190,9 @@ bool MediaStream::IsLoaded() const {
 }
 
 struct SoundEffect::Impl {
-    ISoundPlayer* player;
+    IShell*  shell;
+    IMedia*  media;
+    uint8_t  volume;
 };
 
 SoundEffect::SoundEffect()
@@ -212,15 +217,9 @@ Result SoundEffect::Initialize(void* platformContext) {
     if (!m_impl) {
         return Result::OutOfMemory;
     }
-    m_impl->player = nullptr;
-
-    if (ISHELL_CreateInstance(shell, AEECLSID_SOUNDPLAYER,
-                              reinterpret_cast<void**>(&m_impl->player)) != AEE_SUCCESS || !m_impl->player) {
-        ZSDK_LOG_ERROR("AUD", "Failed to create AEECLSID_SOUNDPLAYER");
-        Shutdown();
-        return Result::AudioError;
-    }
-
+    m_impl->shell  = shell;
+    m_impl->media  = nullptr;
+    m_impl->volume = 100u;
     return Result::Ok;
 }
 
@@ -228,62 +227,84 @@ void SoundEffect::Shutdown() {
     if (!m_impl) {
         return;
     }
-    if (m_impl->player) {
-        ISOUNDPLAYER_Stop(m_impl->player);
-        ISOUNDPLAYER_Release(m_impl->player);
-        m_impl->player = nullptr;
+    if (m_impl->media) {
+        IMEDIA_Stop(m_impl->media);
+        IMEDIA_Release(m_impl->media);
+        m_impl->media = nullptr;
     }
     debug::MemoryTracker::Free(debug::MemorySubsystem::Audio, m_impl);
     m_impl = nullptr;
 }
 
 Result SoundEffect::PlayFile(const char* filePath) {
-    if (!m_impl || !m_impl->player || !filePath) {
+    if (!m_impl || !m_impl->shell || !filePath) {
         return Result::InvalidArg;
     }
-    AEESoundPlayerInfo info;
-    MEMSET(&info, 0, sizeof(info));
-    info.eInput = SDT_FILE;
-    info.pData  = const_cast<char*>(filePath);
-    ISOUNDPLAYER_Stop(m_impl->player);
-    if (ISOUNDPLAYER_SetInfo(m_impl->player, &info) != SUCCESS) {
+    if (m_impl->media) {
+        IMEDIA_Stop(m_impl->media);
+        IMEDIA_Release(m_impl->media);
+        m_impl->media = nullptr;
+    }
+
+    AEEMediaData md;
+    md.clsData = MMD_FILE_NAME;
+    md.pData   = const_cast<char*>(filePath);
+    md.dwSize  = 0;
+
+    if (AEEMediaUtil_CreateMedia(m_impl->shell, &md, &m_impl->media) != SUCCESS || !m_impl->media) {
+        ZSDK_LOG_ERROR("AUD", "SFX AEEMediaUtil_CreateMedia failed for %s", filePath);
         return Result::AudioError;
     }
-    ISOUNDPLAYER_Play(m_impl->player);
-    return Result::Ok;
+
+    /* Zeebo Developer Guide 9.5.1.1: required for simultaneous playback with BGM/other SFX */
+    IMEDIA_EnableChannelShare(m_impl->media, TRUE);
+    IMEDIA_SetVolume(m_impl->media, m_impl->volume);
+    return (IMEDIA_Play(m_impl->media) == SUCCESS) ? Result::Ok : Result::AudioError;
 }
 
 Result SoundEffect::PlayMemory(const void* data, uint32_t sizeBytes) {
-    if (!m_impl || !m_impl->player || !data || sizeBytes == 0u) {
+    if (!m_impl || !m_impl->shell || !data || sizeBytes == 0u) {
         return Result::InvalidArg;
     }
-    AEESoundPlayerInfo info;
-    MEMSET(&info, 0, sizeof(info));
-    info.eInput = SDT_BUFFER;
-    info.pData  = const_cast<void*>(data);
-    info.dwSize = sizeBytes;
-    ISOUNDPLAYER_Stop(m_impl->player);
-    if (ISOUNDPLAYER_SetInfo(m_impl->player, &info) != SUCCESS) {
+    if (m_impl->media) {
+        IMEDIA_Stop(m_impl->media);
+        IMEDIA_Release(m_impl->media);
+        m_impl->media = nullptr;
+    }
+
+    AEEMediaData md;
+    md.clsData = MMD_BUFFER;
+    md.pData   = const_cast<void*>(data);
+    md.dwSize  = sizeBytes;
+
+    if (AEEMediaUtil_CreateMedia(m_impl->shell, &md, &m_impl->media) != SUCCESS || !m_impl->media) {
+        ZSDK_LOG_ERROR("AUD", "SFX AEEMediaUtil_CreateMedia (memory) failed");
         return Result::AudioError;
     }
-    ISOUNDPLAYER_Play(m_impl->player);
-    return Result::Ok;
+
+    IMEDIA_EnableChannelShare(m_impl->media, TRUE);
+    IMEDIA_SetVolume(m_impl->media, m_impl->volume);
+    return (IMEDIA_Play(m_impl->media) == SUCCESS) ? Result::Ok : Result::AudioError;
 }
 
 Result SoundEffect::Stop() {
-    if (!m_impl || !m_impl->player) {
+    if (!m_impl) {
         return Result::NotInitialized;
     }
-    ISOUNDPLAYER_Stop(m_impl->player);
+    if (m_impl->media) {
+        IMEDIA_Stop(m_impl->media);
+    }
     return Result::Ok;
 }
 
 Result SoundEffect::SetVolume(uint8_t volumePercent) {
-    if (!m_impl || !m_impl->player) {
+    if (!m_impl) {
         return Result::NotInitialized;
     }
-    const uint16 vol = (volumePercent > 100u) ? 100u : volumePercent;
-    ISOUNDPLAYER_SetVolume(m_impl->player, vol);
+    m_impl->volume = (volumePercent > 100u) ? 100u : volumePercent;
+    if (m_impl->media) {
+        IMEDIA_SetVolume(m_impl->media, m_impl->volume);
+    }
     return Result::Ok;
 }
 

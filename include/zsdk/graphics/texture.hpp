@@ -7,6 +7,7 @@
 #define ZSDK_GRAPHICS_TEXTURE_HPP
 
 #include "zsdk/core/types.hpp"
+#include "zsdk/graphics/renderer_types.hpp"
 
 namespace zsdk {
 namespace graphics {
@@ -64,15 +65,29 @@ public:
     Result CreateFromAtitc(const void* fileData, uint32_t fileSize,
                            TextureFilter filter = TextureFilter::Linear);
 
-    /** @brief Updates a sub-rectangle of an existing texture without reallocating VRAM (uncompressed textures only). */
+    /**
+     * @brief Updates a sub-rectangle of an existing texture without reallocating VRAM (uncompressed textures only).
+     * @return Result::NotInitialized if the texture is not created/was destroyed,
+     *         Result::InvalidArg if pixelData is null or width/height is zero.
+     */
     Result UpdateSubImage(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
                           const void* pixelData);
 
     /**
      * @brief Generates mipmaps for this texture (glGenerateMipmapOES / GL_GENERATE_MIPMAP)
-     *        and updates minification filter to mipmap filtering.
+     *        and updates minification filter to GL_LINEAR_MIPMAP_NEAREST (hardware fast-path).
      */
     Result GenerateMipmaps(TextureFilter filter = TextureFilter::Linear);
+
+    /** @brief Sets S/T texture wrap mode (ClampToEdge or Repeat). */
+    Result SetWrap(TextureWrap wrapS, TextureWrap wrapT);
+
+    /**
+     * @brief Copies a region from the active framebuffer into this texture via glCopyTexImage2D.
+     *        Ideal for RGB565 effects on Zeebo where FBO render-to-texture is unavailable.
+     */
+    Result CopyFromFramebuffer(int32_t x, int32_t y, uint16_t width, uint16_t height,
+                               TextureFilter filter = TextureFilter::Linear);
 
     /**
      * @brief Reads pixels from the active framebuffer via glReadPixels.
@@ -91,6 +106,23 @@ public:
 
     /** @brief Binds this texture to GL_TEXTURE_2D (or unbinds if invalid). */
     void Bind(uint8_t textureUnit = 0) const;
+
+    /** @brief Returns true if @p value is a non-zero power of 2 (required on Zeebo <= 1024). */
+    static ZSDK_FORCE_INLINE bool IsPowerOfTwo(uint16_t value) {
+        return value != 0u && (value & static_cast<uint16_t>(value - 1u)) == 0u;
+    }
+
+    /** @brief Rounds @p value up to the next power of 2 (minimum 1). */
+    static ZSDK_FORCE_INLINE uint16_t NextPowerOfTwo(uint16_t value) {
+        if (value <= 1u) {
+            return 1u;
+        }
+        uint16_t p = 1u;
+        while (p < value && p < 32768u) {
+            p = static_cast<uint16_t>(p << 1u);
+        }
+        return p;
+    }
 
     ZSDK_FORCE_INLINE uint32_t GetNativeId() const { return m_glId; }
     ZSDK_FORCE_INLINE uint16_t GetWidth() const { return m_width; }

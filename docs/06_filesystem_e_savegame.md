@@ -37,7 +37,7 @@ Para proteger a NAND principal do Zeebo contra corrupção acidental:
 
 ## 2. Sistema `udata` & SaveGame (`SaveGameManager`)
 
-Segue a padronização do Zeebo armazenando arquivos persistentes e slots de save dentro da pasta **`udata`** do próprio jogo (`fs:/~/udata/` no Zeebo, `udata/` no Windows), com verificação de **magic (`ZSV1`)**, **versão** e **CRC32**:
+Seguem a padronização do Zeebo armazenando arquivos persistentes e slots de save dentro da pasta **`udata`** do próprio jogo (`fs:/~/udata/` no Zeebo, `udata/` no Windows), com verificação de **magic (`ZSV1`)**, **versão**, **CRC32**, checagem de espaço livre na Flash (`SystemInfo::GetMemoryInfo`) e trava de **64 KB** (`kMaxSaveDataBytes = 65536`, conforme Zeebo Developer Guide 5.1):
 
 ```cpp
 zsdk::fs::SaveGameManager saveMgr;

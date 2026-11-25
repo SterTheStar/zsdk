@@ -11,10 +11,11 @@
 namespace zsdk {
 namespace audio {
 
-static const uint8_t kMaxSfxChannels = static_cast<uint8_t>(ZSDK_MAX_SFX_CHANNELS);
+/* Zeebo Developer Guide 9.2: max 4 simultaneous ADPCM/PCM/QCP decoders + 1 MP3 decoder (#1). */
+static const uint8_t kMaxSfxChannels = 4u;
 
 /**
- * @brief Central audio mixer owning 1 BGM MediaStream + up to kMaxSfxChannels (ZSDK_MAX_SFX_CHANNELS) SoundEffect channels.
+ * @brief Central audio mixer owning 1 BGM MediaStream + up to kMaxSfxChannels SoundEffect channels.
  */
 class AudioEngine : public NonCopyable {
 public:
@@ -43,6 +44,7 @@ private:
     uint8_t     m_bgmVolume;
     uint8_t     m_sfxVolume;
     bool        m_initialized;
+    bool        m_bgmIsMp3;
 };
 
 } // namespace audio

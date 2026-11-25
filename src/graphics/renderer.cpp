@@ -9,6 +9,7 @@
 #include "zsdk/graphics/renderer.hpp"
 #include "zsdk/graphics/mesh_buffer.hpp"
 #include "zsdk/debug/debug_overlay.hpp"
+#include "zsdk/debug/logger.hpp"
 #include "gl_platform.hpp"
 
 #include <math.h>
@@ -19,13 +20,20 @@ namespace graphics {
 namespace {
 
 struct RenderStateCache {
-    int8_t blendMode;
-    int8_t depthTest;
-    int8_t cullFace;
-    int8_t texture2D;
+    int8_t  blendMode;
+    int8_t  depthTest;
+    int8_t  cullFace;
+    int8_t  texture2D;
+    bool    viewportValid;
+    int32_t vpX;
+    int32_t vpY;
+    int32_t vpWidth;
+    int32_t vpHeight;
 };
 
-RenderStateCache g_stateCache = {-1, -1, -1, -1};
+RenderStateCache g_stateCache = {-1, -1, -1, -1, false, 0, 0, 0, 0};
+int32_t g_modelViewDepth = 1;
+bool    g_warnedMvOverflow = false;
 
 GLenum ToGlPrimitive(PrimitiveType p) {
     switch (p) {
@@ -54,6 +62,18 @@ GLenum ToGlCompare(CompareFunc f) {
 } // namespace
 
 void Renderer::SetViewport(int32_t x, int32_t y, int32_t width, int32_t height) {
+    if (g_stateCache.viewportValid &&
+        g_stateCache.vpX == x &&
+        g_stateCache.vpY == y &&
+        g_stateCache.vpWidth == width &&
+        g_stateCache.vpHeight == height) {
+        return;
+    }
+    g_stateCache.viewportValid = true;
+    g_stateCache.vpX           = x;
+    g_stateCache.vpY           = y;
+    g_stateCache.vpWidth       = width;
+    g_stateCache.vpHeight      = height;
     glViewport(static_cast<GLint>(x), static_cast<GLint>(y),
                static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 }
@@ -81,10 +101,11 @@ void Renderer::Clear(const Color& color, bool clearDepth, bool clearStencil) {
 }
 
 void Renderer::ResetStateCache() {
-    g_stateCache.blendMode = -1;
-    g_stateCache.depthTest = -1;
-    g_stateCache.cullFace  = -1;
-    g_stateCache.texture2D = -1;
+    g_stateCache.blendMode     = -1;
+    g_stateCache.depthTest     = -1;
+    g_stateCache.cullFace      = -1;
+    g_stateCache.texture2D     = -1;
+    g_stateCache.viewportValid = false;
 }
 
 void Renderer::SetBlendMode(BlendMode mode) {
@@ -178,19 +199,34 @@ void Renderer::SetPerspective(float fovYDegrees, float aspect, float nearZ, floa
 void Renderer::ResetModelView() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    g_modelViewDepth = 1;
 }
 
 void Renderer::PushMatrix() {
+    if (g_modelViewDepth >= 16 && !g_warnedMvOverflow) {
+        g_warnedMvOverflow = true;
+        ZSDK_LOG_WARN("GFX", "MODELVIEW stack depth > 16 (Zeebo GLES limit)");
+    }
+    ++g_modelViewDepth;
     glPushMatrix();
 }
 
 void Renderer::PopMatrix() {
+    if (g_modelViewDepth > 1) {
+        --g_modelViewDepth;
+    }
     glPopMatrix();
 }
 
 void Renderer::LoadMatrix(const float* mat4x4ColumnMajor) {
     if (mat4x4ColumnMajor) {
         glLoadMatrixf(mat4x4ColumnMajor);
+    }
+}
+
+void Renderer::MultMatrix(const float* mat4x4ColumnMajor) {
+    if (mat4x4ColumnMajor) {
+        glMultMatrixf(mat4x4ColumnMajor);
     }
 }
 

@@ -27,8 +27,8 @@ cmake --build build_zeebo
 ### Saídas geradas em `build_zeebo/`
 * `libzsdk.a` — Biblioteca estática do ZSDK.
 * `01_spinning_cube.elf` — Executável ELF relocável linkado com `tools/elf2mod/elf2mod.x`.
-* `01_spinning_cube.mod` — Módulo executável BREW gerado pelo `tools/elf2mod/elf2mod.exe`.
-* `01_spinning_cube.mif` — Manifesto BREW compilado pelo `cifc.exe` a partir de `tools/mif/zsdk_template.mif.in`.
+* `mod/01_spinning_cube/01_spinning_cube.mod` — Módulo executável BREW gerado pelo `tools/elf2mod/elf2mod.exe` (estrutura padrão BREW pronta para copiar para o console/SD).
+* `mif/01_spinning_cube.mif` — Manifesto BREW compilado pelo `cifc.exe` a partir de `tools/mif/zsdk_template.mif.in`.
 
 > **Nota de Runtime C++:** O arquivo [AEEModGen.c](../third_party/brew_crt/AEEModGen.c) foi adaptado para colocar `AEEMod_Load` no offset `0x00000000` (`.text.AEEMod_Load`) e executar os construtores globais C++ (`__preinit_array` e `__init_array`) automaticamente no carregamento do módulo.
 
@@ -80,11 +80,11 @@ zsdk_add_brew_app(meu_jogo
 | Opção | Padrão | Efeito |
 | :--- | :--- | :--- |
 | `ZSDK_BUILD_ZEEBO` | ON | ON = alvo Zeebo/BREW (ARM); OFF = backend Windows |
-| `ZSDK_BUILD_EXAMPLES` | ON | Compila `01_spinning_cube` e `02_lua_demo` |
-| `ZSDK_ENABLE_LUA` | ON | Embute o Lua 5.4 (`zsdk::script::LuaVM`) e habilita o exemplo 02 |
+| `ZSDK_BUILD_EXAMPLES` | ON | Compila `01_spinning_cube` e `04_lua_vm_demo` |
+| `ZSDK_ENABLE_LUA_VM` | ON | Embute o Lua 5.4 (`zsdk::script::LuaVM`) e habilita o exemplo 02 |
 | `ZSDK_ENABLE_DEBUG_OVERLAY` | ON | Overlay de debug e logs INFO/WARN |
 
-O `02_lua_demo` embute `examples/02_lua_demo/scripts/star_catcher.lua` no build (header gerado em `<build>/gen`) e prefere `script:/star_catcher.lua` (Zeebo: `fs:/~/scripts/`) se existir.
+O `04_lua_vm_demo` embute `examples/04_lua_vm_demo/scripts/star_catcher.lua` no build (header gerado em `<build>/gen`) e prefere `script:/star_catcher.lua` (Zeebo: `fs:/~/scripts/`) se existir.
 
 ### Build fora do Windows (Linux)
 
