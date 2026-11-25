@@ -74,14 +74,13 @@ cmake --build build_zeebo
 cmake --build build_windows
 ```
 
-### Rust & Verificação de Paridade
+### Verificação de Paridade (C / Lua / Rust)
 ```powershell
-cargo check --manifest-path bindings/rust/Cargo.toml
 python tools/check_bindings.py
 ctest --test-dir build_windows --output-on-failure
 ```
 
-> Veja os pré-requisitos completos de toolchain ARM, BREW SDK, Rust (`armv5te-unknown-linux-gnueabi`) e MSVC em [`docs/01_build_e_empacotamento.md`](./docs/01_build_e_empacotamento.md).
+> Veja os pré-requisitos completos de toolchain ARM, BREW SDK, Rust e MSVC em [`docs/01_build_e_empacotamento.md`](./docs/01_build_e_empacotamento.md).
 
 ---
 
