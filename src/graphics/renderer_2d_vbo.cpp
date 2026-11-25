@@ -70,9 +70,13 @@ void EnsureRendererFontTexture() {
     if (g_rendererFontTex != 0u) {
         glBindTexture(GL_TEXTURE_2D, g_rendererFontTex);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, static_cast<GLfloat>(GL_NEAREST));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, static_cast<GLfloat>(GL_NEAREST));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLfloat>(GL_CLAMP_TO_EDGE));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLfloat>(GL_CLAMP_TO_EDGE));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, 128, 64, 0,
                      GL_ALPHA, GL_UNSIGNED_BYTE, atlas);
         debug::MemoryTracker::RecordVramAlloc(kFontAtlasVramBytes);
@@ -193,6 +197,7 @@ void Renderer::Begin2D(int32_t viewportWidth, int32_t viewportHeight) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, static_cast<GLfloat>(GL_MODULATE));
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glEnableClientState(GL_VERTEX_ARRAY);
     ResetStateCache();
 }
@@ -245,6 +250,7 @@ void Renderer::Begin2DVirtual(float virtualWidth, float virtualHeight,
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, static_cast<GLfloat>(GL_MODULATE));
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glEnableClientState(GL_VERTEX_ARRAY);
     ResetStateCache();
 }

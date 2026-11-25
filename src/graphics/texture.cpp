@@ -27,6 +27,12 @@ void WarnIfNonZeeboTextureDims(uint16_t width, uint16_t height) {
     }
 }
 
+/* Call both float (GLES 1.0/1.1 GLCM) and int (GLES 1.1 / HLE emulator) variants. */
+void SetTexParam2D(GLenum pname, GLint value) {
+    glTexParameterf(GL_TEXTURE_2D, pname, static_cast<GLfloat>(value));
+    glTexParameteri(GL_TEXTURE_2D, pname, value);
+}
+
 void MapFormat(TextureFormat fmt, GLenum& outGlFormat, GLenum& outGlType, uint32_t& outBpp) {
     switch (fmt) {
         case TextureFormat::Alpha8:
@@ -87,13 +93,13 @@ Result Texture::Create(uint16_t width, uint16_t height, TextureFormat format,
         return Result::GraphicsError;
     }
 
-    const GLfloat glFilter = static_cast<GLfloat>((filter == TextureFilter::Nearest) ? GL_NEAREST : GL_LINEAR);
+    const GLint glFilter = (filter == TextureFilter::Nearest) ? GL_NEAREST : GL_LINEAR;
 
     glBindTexture(GL_TEXTURE_2D, id);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glFilter);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glFilter);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLfloat>(GL_CLAMP_TO_EDGE));
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLfloat>(GL_CLAMP_TO_EDGE));
+    SetTexParam2D(GL_TEXTURE_MIN_FILTER, glFilter);
+    SetTexParam2D(GL_TEXTURE_MAG_FILTER, glFilter);
+    SetTexParam2D(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    SetTexParam2D(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(glFmt),
                  static_cast<GLsizei>(width), static_cast<GLsizei>(height),
                  0, glFmt, glType, pixelData);
@@ -135,13 +141,13 @@ Result Texture::CreateCompressed(uint16_t width, uint16_t height, uint32_t glInt
         return Result::GraphicsError;
     }
 
-    const GLfloat glFilter = static_cast<GLfloat>((filter == TextureFilter::Nearest) ? GL_NEAREST : GL_LINEAR);
+    const GLint glFilter = (filter == TextureFilter::Nearest) ? GL_NEAREST : GL_LINEAR;
 
     glBindTexture(GL_TEXTURE_2D, id);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glFilter);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glFilter);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLfloat>(GL_CLAMP_TO_EDGE));
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLfloat>(GL_CLAMP_TO_EDGE));
+    SetTexParam2D(GL_TEXTURE_MIN_FILTER, glFilter);
+    SetTexParam2D(GL_TEXTURE_MAG_FILTER, glFilter);
+    SetTexParam2D(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    SetTexParam2D(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glCompressedTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLenum>(glInternalFormat),
                            static_cast<GLsizei>(width), static_cast<GLsizei>(height),
                            0, static_cast<GLsizei>(imageSize), compressedData);
@@ -244,13 +250,13 @@ Result Texture::GenerateMipmaps(TextureFilter filter) {
 
     /* Zeebo Developer Guide 7.1.3: trilinear (GL_LINEAR_MIPMAP_LINEAR) is software-emulated;
        use GL_LINEAR_MIPMAP_NEAREST for hardware-accelerated mipmapping. */
-    const GLfloat minFilter = static_cast<GLfloat>((filter == TextureFilter::Nearest)
+    const GLint minFilter = (filter == TextureFilter::Nearest)
         ? GL_NEAREST_MIPMAP_NEAREST
-        : GL_LINEAR_MIPMAP_NEAREST);
-    const GLfloat magFilter = static_cast<GLfloat>((filter == TextureFilter::Nearest) ? GL_NEAREST : GL_LINEAR);
+        : GL_LINEAR_MIPMAP_NEAREST;
+    const GLint magFilter = (filter == TextureFilter::Nearest) ? GL_NEAREST : GL_LINEAR;
 
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+    SetTexParam2D(GL_TEXTURE_MIN_FILTER, minFilter);
+    SetTexParam2D(GL_TEXTURE_MAG_FILTER, magFilter);
 
 #if ZSDK_PLATFORM_ZEEBO
     static bool s_resolved = false;
@@ -263,11 +269,11 @@ Result Texture::GenerateMipmaps(TextureFilter filter) {
     if (s_genMipmap) {
         s_genMipmap(GL_TEXTURE_2D);
     } else {
-        glTexParameterf(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, static_cast<GLfloat>(GL_TRUE));
+        SetTexParam2D(GL_GENERATE_MIPMAP, GL_TRUE);
     }
 #else
     #ifdef GL_GENERATE_MIPMAP
-    glTexParameterf(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, static_cast<GLfloat>(GL_TRUE));
+    SetTexParam2D(GL_GENERATE_MIPMAP, GL_TRUE);
     #endif
 #endif
 
@@ -278,11 +284,11 @@ Result Texture::SetWrap(TextureWrap wrapS, TextureWrap wrapT) {
     if (m_glId == 0u) {
         return Result::NotInitialized;
     }
-    const GLfloat glS = static_cast<GLfloat>((wrapS == TextureWrap::Repeat) ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-    const GLfloat glT = static_cast<GLfloat>((wrapT == TextureWrap::Repeat) ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+    const GLint glS = (wrapS == TextureWrap::Repeat) ? GL_REPEAT : GL_CLAMP_TO_EDGE;
+    const GLint glT = (wrapT == TextureWrap::Repeat) ? GL_REPEAT : GL_CLAMP_TO_EDGE;
     glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(m_glId));
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glS);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glT);
+    SetTexParam2D(GL_TEXTURE_WRAP_S, glS);
+    SetTexParam2D(GL_TEXTURE_WRAP_T, glT);
     return (glGetError() == GL_NO_ERROR) ? Result::Ok : Result::GraphicsError;
 }
 
@@ -307,12 +313,12 @@ Result Texture::CopyFromFramebuffer(int32_t x, int32_t y, uint16_t width, uint16
         return Result::GraphicsError;
     }
 
-    const GLfloat glFilter = static_cast<GLfloat>((filter == TextureFilter::Nearest) ? GL_NEAREST : GL_LINEAR);
+    const GLint glFilter = (filter == TextureFilter::Nearest) ? GL_NEAREST : GL_LINEAR;
     glBindTexture(GL_TEXTURE_2D, id);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, glFilter);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glFilter);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLfloat>(GL_CLAMP_TO_EDGE));
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLfloat>(GL_CLAMP_TO_EDGE));
+    SetTexParam2D(GL_TEXTURE_MIN_FILTER, glFilter);
+    SetTexParam2D(GL_TEXTURE_MAG_FILTER, glFilter);
+    SetTexParam2D(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    SetTexParam2D(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
                      static_cast<GLint>(x), static_cast<GLint>(y),
                      static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0);
