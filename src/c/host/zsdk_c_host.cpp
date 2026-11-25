@@ -22,10 +22,6 @@ public:
 
     void OnUpdate(uint32_t deltaTimeMs) override {
         zsdk::Application* app = zsdk::Application::GetInstance();
-        if (app && app->GetInput().GetGamepad(0).IsPressed(zsdk::input::GamepadButton::Home)) {
-            app->RequestQuit();
-            return;
-        }
         const zsdk_input_t* inp = app
             ? reinterpret_cast<const zsdk_input_t*>(&app->GetInput())
             : nullptr;
