@@ -81,8 +81,10 @@ static float   g_angleY        = 35.0f;
 static float   g_camPanX       = 0.0f;
 static float   g_camPanY       = 0.0f;
 static float   g_camZoomOffset = 0.0f;
-static int     g_menuOpen      = 0;
-static uint8_t g_menuCursor    = 0u;
+static int     g_menuOpen          = 0;
+static uint8_t g_menuCursor        = 0u;
+static uint8_t g_menuRepeatDir     = 0u;
+static int32_t g_menuRepeatTimerMs = 0;
 #if ZSDK_PLATFORM_ZEEBO
 static CubeSettings g_settings = {1u, 1u, 1u, 2u, 0u, 1u, 1u};
 #else
@@ -181,19 +183,43 @@ static void AdjustMenuItem(int dir) {
     }
 }
 
-static void UpdateMenu(const zsdk_input_t* input) {
-    if (zsdk_input_is_pressed(input, 0u, ZSDK_BTN_DPAD_UP)) {
+static void UpdateMenu(const zsdk_input_t* input, uint32_t delta_ms) {
+    float sx = 0.0f, sy = 0.0f;
+    zsdk_input_left_stick(input, 0u, &sx, &sy);
+    uint8_t dir = 0u;
+    if (zsdk_input_is_down(input, 0u, ZSDK_BTN_DPAD_UP)    || sy >  0.55f) dir = 1u;
+    else if (zsdk_input_is_down(input, 0u, ZSDK_BTN_DPAD_DOWN)  || sy < -0.55f) dir = 2u;
+    else if (zsdk_input_is_down(input, 0u, ZSDK_BTN_DPAD_LEFT)  || sx < -0.55f) dir = 3u;
+    else if (zsdk_input_is_down(input, 0u, ZSDK_BTN_DPAD_RIGHT) || sx >  0.55f) dir = 4u;
+
+    uint8_t fireDir = 0u;
+    if (dir == 0u) {
+        g_menuRepeatDir = 0u;
+        g_menuRepeatTimerMs = 0;
+    } else if (dir != g_menuRepeatDir) {
+        g_menuRepeatDir = dir;
+        g_menuRepeatTimerMs = 260;
+        fireDir = dir;
+    } else {
+        g_menuRepeatTimerMs -= (int32_t)delta_ms;
+        if (g_menuRepeatTimerMs <= 0) {
+            g_menuRepeatTimerMs = 95;
+            fireDir = dir;
+        }
+    }
+
+    if (fireDir == 1u) {
         g_menuCursor = (g_menuCursor == 0u) ? (uint8_t)(kMenuItemCount - 1u) : (uint8_t)(g_menuCursor - 1u);
-    }
-    if (zsdk_input_is_pressed(input, 0u, ZSDK_BTN_DPAD_DOWN)) {
+    } else if (fireDir == 2u) {
         g_menuCursor = (uint8_t)((g_menuCursor + 1u) % kMenuItemCount);
-    }
-    if (zsdk_input_is_pressed(input, 0u, ZSDK_BTN_DPAD_RIGHT) ||
-        zsdk_input_is_pressed(input, 0u, ZSDK_BTN_ACTION1)) {
+    } else if (fireDir == 3u) {
+        AdjustMenuItem(-1);
+    } else if (fireDir == 4u) {
         AdjustMenuItem(1);
     }
-    if (zsdk_input_is_pressed(input, 0u, ZSDK_BTN_DPAD_LEFT)) {
-        AdjustMenuItem(-1);
+
+    if (zsdk_input_is_pressed(input, 0u, ZSDK_BTN_ACTION1)) {
+        AdjustMenuItem(1);
     }
     if (zsdk_input_is_pressed(input, 0u, ZSDK_BTN_BACK)) {
         g_menuOpen = 0;
@@ -337,7 +363,7 @@ void zsdk_c_app_update(uint32_t delta_ms, const zsdk_input_t* input) {
     }
 
     if (g_menuOpen) {
-        UpdateMenu(input);
+        UpdateMenu(input, delta_ms);
     } else {
         static const float spinTable[4] = {0.0f, 20.0f, 48.0f, 110.0f};
         const float baseSpin = spinTable[g_settings.spinMode & 3u];

@@ -109,6 +109,8 @@ struct CubeState {
     cam_zoom_offset: f32,
     menu_open: bool,
     menu_cursor: u8,
+    menu_repeat_dir: u8,
+    menu_repeat_timer_ms: i32,
     settings: CubeSettings,
 }
 
@@ -124,6 +126,8 @@ static STATE: SyncCell<CubeState> = SyncCell(UnsafeCell::new(CubeState {
     cam_zoom_offset: 0.0,
     menu_open: false,
     menu_cursor: 0,
+    menu_repeat_dir: 0,
+    menu_repeat_timer_ms: 0,
     settings: CubeSettings {
         lighting: 1,
         fps_mode: if cfg!(target_arch = "arm") { 1 } else { 0 },
@@ -250,20 +254,48 @@ fn adjust_menu_item(st: &mut CubeState, dir: i8) {
     }
 }
 
-unsafe fn update_menu(st: &mut CubeState, input: *const zsdk_input_t) {
-    if zsdk_input_is_pressed(input, 0, ZsdkButton::DPadUp) != 0 {
-        st.menu_cursor = if st.menu_cursor == 0 { MENU_ITEM_COUNT - 1 } else { st.menu_cursor - 1 };
+unsafe fn update_menu(st: &mut CubeState, input: *const zsdk_input_t, delta_ms: u32) {
+    let (mut sx, mut sy) = (0.0f32, 0.0f32);
+    zsdk_input_left_stick(input, 0, &mut sx, &mut sy);
+
+    let dir: u8 = if zsdk_input_is_down(input, 0, ZsdkButton::DPadUp) != 0 || sy > 0.55 {
+        1
+    } else if zsdk_input_is_down(input, 0, ZsdkButton::DPadDown) != 0 || sy < -0.55 {
+        2
+    } else if zsdk_input_is_down(input, 0, ZsdkButton::DPadLeft) != 0 || sx < -0.55 {
+        3
+    } else if zsdk_input_is_down(input, 0, ZsdkButton::DPadRight) != 0 || sx > 0.55 {
+        4
+    } else {
+        0
+    };
+
+    let mut fire_dir: u8 = 0;
+    if dir == 0 {
+        st.menu_repeat_dir = 0;
+        st.menu_repeat_timer_ms = 0;
+    } else if dir != st.menu_repeat_dir {
+        st.menu_repeat_dir = dir;
+        st.menu_repeat_timer_ms = 260;
+        fire_dir = dir;
+    } else {
+        st.menu_repeat_timer_ms -= delta_ms as i32;
+        if st.menu_repeat_timer_ms <= 0 {
+            st.menu_repeat_timer_ms = 95;
+            fire_dir = dir;
+        }
     }
-    if zsdk_input_is_pressed(input, 0, ZsdkButton::DPadDown) != 0 {
-        st.menu_cursor = (st.menu_cursor + 1) % MENU_ITEM_COUNT;
+
+    match fire_dir {
+        1 => st.menu_cursor = if st.menu_cursor == 0 { MENU_ITEM_COUNT - 1 } else { st.menu_cursor - 1 },
+        2 => st.menu_cursor = (st.menu_cursor + 1) % MENU_ITEM_COUNT,
+        3 => adjust_menu_item(st, -1),
+        4 => adjust_menu_item(st, 1),
+        _ => {}
     }
-    if zsdk_input_is_pressed(input, 0, ZsdkButton::DPadRight) != 0
-        || zsdk_input_is_pressed(input, 0, ZsdkButton::Action1) != 0
-    {
+
+    if zsdk_input_is_pressed(input, 0, ZsdkButton::Action1) != 0 {
         adjust_menu_item(st, 1);
-    }
-    if zsdk_input_is_pressed(input, 0, ZsdkButton::DPadLeft) != 0 {
-        adjust_menu_item(st, -1);
     }
     if zsdk_input_is_pressed(input, 0, ZsdkButton::Back) != 0 {
         st.menu_open = false;
@@ -429,7 +461,7 @@ pub unsafe extern "C" fn zsdk_c_app_update(delta_ms: u32, input: *const zsdk_inp
     }
 
     if st.menu_open {
-        update_menu(st, input);
+        update_menu(st, input, delta_ms);
     } else {
         const SPIN_TABLE: [f32; 4] = [0.0, 20.0, 48.0, 110.0];
         let base_spin = SPIN_TABLE[(st.settings.spin_mode & 3) as usize];

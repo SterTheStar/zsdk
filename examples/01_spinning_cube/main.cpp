@@ -125,6 +125,8 @@ public:
         , m_lastDrawnCubes(1u)
         , m_menuOpen(false)
         , m_menuCursor(0u)
+        , m_menuRepeatDir(0u)
+        , m_menuRepeatTimerMs(0)
 #if ZSDK_PLATFORM_ZEEBO
         , m_settings{1u, 1u, 1u, 2u, 0u, 1u, 1u} {} /* 30 FPS default on Zeebo TV-Out (Guide 11.9) */
 #else
@@ -185,7 +187,7 @@ public:
         }
 
         if (m_menuOpen) {
-            UpdateMenu(p1);
+            UpdateMenu(p1, deltaTimeMs);
         } else {
             const float spinTable[4] = {0.0f, 20.0f, 48.0f, 110.0f};
             const float baseSpin = spinTable[m_settings.spinMode & 3u];
@@ -386,19 +388,42 @@ private:
         }
     }
 
-    void UpdateMenu(const zsdk::input::GamepadState& p1) {
-        if (p1.IsPressed(zsdk::input::GamepadButton::DPadUp)) {
+    void UpdateMenu(const zsdk::input::GamepadState& p1, uint32_t deltaTimeMs) {
+        const zsdk::Vec2 stick = p1.GetLeftStick();
+        uint8_t dir = 0u;
+        if (p1.IsDown(zsdk::input::GamepadButton::DPadUp)    || stick.y >  0.55f) dir = 1u;
+        else if (p1.IsDown(zsdk::input::GamepadButton::DPadDown)  || stick.y < -0.55f) dir = 2u;
+        else if (p1.IsDown(zsdk::input::GamepadButton::DPadLeft)  || stick.x < -0.55f) dir = 3u;
+        else if (p1.IsDown(zsdk::input::GamepadButton::DPadRight) || stick.x >  0.55f) dir = 4u;
+
+        uint8_t fireDir = 0u;
+        if (dir == 0u) {
+            m_menuRepeatDir = 0u;
+            m_menuRepeatTimerMs = 0;
+        } else if (dir != m_menuRepeatDir) {
+            m_menuRepeatDir = dir;
+            m_menuRepeatTimerMs = 260;
+            fireDir = dir;
+        } else {
+            m_menuRepeatTimerMs -= static_cast<int32_t>(deltaTimeMs);
+            if (m_menuRepeatTimerMs <= 0) {
+                m_menuRepeatTimerMs = 95;
+                fireDir = dir;
+            }
+        }
+
+        if (fireDir == 1u) {
             m_menuCursor = (m_menuCursor == 0u) ? (kMenuItemCount - 1u) : (m_menuCursor - 1u);
-        }
-        if (p1.IsPressed(zsdk::input::GamepadButton::DPadDown)) {
+        } else if (fireDir == 2u) {
             m_menuCursor = static_cast<uint8_t>((m_menuCursor + 1u) % kMenuItemCount);
-        }
-        if (p1.IsPressed(zsdk::input::GamepadButton::DPadRight) ||
-            p1.IsPressed(zsdk::input::GamepadButton::Action1)) {
+        } else if (fireDir == 3u) {
+            AdjustMenuItem(-1);
+        } else if (fireDir == 4u) {
             AdjustMenuItem(1);
         }
-        if (p1.IsPressed(zsdk::input::GamepadButton::DPadLeft)) {
-            AdjustMenuItem(-1);
+
+        if (p1.IsPressed(zsdk::input::GamepadButton::Action1)) {
+            AdjustMenuItem(1);
         }
         if (p1.IsPressed(zsdk::input::GamepadButton::Back)) {
             m_menuOpen = false;
@@ -504,6 +529,8 @@ private:
     uint16_t     m_lastDrawnCubes;
     bool         m_menuOpen;
     uint8_t      m_menuCursor;
+    uint8_t      m_menuRepeatDir;
+    int32_t      m_menuRepeatTimerMs;
     CubeSettings m_settings;
 };
 

@@ -62,8 +62,10 @@ local angleY        = 35.0
 local camPanX       = 0.0
 local camPanY       = 0.0
 local camZoomOffset = 0.0
-local menuOpen      = false
-local menuCursor    = 1
+local menuOpen        = false
+local menuCursor      = 1
+local menuRepeatDir   = 0
+local menuRepeatTimer = 0
 
 local settings = {
     lighting       = 1,
@@ -131,18 +133,47 @@ local function adjust_menu_item(dir)
     end
 end
 
-local function update_menu(input)
-    if input:is_pressed(0, inp.BTN_DPAD_UP) then
+local function update_menu(input, delta_ms)
+    local sx, sy = input:left_stick(0)
+    local dir = 0
+    if input:is_down(0, inp.BTN_DPAD_UP) or sy > 0.55 then
+        dir = 1
+    elseif input:is_down(0, inp.BTN_DPAD_DOWN) or sy < -0.55 then
+        dir = 2
+    elseif input:is_down(0, inp.BTN_DPAD_LEFT) or sx < -0.55 then
+        dir = 3
+    elseif input:is_down(0, inp.BTN_DPAD_RIGHT) or sx > 0.55 then
+        dir = 4
+    end
+
+    local fireDir = 0
+    if dir == 0 then
+        menuRepeatDir = 0
+        menuRepeatTimer = 0
+    elseif dir ~= menuRepeatDir then
+        menuRepeatDir = dir
+        menuRepeatTimer = 260
+        fireDir = dir
+    else
+        menuRepeatTimer = menuRepeatTimer - delta_ms
+        if menuRepeatTimer <= 0 then
+            menuRepeatTimer = 95
+            fireDir = dir
+        end
+    end
+
+    if fireDir == 1 then
         menuCursor = (menuCursor == 1) and MENU_ITEMS or (menuCursor - 1)
-    end
-    if input:is_pressed(0, inp.BTN_DPAD_DOWN) then
+    elseif fireDir == 2 then
         menuCursor = (menuCursor % MENU_ITEMS) + 1
-    end
-    if input:is_pressed(0, inp.BTN_DPAD_RIGHT) or input:is_pressed(0, inp.BTN_ACTION1) then
+    elseif fireDir == 3 then
+        adjust_menu_item(-1)
+    elseif fireDir == 4 then
         adjust_menu_item(1)
     end
-    if input:is_pressed(0, inp.BTN_DPAD_LEFT) then
-        adjust_menu_item(-1)
+
+    if input:is_pressed(0, inp.BTN_ACTION1) then
+        adjust_menu_item(1)
     end
     if input:is_pressed(0, inp.BTN_BACK) then
         menuOpen = false
@@ -241,7 +272,7 @@ function zsdk_on_update(delta_ms, input)
     end
 
     if menuOpen then
-        update_menu(input)
+        update_menu(input, delta_ms)
     else
         local spinTable = {[0]=0.0, [1]=20.0, [2]=48.0, [3]=110.0}
         local baseSpin = spinTable[settings.spinMode % 4] or 48.0
