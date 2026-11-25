@@ -35,14 +35,15 @@ O **ZSDK** foi projetado para desenvolvimento de jogos e aplicações de alta pe
 
 | Módulo | Recursos Principais | Documentação |
 | :--- | :--- | :--- |
-| **Build & Empacotamento** | CMake (`zsdk_add_brew_app`), `elf2mod`, `cifc`, `.mod` + `.mif` e MSVC Windows | [01_build_e_empacotamento.md](./docs/01_build_e_empacotamento.md) |
+| **Build & Empacotamento** | CMake (`zsdk_add_brew_app`, `zsdk_add_c_app`, `zsdk_add_lua_app`, `zsdk_add_rust_app`), `elf2mod`, `cifc`, `.mod` + `.mif` e MSVC Windows | [01_build_e_empacotamento.md](./docs/01_build_e_empacotamento.md) |
 | **Core & Assíncrono** | `Application`, `ZSDK_IMPLEMENT_APP`, `FpsCap` (30/60), `Clock`, `FrameTimer`, `Fixed16`, `Thread`, `SignalBus` | [02_core_e_async.md](./docs/02_core_e_async.md) |
 | **Debug & Profiler** | `MemoryTracker` (RAM por subsistema + VRAM), `Logger` e `DebugOverlay` (FPS real, Draws, Verts) | [03_debug_e_profiler.md](./docs/03_debug_e_profiler.md) |
 | **Input & Controles** | Z-Pad (`IHID`), hotplug, deadzone, Boomerang (acelerômetro/giroscópio), `SetRumble`, XInput e teclado/mouse | [04_input_controles.md](./docs/04_input_controles.md) |
 | **Gráficos 3D & 2D** | `GLContext` (EGL/WGL), `Renderer` com State Cache, `SpriteBatch2D`, `Frustum` Culling, `Texture`, `MeshBuffer`, `ImageDecoder` | [05_graficos_3d_e_2d.md](./docs/05_graficos_3d_e_2d.md) |
-| **Filesystem & SaveGame** | `FileSystem` com `ZSDK_NAND_WRITE_GUARD`, `SaveGameManager` (`udata` + CRC32), `UnzipStream`, `LocalStorage`, `Database` | [06_filesystem_e_savegame.md](./docs/06_filesystem_e_savegame.md) |
-| **Áudio, Rede & Segurança** | `MediaStream`, `SoundEffect`, `AudioEngine`, `Socket`, `HttpClient`, `NetworkManager`, `BluetoothManager`, Crypto & `LicenseManager` | [07_audio_rede_seguranca.md](./docs/07_audio_rede_seguranca.md) |
-| **Scripting Lua** | `LuaVM` (Lua 5.4 em sandbox, 32 bits), API `gfx`/`input`/`save`/`app`, exemplo `04_lua_vm_demo` | [08_scripting_lua.md](./docs/08_scripting_lua.md) |
+| **Filesystem & SaveGame** | `FileSystem` com `ZSDK_NAND_WRITE_GUARD`, `SaveGameManager` (`udata` + CRC32, SD Card `fs:/card0/`), `UnzipStream`, `LocalStorage`, `Database`, `Vfs` | [06_filesystem_e_savegame.md](./docs/06_filesystem_e_savegame.md) |
+| **Áudio, Rede & Segurança** | `MediaStream`, `SoundEffect`, `AudioEngine`, `PcmMixer`, `Socket`, `HttpClient`, `NetworkManager`, `BluetoothManager`, Crypto & `LicenseManager` | [07_audio_rede_seguranca.md](./docs/07_audio_rede_seguranca.md) |
+| **Scripting Lua** | `LuaVM` (Lua 5.4 em sandbox, 32 bits), API `gfx`/`input`/`save`/`app` e bindings modulares `zsdk_lua` (`03_lua_spinning_cube`) | [08_scripting_lua.md](./docs/08_scripting_lua.md) |
+| **C ABI & Bindings (C/Lua/Rust)** | ABI C99 (`231` funções), bindings Lua (`228/231`), crates Rust `#![no_std]` `zsdk-sys` / `zsdk` (`230/231`) e `check_bindings.py` | [bindings/README.md](./bindings/README.md) |
 
 ---
 
@@ -77,12 +78,13 @@ cmake --build build_windows
 
 ```text
 ZSDK/
-├── cmake/                  # Toolchain BREW ARM & macro zsdk_add_brew_app
+├── bindings/               # Bindings oficiais sobre a C ABI: lua/ (zsdk_lua) e rust/ (zsdk-sys + zsdk)
+├── cmake/                  # Toolchain BREW ARM & macros zsdk_add_{brew,c,lua,rust}_app
 ├── docs/                   # Documentação modularizada completa em PT-BR
-├── examples/               # 01 cubo C++, 02 cubo C99, 03 cubo Lua (bindings), 04 jogo em Lua (LuaVM)
-├── include/zsdk/           # Headers públicos C++14 (100% isolados de BREW/GL)
-├── src/                    # Implementações core e backends (zeebo / windows)
+├── examples/               # 01 cubo C++, 02 cubo C99 puro, 03 cubo Lua puro, 04 cubo Rust no_std
+├── include/zsdk/           # Headers públicos C++14 e C99 (include/zsdk/c/*.h)
+├── src/                    # Implementações core, ponte C (src/c/) e backends (zeebo / windows)
 ├── third_party/brew_crt/   # Runtime C oficial BREW (AEEModGen, EGL_1x, GLES_1x)
 ├── third_party/lua/        # Lua 5.4.7 (MIT, ver LICENSE e README.zsdk.md)
-└── tools/                  # elf2mod e template .mif (0x07AF)
+└── tools/                  # elf2mod, template .mif (0x07AF) e check_bindings.py
 ```

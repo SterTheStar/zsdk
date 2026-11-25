@@ -34,14 +34,13 @@ vm.LoadString("game.lua", src, len);   // OnInit
 vm.Update(dt);                        // OnUpdate
 batch.BeginVirtual(640, 480, w, h); vm.Draw(); batch.End();   // OnRender
 ```
-Exemplo completo: [`examples/04_lua_vm_demo/main.cpp`](../examples/04_lua_vm_demo/main.cpp) (jogo "Star Catcher" inteiro em Lua, melhor pontuação salva em slot).
+> Para apps inteiros em Lua usando os bindings completos da C ABI (`zsdk.graphics`, `zsdk.input`, `zsdk.audio`, etc.) sem código C++, veja [`examples/03_lua_spinning_cube/main.lua`](../examples/03_lua_spinning_cube/main.lua) e [`bindings/README.md`](../bindings/README.md) (`zsdk_add_lua_app`).
 
 ## Scripts em arquivo, `require` e `print`
 
 * `vm.SetVfs(&vfs); vm.LoadFile("script:/main.lua");` carrega o script pelo `Vfs` (Zeebo: `fs:/~/scripts/main.lua`).
 * `require("sub.util")` carrega `script:/sub/util.lua` uma vez (cache); pontos viram subpastas. Só aceita `[A-Za-z0-9_.-]` e rejeita `..`. Exige `SetVfs()`.
 * `print(...)` vai para o `Logger` (tag `LUA`). O `print` padrão do Lua escreve em stdout, que não existe no Zeebo e travava o app (o stub `abort()` do CRT é um laço infinito).
-* O `04_lua_vm_demo` embute `scripts/star_catcher.lua` no build (CMake gera `star_catcher_lua.h`) e o usa se `script:/star_catcher.lua` não existir.
 
 Hook opcional `function on_pad(index, connected)`: chamado quando um gamepad entra ou sai (encaminhe `IAppDelegate::OnGamepadConnected/Disconnected` para `LuaVM::NotifyGamepad`). O `star_catcher.lua` pausa e mostra "CONNECT A CONTROLLER" sem o pad 0.
 

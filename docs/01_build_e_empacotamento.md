@@ -44,9 +44,14 @@ Saídas em `build_windows/`: `zsdk.lib` e `01_spinning_cube.exe` (linkado com `o
 
 ---
 
-## 3. Criando um Novo Jogo com `zsdk_add_brew_app`
+## 3. Criando um Novo Jogo (`C++`, `C99`, `Lua` ou `Rust`)
 
-No seu `CMakeLists.txt`, basta chamar a macro `zsdk_add_brew_app`:
+O [ZsdkBrew.cmake](../cmake/ZsdkBrew.cmake) oferece 4 macros conforme a linguagem do projeto:
+
+* **`zsdk_add_brew_app`**: app em C++14 usando `IAppDelegate` + `ZSDK_IMPLEMENT_APP`.
+* **`zsdk_add_c_app`**: app em **C99 puro** (implementa `zsdk_c_app_*` sem precisar de `main.cpp`, via `src/c/host/zsdk_c_host.cpp`).
+* **`zsdk_add_lua_app`**: app em **Lua puro** (apenas `main.lua`, via `bindings/lua/host/zsdk_lua_host.cpp`).
+* **`zsdk_add_rust_app`**: app em **Rust `#![no_std]`** (`Cargo.toml` `staticlib` + `src/lib.rs`, via `bindings/rust/host/zsdk_rust_host.cpp`; no Zeebo usa `armv5te-unknown-linux-gnueabi` com `-C relocation-model=static`).
 
 ```cmake
 include(cmake/ZsdkBrew.cmake)
@@ -80,11 +85,13 @@ zsdk_add_brew_app(meu_jogo
 | Opção | Padrão | Efeito |
 | :--- | :--- | :--- |
 | `ZSDK_BUILD_ZEEBO` | ON | ON = alvo Zeebo/BREW (ARM); OFF = backend Windows |
-| `ZSDK_BUILD_EXAMPLES` | ON | Compila `01_spinning_cube` e `04_lua_vm_demo` |
-| `ZSDK_ENABLE_LUA_VM` | ON | Embute o Lua 5.4 (`zsdk::script::LuaVM`) e habilita o exemplo 02 |
+| `ZSDK_BUILD_EXAMPLES` | ON | Compila `01_spinning_cube` (C++), `02_c_spinning_cube` (C99), `03_lua_spinning_cube` (Lua) e `04_rust_spinning_cube` (Rust) |
+| `ZSDK_ENABLE_LUA_VM` | ON | Embute o runtime Lua 5.4 (`zsdk::script::LuaVM`) |
+| `ZSDK_BUILD_LUA_BINDINGS` | ON | Compila a biblioteca modular `zsdk_lua` (`bindings/lua/`) |
+| `ZSDK_ENABLE_TESTS` | ON | Habilita `zsdk_bindings_parity` (`tools/check_bindings.py`) e `zsdk_c_abi_compile_test` |
 | `ZSDK_ENABLE_DEBUG_OVERLAY` | ON | Overlay de debug e logs INFO/WARN |
 
-O `04_lua_vm_demo` embute `examples/04_lua_vm_demo/scripts/star_catcher.lua` no build (header gerado em `<build>/gen`) e prefere `script:/star_catcher.lua` (Zeebo: `fs:/~/scripts/`) se existir.
+> Consulte [`bindings/README.md`](../bindings/README.md) para detalhes da ABI C99, bindings Lua/Rust e verificação de paridade com `python tools/check_bindings.py`.
 
 ### Build fora do Windows (Linux)
 
