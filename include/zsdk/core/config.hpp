@@ -74,6 +74,10 @@
     #define ZSDK_ENABLE_MEMORY_TRACKING ZSDK_ENABLE_DEBUG_OVERLAY
 #endif
 
+#ifndef ZSDK_ENABLE_LOGGING
+    #define ZSDK_ENABLE_LOGGING 1
+#endif
+
 #ifndef ZSDK_DEBUG_LOG_CAPACITY
     /** @brief Number of recent log lines kept in the in-memory ring buffer. */
     #define ZSDK_DEBUG_LOG_CAPACITY 32u

@@ -60,7 +60,11 @@ public:
     Result CreateFromAtitc(const void* fileBytes, uint32_t fileSizeBytes,
                            TextureFilter filter = TextureFilter::Linear);
 
-    /** @brief Updates a sub-rectangle of an existing texture without reallocating VRAM. */
+    /**
+     * @brief Updates a sub-rectangle of an existing texture without reallocating VRAM.
+     * @return Result::NotInitialized if the texture is not created/was destroyed,
+     *         Result::InvalidArg if pixelData is null or width/height is zero.
+     */
     Result UpdateSubImage(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
                           const void* pixelData);
 

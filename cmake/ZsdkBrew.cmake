@@ -46,7 +46,7 @@ function(zsdk_add_brew_app TARGET_NAME)
 
         target_compile_definitions(${TARGET_NAME} PRIVATE DYNAMIC_APP)
         target_compile_options(${TARGET_NAME} PRIVATE
-            $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions -fno-rtti -fno-use-cxa-atexit>
+            $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions -fno-rtti -fno-use-cxa-atexit -fno-threadsafe-statics>
             -fno-unwind-tables -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections -mlong-calls
         )
 
@@ -57,6 +57,7 @@ function(zsdk_add_brew_app TARGET_NAME)
             --specs=nosys.specs
             -Wl,--gc-sections
             -Wl,--emit-relocs
+            -Wl,--strip-debug
             -Wl,-e,AEEMod_Load
         )
 

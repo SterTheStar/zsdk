@@ -69,7 +69,10 @@ Result MeshBuffer::Create(BufferType type, BufferUsage usage, uint32_t sizeBytes
 }
 
 Result MeshBuffer::UpdateData(uint32_t offsetBytes, uint32_t sizeBytes, const void* data) {
-    if (m_glId == 0u || !data || offsetBytes + sizeBytes > m_sizeBytes) {
+    if (m_glId == 0u) {
+        return Result::NotInitialized;
+    }
+    if (!data || offsetBytes > m_sizeBytes || sizeBytes > (m_sizeBytes - offsetBytes)) {
         return Result::InvalidArg;
     }
     glBindBuffer(ToGlTarget(m_type), static_cast<GLuint>(m_glId));

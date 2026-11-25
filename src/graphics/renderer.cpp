@@ -20,13 +20,18 @@ namespace graphics {
 namespace {
 
 struct RenderStateCache {
-    int8_t blendMode;
-    int8_t depthTest;
-    int8_t cullFace;
-    int8_t texture2D;
+    int8_t  blendMode;
+    int8_t  depthTest;
+    int8_t  cullFace;
+    int8_t  texture2D;
+    bool    viewportValid;
+    int32_t vpX;
+    int32_t vpY;
+    int32_t vpWidth;
+    int32_t vpHeight;
 };
 
-RenderStateCache g_stateCache = {-1, -1, -1, -1};
+RenderStateCache g_stateCache = {-1, -1, -1, -1, false, 0, 0, 0, 0};
 int32_t g_modelViewDepth = 1;
 bool    g_warnedMvOverflow = false;
 
@@ -57,6 +62,18 @@ GLenum ToGlCompare(CompareFunc f) {
 } // namespace
 
 void Renderer::SetViewport(int32_t x, int32_t y, int32_t width, int32_t height) {
+    if (g_stateCache.viewportValid &&
+        g_stateCache.vpX == x &&
+        g_stateCache.vpY == y &&
+        g_stateCache.vpWidth == width &&
+        g_stateCache.vpHeight == height) {
+        return;
+    }
+    g_stateCache.viewportValid = true;
+    g_stateCache.vpX           = x;
+    g_stateCache.vpY           = y;
+    g_stateCache.vpWidth       = width;
+    g_stateCache.vpHeight      = height;
     glViewport(static_cast<GLint>(x), static_cast<GLint>(y),
                static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 }
@@ -84,10 +101,11 @@ void Renderer::Clear(const Color& color, bool clearDepth, bool clearStencil) {
 }
 
 void Renderer::ResetStateCache() {
-    g_stateCache.blendMode = -1;
-    g_stateCache.depthTest = -1;
-    g_stateCache.cullFace  = -1;
-    g_stateCache.texture2D = -1;
+    g_stateCache.blendMode     = -1;
+    g_stateCache.depthTest     = -1;
+    g_stateCache.cullFace      = -1;
+    g_stateCache.texture2D     = -1;
+    g_stateCache.viewportValid = false;
 }
 
 void Renderer::SetBlendMode(BlendMode mode) {

@@ -28,7 +28,9 @@ public:
 } // namespace debug
 } // namespace zsdk
 
-#if ZSDK_ENABLE_DEBUG_OVERLAY
+#include "zsdk/core/config.hpp"
+
+#if ZSDK_ENABLE_LOGGING
     #define ZSDK_LOG_INFO(tag, ...)  ::zsdk::debug::Logger::Log(::zsdk::debug::LogLevel::Info,  tag, __VA_ARGS__)
     #define ZSDK_LOG_WARN(tag, ...)  ::zsdk::debug::Logger::Log(::zsdk::debug::LogLevel::Warn,  tag, __VA_ARGS__)
     #define ZSDK_LOG_ERROR(tag, ...) ::zsdk::debug::Logger::Log(::zsdk::debug::LogLevel::Error, tag, __VA_ARGS__)

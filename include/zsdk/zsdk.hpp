@@ -45,6 +45,7 @@
 
 #include "zsdk/audio/audio.hpp"
 #include "zsdk/audio/audio_engine.hpp"
+#include "zsdk/audio/pcm_mixer.hpp"
 
 #include "zsdk/net/socket.hpp"
 #include "zsdk/net/http_client.hpp"

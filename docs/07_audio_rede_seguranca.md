@@ -1,6 +1,6 @@
 # 07 — Áudio, Rede, Bluetooth e Criptografia
 
-Headers incluídos: `audio/audio.hpp`, `audio/audio_engine.hpp`, `net/socket.hpp`, `net/http_client.hpp`, `net/network_mgr.hpp`, `net/bluetooth.hpp`, `security/crypto.hpp`, `security/license.hpp`.
+Headers incluídos: `audio/audio.hpp`, `audio/audio_engine.hpp`, `audio/pcm_mixer.hpp`, `net/socket.hpp`, `net/http_client.hpp`, `net/network_mgr.hpp`, `net/bluetooth.hpp`, `security/crypto.hpp`, `security/license.hpp`.
 
 ---
 
@@ -18,6 +18,10 @@ audio.SetMasterVolume(90);
 audio.PlayMusic("fs:/~/audio/tema.mp3", true); // BGM em loop
 audio.PlaySfx("fs:/~/audio/pulo.wav");         // Pool de 4 canais SFX (limite MSM7201A)
 ```
+
+* **Mixer PCM em Software com Pitch/Sample-Rate ao Vivo (`PcmMixer` em `audio/pcm_mixer.hpp`):**
+  * Como o `IMedia` do BREW não suporta alteração de *sample-rate* ou *pitch* em tempo real sem esperar o próximo buffer, o `PcmMixer` fornece até **16 vozes PCM 16-bit** (mono ou estéreo) com acumulador de fase em ponto fixo 16.16 e interpolação linear.
+  * `SetVoiceSampleRate(voice, hz)` e `SetVoicePitch(voice, pitchQ16)` têm efeito imediato na próxima chamada de `Mix(outStereo, frames)`.
 
 ---
 

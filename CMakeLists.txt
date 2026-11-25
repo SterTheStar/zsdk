@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(ZSDK_ENABLE_DEBUG_OVERLAY "Enable in-game OpenGL ES Debug & RAM/VRAM Overlay" ON)
+option(ZSDK_ENABLE_LOGGING "Enable ZSDK_LOG_INFO and ZSDK_LOG_WARN logging" ON)
 option(ZSDK_BUILD_ZEEBO "Build for Zeebo / Qualcomm BREW 4.0.2" ON)
 option(ZSDK_BUILD_EXAMPLES "Build ZSDK sample applications" ON)
 
@@ -28,6 +29,7 @@ set(ZSDK_SOURCES
     src/graphics/sprite_batch.cpp
     src/graphics/frustum.cpp
     src/audio/audio_engine.cpp
+    src/audio/pcm_mixer.cpp
     src/fs/savegame.cpp
 )
 
@@ -84,10 +86,19 @@ else()
     target_compile_definitions(zsdk PUBLIC ZSDK_ENABLE_DEBUG_OVERLAY=0)
 endif()
 
+if(ZSDK_ENABLE_LOGGING)
+    target_compile_definitions(zsdk PUBLIC ZSDK_ENABLE_LOGGING=1)
+else()
+    target_compile_definitions(zsdk PUBLIC ZSDK_ENABLE_LOGGING=0)
+endif()
+
 if(MSVC)
     target_compile_options(zsdk PRIVATE /W4 /GR- /EHs-c-)
 else()
-    target_compile_options(zsdk PRIVATE -Wall -Wextra -fno-exceptions -fno-rtti -fno-use-cxa-atexit -fno-unwind-tables -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections -mlong-calls)
+    target_compile_options(zsdk PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions -fno-rtti -fno-use-cxa-atexit -fno-threadsafe-statics>
+        -Wall -Wextra -fno-unwind-tables -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections -mlong-calls
+    )
 endif()
 
 include(cmake/ZsdkBrew.cmake)

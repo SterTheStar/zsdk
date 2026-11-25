@@ -169,7 +169,7 @@ void Renderer::Begin2D(int32_t viewportWidth, int32_t viewportHeight) {
     EnsureRendererFontTexture();
     MeshBuffer::Unbind(BufferType::Vertex);
 
-    glViewport(0, 0, static_cast<GLsizei>(viewportWidth), static_cast<GLsizei>(viewportHeight));
+    SetViewport(0, 0, viewportWidth, viewportHeight);
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -221,8 +221,7 @@ void Renderer::Begin2DVirtual(float virtualWidth, float virtualHeight,
         vpY = (realHeight - vpH) / 2;
     }
 
-    glViewport(static_cast<GLint>(vpX), static_cast<GLint>(vpY),
-               static_cast<GLsizei>(vpW), static_cast<GLsizei>(vpH));
+    SetViewport(vpX, vpY, vpW, vpH);
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();

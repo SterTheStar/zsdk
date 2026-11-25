@@ -15,7 +15,7 @@ O **DebugOverlay** é um painel renderizado diretamente via OpenGL ES 1.x / Open
   * Uso total de memória (`RAM + VRAM`), percentual em relação ao limite configurável (padrão `32 MB`) com barra colorida (verde/amarelo/vermelho) e pico de RAM.
   * Uso de VRAM (texturas + VBOs) e quebra por subsistema (`CORE`, `GFX`, `AUD`, `FS`).
   * Console com as últimas linhas de log.
-* **Compilação Condicional:** Defina `ZSDK_ENABLE_DEBUG_OVERLAY=0` em builds finais de produção para remover todo o código do painel e os logs `INFO`/`WARN` com zero overhead.
+* **Compilação Condicional:** Defina `ZSDK_ENABLE_DEBUG_OVERLAY=0` para remover o código do painel visual, e `ZSDK_ENABLE_LOGGING=0` em builds finais de produção para remover os logs `INFO`/`WARN` com zero overhead (mantendo `ZSDK_LOG_ERROR`).
 
 ```cpp
 zsdk::debug::DebugOverlay::SetVisible(true);

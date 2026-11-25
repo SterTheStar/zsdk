@@ -212,7 +212,10 @@ Result Texture::CreateFromAtitc(const void* fileBytes, uint32_t fileSizeBytes,
 
 Result Texture::UpdateSubImage(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
                                const void* pixelData) {
-    if (m_glId == 0u || !pixelData) {
+    if (m_glId == 0u) {
+        return Result::NotInitialized;
+    }
+    if (!pixelData || width == 0u || height == 0u) {
         return Result::InvalidArg;
     }
 

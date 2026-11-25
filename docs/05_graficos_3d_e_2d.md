@@ -60,7 +60,7 @@ Formatos prontos em `vertex_formats.hpp`: `VertexP3N3C4` (28B), `VertexP3N3U2` (
 
 ## 3. Texturas (`Texture`) e Buffers (`MeshBuffer`) com Tracking de VRAM
 
-* **`Texture`:** `Create(w, h, format, pixels, filter)` (`Alpha8`, `RGB565`, `RGBA4444`, `RGBA5551`, `RGB888`, `RGBA8888`), `UpdateSubImage`, `SetWrap(ClampToEdge/Repeat)`, `CreateCompressed`, `CreateFromAtitc` (remove o header de 20 bytes `ATITC_HEADER` automaticamente), `GenerateMipmaps` (usa `GL_LINEAR_MIPMAP_NEAREST` acelerado em hardware em vez de trilinear lento), `CopyFromFramebuffer` (`glCopyTexImage2D`), `ReadFramebuffer` (`glReadPixels`).
+* **`Texture`:** `Create(w, h, format, pixels, filter)` (`Alpha8`, `RGB565`, `RGBA4444`, `RGBA5551`, `RGB888`, `RGBA8888`), `UpdateSubImage` (retorna `Result::NotInitialized` se a textura ainda não foi criada ou já foi destruída, e `Result::InvalidArg` se `pixelData == nullptr` ou dimensões zero), `SetWrap(ClampToEdge/Repeat)`, `CreateCompressed`, `CreateFromAtitc` (remove o header de 20 bytes `ATITC_HEADER` automaticamente), `GenerateMipmaps` (usa `GL_LINEAR_MIPMAP_NEAREST` acelerado em hardware em vez de trilinear lento), `CopyFromFramebuffer` (`glCopyTexImage2D`), `ReadFramebuffer` (`glReadPixels`).
   * Validação Zeebo: `IsPowerOfTwo()` / `NextPowerOfTwo()`, com aviso automático (`ZSDK_LOG_WARN`) caso a textura não seja potência de 2 ou ultrapasse `1024x1024` (Seção 7.1.3 do Developer Guide).
 * Contabiliza automaticamente toda alocação/liberação de VRAM no `MemoryTracker`.
 
