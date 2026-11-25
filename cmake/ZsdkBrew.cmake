@@ -208,7 +208,7 @@ function(zsdk_add_rust_app TARGET_NAME)
         return()
     endif()
     if(ZSDK_BUILD_ZEEBO AND NOT ZSDK_RUST_TARGET)
-        return()
+        set(ZSDK_RUST_TARGET "armv5te-unknown-linux-gnueabi")
     endif()
 
     get_filename_component(_MANIFEST_ABS "${ARG_MANIFEST}" ABSOLUTE)
@@ -224,9 +224,15 @@ function(zsdk_add_rust_app TARGET_NAME)
         set(_RUST_LIB_PATH "${_CRATE_DIR}/target/release/lib${ARG_LIB_NAME}.a")
     endif()
 
+    if(ZSDK_BUILD_ZEEBO)
+        set(_CARGO_ENV ${CMAKE_COMMAND} -E env "RUSTFLAGS=-C relocation-model=static")
+    else()
+        set(_CARGO_ENV "")
+    endif()
+
     add_custom_command(
         OUTPUT "${_RUST_LIB_PATH}"
-        COMMAND "${ZSDK_CARGO}" build --manifest-path "${_MANIFEST_ABS}" --release ${_CARGO_TARGET_FLAG}
+        COMMAND ${_CARGO_ENV} "${ZSDK_CARGO}" build --manifest-path "${_MANIFEST_ABS}" --release ${_CARGO_TARGET_FLAG}
         WORKING_DIRECTORY "${_CRATE_DIR}"
         COMMENT "Building Rust staticlib ${ARG_LIB_NAME}"
         USES_TERMINAL
@@ -245,5 +251,5 @@ function(zsdk_add_rust_app TARGET_NAME)
         target_compile_definitions(${TARGET_NAME} PRIVATE ZSDK_RUST_APP_NAME="${ARG_MIF_APP_NAME}")
     endif()
     add_dependencies(${TARGET_NAME} ${TARGET_NAME}_rust_lib)
-    target_link_libraries(${TARGET_NAME} PRIVATE "${_RUST_LIB_PATH}")
+    target_link_libraries(${TARGET_NAME} PRIVATE "${_RUST_LIB_PATH}" zsdk)
 endfunction()

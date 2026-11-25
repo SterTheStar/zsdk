@@ -10,6 +10,10 @@
     #define ZSDK_RUST_APP_NAME "ZSDK_Rust_App"
 #endif
 
+#if defined(__ARM_EABI__)
+extern "C" void rust_eh_personality(void) {}
+#endif
+
 class ZsdkRustHostApp : public zsdk::IAppDelegate {
 public:
     zsdk::Result OnInit() override {
