@@ -43,6 +43,7 @@ static int l_gl_new(lua_State* L) {
     return 1;
 }
 static int l_gl_make_current(lua_State* L)      { lua_pushinteger(L, (lua_Integer)zsdk_gl_make_current(check_gl(L, 1))); return 1; }
+static int l_gl_has_extension(lua_State* L)    { lua_pushboolean(L, zsdk_gl_has_extension(check_gl(L, 1), luaL_checkstring(L, 2))); return 1; }
 static int l_gl_swap_buffers(lua_State* L)      { lua_pushinteger(L, (lua_Integer)zsdk_gl_swap_buffers(check_gl(L, 1))); return 1; }
 static int l_gl_set_swap_interval(lua_State* L) { lua_pushinteger(L, (lua_Integer)zsdk_gl_set_swap_interval(check_gl(L, 1), (int32_t)luaL_checkinteger(L, 2))); return 1; }
 static int l_gl_size(lua_State* L)              { zsdk_gl_context_t* g = check_gl(L, 1); lua_pushinteger(L, zsdk_gl_get_width(g)); lua_pushinteger(L, zsdk_gl_get_height(g)); return 2; }
@@ -271,7 +272,7 @@ static int l_gfx_draw_colored_mesh(lua_State* L) {
     return 0;
 }
 
-static const luaL_Reg kGlMethods[]      = { { "make_current", l_gl_make_current }, { "swap_buffers", l_gl_swap_buffers }, { "set_swap_interval", l_gl_set_swap_interval }, { "size", l_gl_size }, { "__gc", l_gl_gc }, { NULL, NULL } };
+static const luaL_Reg kGlMethods[]      = { { "make_current", l_gl_make_current }, { "swap_buffers", l_gl_swap_buffers }, { "has_extension", l_gl_has_extension }, { "set_swap_interval", l_gl_set_swap_interval }, { "size", l_gl_size }, { "__gc", l_gl_gc }, { NULL, NULL } };
 static const luaL_Reg kTexMethods[]     = { { "init_2d", l_tex_init_2d }, { "from_atitc", l_tex_from_atitc }, { "update_sub_image", l_tex_update_sub }, { "bind", l_tex_bind }, { "set_wrap", l_tex_set_wrap }, { "is_valid", l_tex_is_valid }, { "gl_id", l_tex_gl_id }, { "size", l_tex_size }, { "__gc", l_tex_gc }, { NULL, NULL } };
 static const luaL_Reg kMeshMethods[]    = { { "init", l_mesh_init }, { "update", l_mesh_update }, { "release", l_mesh_release }, { "is_valid", l_mesh_is_valid }, { "__gc", l_mesh_gc }, { NULL, NULL } };
 static const luaL_Reg kBatchMethods[]   = { { "begin", l_batch_begin }, { "begin_virtual", l_batch_begin_virtual }, { "finish", l_batch_end }, { "flush", l_batch_flush }, { "draw_rect", l_batch_draw_rect }, { "draw_quad", l_batch_draw_quad }, { "__gc", l_batch_gc }, { NULL, NULL } };

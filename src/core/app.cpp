@@ -17,7 +17,8 @@ Application::Application()
     , m_delegate(nullptr)
     , m_platform(nullptr)
     , m_quitRequested(false)
-    , m_suspended(false) {
+    , m_suspended(false)
+    , m_padMask(0u) {
     g_appInstance = this;
 }
 
@@ -39,6 +40,25 @@ void Application::Configure(const AppConfig& config, IAppDelegate* delegate) {
 
 void Application::RequestQuit() {
     m_quitRequested = true;
+}
+
+void Application::DispatchGamepadChanges() {
+    if (m_delegate == nullptr) {
+        return;
+    }
+    for (uint8_t i = 0u; i < ZSDK_MAX_GAMEPADS && i < 8u; ++i) {
+        const bool now = m_input.GetGamepad(i).IsConnected();
+        const bool was = (m_padMask & (1u << i)) != 0u;
+        if (now == was) {
+            continue;
+        }
+        m_padMask = static_cast<uint8_t>(now ? (m_padMask | (1u << i)) : (m_padMask & ~(1u << i)));
+        if (now) {
+            m_delegate->OnGamepadConnected(i);
+        } else {
+            m_delegate->OnGamepadDisconnected(i);
+        }
+    }
 }
 
 bool Application::IsQuitRequested() const {

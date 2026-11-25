@@ -9,6 +9,13 @@
 #include <lua.h>
 #include <lauxlib.h>
 
+#if LUA_VERSION_NUM >= 502
+    /* Lua 5.2+ renamed lua_objlen to lua_rawlen. */
+    #ifndef lua_objlen
+        #define lua_objlen(L, i) lua_rawlen((L), (i))
+    #endif
+#endif
+
 static void zsdk_lua_register_funcs(lua_State* L, const luaL_Reg* funcs) {
 #if LUA_VERSION_NUM >= 502
     luaL_setfuncs(L, funcs, 0);

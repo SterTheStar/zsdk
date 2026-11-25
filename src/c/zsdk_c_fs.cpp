@@ -58,6 +58,19 @@ zsdk_result_t zsdk_fs_remove(zsdk_fs_t* fs, const char* path) {
     return zsdk::c_abi::ToCResult(fs->fs.Remove(path));
 }
 
+zsdk_result_t zsdk_fs_rename(zsdk_fs_t* fs, const char* src_path, const char* dst_path) {
+    if (!fs) return ZSDK_C_ERR_INVALID_ARG;
+    return zsdk::c_abi::ToCResult(fs->fs.Rename(src_path, dst_path));
+}
+
+uint32_t zsdk_fs_get_free_bytes(const zsdk_fs_t* fs, uint32_t* out_total) {
+    if (!fs) {
+        if (out_total) *out_total = 0u;
+        return 0u;
+    }
+    return fs->fs.GetFreeBytes(out_total);
+}
+
 zsdk_result_t zsdk_fs_mkdir(zsdk_fs_t* fs, const char* path) {
     if (!fs) return ZSDK_C_ERR_INVALID_ARG;
     return zsdk::c_abi::ToCResult(fs->fs.MkDir(path));
@@ -178,6 +191,21 @@ void zsdk_savegame_shutdown(zsdk_savegame_t* sg) {
 zsdk_result_t zsdk_savegame_save_slot(zsdk_savegame_t* sg, uint8_t slot, const void* data, uint32_t size_bytes, uint32_t game_ver) {
     if (!sg) return ZSDK_C_ERR_INVALID_ARG;
     return zsdk::c_abi::ToCResult(sg->sg.SaveSlot(slot, data, size_bytes, game_ver));
+}
+
+zsdk_result_t zsdk_savegame_begin_save_slot(zsdk_savegame_t* sg, uint8_t slot, const void* data, uint32_t size_bytes, uint32_t game_ver) {
+    if (!sg) return ZSDK_C_ERR_INVALID_ARG;
+    return zsdk::c_abi::ToCResult(sg->sg.BeginSaveSlot(slot, data, size_bytes, game_ver));
+}
+
+int zsdk_savegame_pump_async(zsdk_savegame_t* sg, uint32_t budget_bytes) {
+    if (!sg) return 0;
+    return static_cast<int>(sg->sg.PumpAsync(budget_bytes));
+}
+
+int zsdk_savegame_async_status(const zsdk_savegame_t* sg) {
+    if (!sg) return 0;
+    return static_cast<int>(sg->sg.GetAsyncStatus());
 }
 
 zsdk_result_t zsdk_savegame_load_slot(zsdk_savegame_t* sg, uint8_t slot, void* out_buf, uint32_t max_bytes, uint32_t* out_read, uint32_t expected_ver) {

@@ -54,6 +54,16 @@ public:
     /** @brief Called when the system resumes the application. */
     virtual void OnResume() {}
 
+    /**
+     * @brief A gamepad appeared in slot @p playerIndex (also fired once per pad already
+     *        connected when the first frame runs). Zeebo requires games to handle gamepad
+     *        detection: typically resume or hide a "connect a controller" screen.
+     */
+    virtual void OnGamepadConnected(uint8_t playerIndex) { ZSDK_UNUSED(playerIndex); }
+
+    /** @brief A gamepad was removed from slot @p playerIndex; pause and prompt the player. */
+    virtual void OnGamepadDisconnected(uint8_t playerIndex) { ZSDK_UNUSED(playerIndex); }
+
     /** @brief Called before shutdown to release game assets. */
     virtual void OnShutdown() = 0;
 };
@@ -99,6 +109,12 @@ public:
 
     struct PlatformState;
 
+    /**
+     * @brief Platform backends call this right after InputManager::Update(): it diffs the
+     *        connected-pad mask and fires IAppDelegate::OnGamepadConnected/Disconnected.
+     */
+    void DispatchGamepadChanges();
+
 private:
     friend class ZeeboAppBridge;
 
@@ -109,6 +125,7 @@ private:
     PlatformState*       m_platform;
     bool                 m_quitRequested;
     bool                 m_suspended;
+    uint8_t              m_padMask;   /**< bit i = pad i was connected at the last dispatch */
 };
 
 /**

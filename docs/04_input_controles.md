@@ -80,6 +80,12 @@ km.Update();
 if (km.HasKeyboard() && km.IsKeyDown(0x04)) { /* ... */ }
 ```
 
+
+## Home, Start e AVK_CLR
+
+* Home (curto) gera `AVK_CLR`; o Developer Guide manda tratá-lo como pausa dentro do jogo (Home longo > 3 s abre o popup do sistema e gera suspend). O caminho de teclas agora mapeia `AVK_CLR` para `GamepadButton::Home`, igual ao caminho HID (antes virava `Back`, então o mesmo botão físico tinha duas identidades).
+* O helper oficial `AEEHIDButton_GetNextButtonEvent` marca `Start` e os cliques dos thumbsticks como "não disponíveis no Zeebo"; `Start` só chega via `AVK_SELECT` (clique do thumbstick direito, §6.4).
+
 ---
 
 ## 5. Teclado Virtual em Tela (`VirtualKeyboard`)

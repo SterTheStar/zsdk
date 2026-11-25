@@ -66,6 +66,11 @@ zsdk_result_t zsdk_gl_make_current(zsdk_gl_context_t* ctx) {
     return zsdk::c_abi::ToCResult(ctx->gl.MakeCurrent());
 }
 
+int zsdk_gl_has_extension(const zsdk_gl_context_t* ctx, const char* name) {
+    if (!ctx || !name) return 0;
+    return ctx->gl.HasExtension(name) ? 1 : 0;
+}
+
 zsdk_result_t zsdk_gl_swap_buffers(zsdk_gl_context_t* ctx) {
     if (!ctx) return ZSDK_C_ERR_INVALID_ARG;
     return zsdk::c_abi::ToCResult(ctx->gl.SwapBuffers());

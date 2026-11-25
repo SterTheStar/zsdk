@@ -18,6 +18,7 @@
 #include "zsdk/debug/memory_tracker.hpp"
 #include "zsdk/debug/logger.hpp"
 #include "zsdk/debug/debug_overlay.hpp"
+#include "zsdk/debug/file_log.hpp"
 
 #include "zsdk/input/input_types.hpp"
 #include "zsdk/input/input.hpp"
@@ -35,6 +36,7 @@
 #include "zsdk/graphics/display2d.hpp"
 #include "zsdk/graphics/image_decoder.hpp"
 #include "zsdk/graphics/sprite2d.hpp"
+#include "zsdk/graphics/frame.hpp"
 
 #include "zsdk/fs/filesystem.hpp"
 #include "zsdk/fs/archive_unzip.hpp"
@@ -42,6 +44,7 @@
 #include "zsdk/fs/ram_cache.hpp"
 #include "zsdk/fs/database.hpp"
 #include "zsdk/fs/savegame.hpp"
+#include "zsdk/fs/vfs.hpp"
 
 #include "zsdk/audio/audio.hpp"
 #include "zsdk/audio/audio_engine.hpp"

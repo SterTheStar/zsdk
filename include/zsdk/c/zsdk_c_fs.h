@@ -37,6 +37,10 @@ ZSDK_C_API void          zsdk_fs_shutdown(zsdk_fs_t* fs);
 ZSDK_C_API int           zsdk_fs_exists(const zsdk_fs_t* fs, const char* path);
 ZSDK_C_API zsdk_result_t zsdk_fs_remove(zsdk_fs_t* fs, const char* path);
 ZSDK_C_API zsdk_result_t zsdk_fs_mkdir(zsdk_fs_t* fs, const char* path);
+/* Fails if dst exists on BREW: remove it first. */
+ZSDK_C_API zsdk_result_t zsdk_fs_rename(zsdk_fs_t* fs, const char* src_path, const char* dst_path);
+/* Free bytes on the volume (0 on error); out_total may be NULL. */
+ZSDK_C_API uint32_t      zsdk_fs_get_free_bytes(const zsdk_fs_t* fs, uint32_t* out_total);
 ZSDK_C_API zsdk_result_t zsdk_fs_read_all_bytes(zsdk_fs_t* fs, const char* path, void** out_buf, uint32_t* out_size);
 ZSDK_C_API void          zsdk_fs_free_buffer(void* buf);
 
@@ -66,6 +70,11 @@ ZSDK_C_API zsdk_result_t    zsdk_savegame_init(zsdk_savegame_t* sg, void* platfo
 ZSDK_C_API void             zsdk_savegame_shutdown(zsdk_savegame_t* sg);
 ZSDK_C_API zsdk_result_t    zsdk_savegame_save_slot(zsdk_savegame_t* sg, uint8_t slot, const void* data, uint32_t size_bytes, uint32_t game_ver);
 ZSDK_C_API zsdk_result_t    zsdk_savegame_load_slot(zsdk_savegame_t* sg, uint8_t slot, void* out_buf, uint32_t max_bytes, uint32_t* out_read, uint32_t expected_ver);
+/* Frame-budgeted save: copies <= 4096 bytes, then call pump_async() once per frame. */
+ZSDK_C_API zsdk_result_t    zsdk_savegame_begin_save_slot(zsdk_savegame_t* sg, uint8_t slot, const void* data, uint32_t size_bytes, uint32_t game_ver);
+/* Returns the async status after writing up to budget_bytes: 0 idle, 1 pending, 2 done, 3 failed. */
+ZSDK_C_API int              zsdk_savegame_pump_async(zsdk_savegame_t* sg, uint32_t budget_bytes);
+ZSDK_C_API int              zsdk_savegame_async_status(const zsdk_savegame_t* sg);
 ZSDK_C_API int              zsdk_savegame_exists_slot(const zsdk_savegame_t* sg, uint8_t slot);
 ZSDK_C_API zsdk_result_t    zsdk_savegame_delete_slot(zsdk_savegame_t* sg, uint8_t slot);
 

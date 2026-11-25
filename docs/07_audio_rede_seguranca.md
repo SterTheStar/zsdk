@@ -41,3 +41,5 @@ audio.PlaySfx("fs:/~/audio/pulo.wav");         // Pool de 4 canais SFX (limite M
 * **`Cipher` (`security/crypto.hpp`):** Cifras simétricas AES-128/192/256, DES, 3DES e ARC4 sobre `ICipherFactory` / `ICipher1`.
 * **`Rsa` (`security/crypto.hpp`):** Exponenciação modular RSA (`ModExp`) sobre `IRSA`.
 * **`LicenseManager` (`security/license.hpp`):** Verificação de expiração e validade da licença BREW (`ILicense`).
+
+

@@ -65,3 +65,29 @@ saveMgr.WriteUserFile("profile.dat", &perfil, sizeof(perfil));
 * **`RamCache` (`fs/ram_cache.hpp`):** Cache em memória com limite de bytes sobre `IRamCache`.
 * **`LocalStorage` (`fs/local_storage.hpp`):** Armazenamento chave-valor persistente.
 * **`DatabaseManager` / `Database` / `DbRecord` (`fs/database.hpp`):** Wrapper completo sobre `IDBMgr` / `IDatabase` / `IDBRecord` (`AEEDB.h`) com buffer de stack de até 16 campos por registro.
+
+
+## `Vfs` — prefixos de montagem (`zsdk/fs/vfs.hpp`)
+
+Camada sobre `FileSystem` que troca caminhos nativos por prefixos portáveis.
+
+| Prefixo | Zeebo | PC |
+| :--- | :--- | :--- |
+| `home:` | `fs:/~/` | `./` |
+| `udata:` | `fs:/~/udata/` (ou `fs:/card0/udata/` com `preferSdCard` e SD presente) | `udata/` |
+| `script:` | `fs:/~/scripts/` | `scripts/` |
+| `sd:` | `fs:/card0/` (só montado com `preferSdCard = true` e cartão presente; caminho **não confirmado**, ver TODO.md) | — |
+
+* `Vfs::Mount("mods:", "fs:/~/mods/")` adiciona montagens (máx. 8). Prefixo não montado passa o caminho sem alteração (caminho nativo, ex. `fs:/~/x`).
+* Caminhos montados rejeitam segmentos `..` (`Result::InvalidArg`), então scripts não escapam da montagem.
+* API: `Open`, `Exists`, `Remove`, `MkDir`, `ReadAllBytes`, `Resolve`.
+
+## Save assíncrono (`SaveGameManager::BeginSaveSlot` / `PumpAsync`)
+
+Não usa threads: copia os dados (≤ `kAsyncSaveMaxBytes` = 4096) e grava em pedaços por frame (`PumpAsync(budgetBytes = 1024)`). O cabeçalho com o magic só é escrito no fim; um save interrompido fica inválido e `LoadSlot` o rejeita. Estados: `AsyncSaveStatus::{Idle, Pending, Done, Failed}`; `BeginSaveSlot` retorna `Result::WouldBlock` se há um job pendente. O `LuaVM` chama `PumpAsync()` sozinho em `Update()`.
+
+
+## Atomicidade e espaço livre
+
+* `FileSystem::Rename(src, dst)` e `FileSystem::GetFreeBytes(&total)` (`IFILEMGR_Rename`/`IFILEMGR_GetFreeSpace`); o mesmo em `Vfs`. No BREW o `Rename` falha se o destino existe.
+* `SaveSlot` e o save assíncrono gravam `save_XX.tmp`, removem o `save_XX.sav` antigo e renomeiam o `.tmp`. Antes de gravar, exigem espaço livre >= payload + cabeçalho + 4 KiB (senão `Result::IoError` e log). `LoadSlot` usa o `.tmp` se o `.sav` estiver ausente ou inválido (queda entre Remove e Rename).

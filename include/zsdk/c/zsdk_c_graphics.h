@@ -65,6 +65,8 @@ ZSDK_C_API zsdk_result_t      zsdk_gl_init(zsdk_gl_context_t* ctx, void* platfor
 ZSDK_C_API void               zsdk_gl_shutdown(zsdk_gl_context_t* ctx);
 ZSDK_C_API zsdk_result_t      zsdk_gl_make_current(zsdk_gl_context_t* ctx);
 ZSDK_C_API zsdk_result_t      zsdk_gl_swap_buffers(zsdk_gl_context_t* ctx);
+/* Whole-token match against GL_EXTENSIONS (needs a current context). */
+ZSDK_C_API int                zsdk_gl_has_extension(const zsdk_gl_context_t* ctx, const char* name);
 ZSDK_C_API zsdk_result_t      zsdk_gl_set_swap_interval(zsdk_gl_context_t* ctx, int32_t interval);
 ZSDK_C_API int32_t            zsdk_gl_get_width(const zsdk_gl_context_t* ctx);
 ZSDK_C_API int32_t            zsdk_gl_get_height(const zsdk_gl_context_t* ctx);

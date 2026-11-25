@@ -15,7 +15,7 @@ namespace audio {
 static const uint8_t kMaxSfxChannels = 4u;
 
 /**
- * @brief Central audio mixer owning 1 BGM MediaStream + up to 8 SoundEffect channels.
+ * @brief Central audio mixer owning 1 BGM MediaStream + up to kMaxSfxChannels SoundEffect channels.
  */
 class AudioEngine : public NonCopyable {
 public:

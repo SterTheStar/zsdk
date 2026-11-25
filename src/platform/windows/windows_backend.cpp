@@ -274,6 +274,7 @@ public:
             if (!app.m_suspended) {
                 const uint32_t dtMs = app.m_timer.Tick();
                 app.m_input.Update(dtMs);
+                app.DispatchGamepadChanges();
                 debug::DebugOverlay::Update(app.m_input, static_cast<float>(dtMs));
 
                 delegate->OnUpdate(dtMs);
@@ -861,6 +862,7 @@ uint32_t File::GetSize() const {
     long sz = ::ftell(f);  ::fseek(f, cur, SEEK_SET);
     return (sz > 0) ? static_cast<uint32_t>(sz) : 0u;
 }
+void File::Flush() { if (m_nativeFile) { ::fflush(static_cast<FILE*>(m_nativeFile)); } }
 void File::Close() { if (m_nativeFile) { ::fclose(static_cast<FILE*>(m_nativeFile)); m_nativeFile = nullptr; } }
 
 struct FileSystem::Impl { int dummy; };
@@ -887,6 +889,19 @@ bool FileSystem::Exists(const char* path) const {
     return false;
 }
 Result FileSystem::Remove(const char* path) { return (path && ::remove(path) == 0) ? Result::Ok : Result::IoError; }
+Result FileSystem::Rename(const char* src, const char* dst) {
+    return (src && dst && ::MoveFileExA(src, dst, MOVEFILE_REPLACE_EXISTING)) ? Result::Ok : Result::IoError;
+}
+uint32_t FileSystem::GetFreeBytes(uint32_t* outTotal) const {
+    ULARGE_INTEGER freeBytes, total, totalFree;
+    if (!::GetDiskFreeSpaceExA(nullptr, &freeBytes, &total, &totalFree)) {
+        if (outTotal) *outTotal = 0u;
+        return 0u;
+    }
+    const ULONGLONG cap = 0xFFFFFFFFull;
+    if (outTotal) *outTotal = static_cast<uint32_t>(total.QuadPart > cap ? cap : total.QuadPart);
+    return static_cast<uint32_t>(freeBytes.QuadPart > cap ? cap : freeBytes.QuadPart);
+}
 Result FileSystem::MkDir(const char* path) { return (path && ::CreateDirectoryA(path, nullptr)) ? Result::Ok : Result::IoError; }
 Result FileSystem::ReadAllBytes(const char* path, void** outBuf, uint32_t& outSize) {
     outSize = 0u; if (!outBuf) return Result::InvalidArg; *outBuf = nullptr;

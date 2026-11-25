@@ -95,3 +95,8 @@ zsdk::SystemInfo::GetBatteryStatus(app->GetNativePlatformContext(), bat);
 zsdk::SystemInfo::SetBacklight(app->GetNativePlatformContext(), true, 80);
 uint32_t lang = zsdk::SystemInfo::GetLanguageCode(app->GetNativePlatformContext());
 ```
+
+
+## Detecção de gamepad (obrigatória no Zeebo)
+
+O Developer Guide (§10) torna obrigatórios o tratamento de suspend/resume e a detecção de gamepad. `IAppDelegate` ganhou `OnGamepadConnected(index)` e `OnGamepadDisconnected(index)`: o `Application` compara a máscara de pads conectados a cada frame (`DispatchGamepadChanges()`, chamado pelos dois backends logo após `InputManager::Update`) e dispara os hooks, inclusive uma vez por pad já conectado no primeiro frame. Use-os para pausar e mostrar "conecte um controle".

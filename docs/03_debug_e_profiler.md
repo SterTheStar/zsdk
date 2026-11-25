@@ -67,3 +67,8 @@ ZSDK_LOG_ERROR("FS",  "Falha ao abrir arquivo");
 * **Uso em C / Lua / FFI:** Use a ABI C99 em `zsdk/c/zsdk_c.h` (`ZSDK_C_LOG_INFO`, `zsdk_log`, `zsdk_log_msg`) ou os bindings em `bindings/lua/` (`zsdk.log.info/warn/error`). Consulte [bindings/README.md](../bindings/README.md).
 
 > **Nota técnica:** O `Logger` e o `DebugOverlay` evitam `VSNPRINTF` e `%f` da `AEEStdLib.h` do BREW (que usa `AEEVaList` proprietária e não formata ponto flutuante), garantindo saída limpa no console do Zeebo.
+
+
+## Sinks de log e `FileLogSink`
+
+`Logger::AddSink(fn, user)` / `RemoveSink` (até 4 destinos extras, recebem a linha já formatada) e `Logger::SetMinLevel(level)` (linhas abaixo do nível são descartadas em todos os destinos). `debug::FileLogSink` (`zsdk/debug/file_log.hpp`) grava cada linha em um arquivo via `Vfs`, por exemplo `Open(vfs, "udata:/zsdk.log")` ou `sd:/zsdk.log`. Para proteger a NAND, ele para e se desregistra ao atingir `maxBytes` (padrão 64 KiB).

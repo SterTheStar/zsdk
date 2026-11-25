@@ -31,6 +31,11 @@ SUBSYSTEM_MAP = {
     "security": "security",
 }
 
+# Host-side subsystems with nothing to expose through the C ABI / Lua bindings.
+# 'script' is the embedded Lua VM itself (zsdk::script::LuaVM): binding a Lua host into Lua
+# makes no sense; Lua scripts reach ZSDK through bindings/lua instead.
+HOST_ONLY_SUBSYSTEMS = {"script"}
+
 
 def check_subsystems(errors: list[str]) -> None:
     inc_zsdk = ROOT / "include" / "zsdk"
@@ -47,7 +52,7 @@ def check_subsystems(errors: list[str]) -> None:
     for entry in sorted(inc_zsdk.iterdir()):
         if not entry.is_dir() or entry.name == "c":
             continue
-        if entry.name not in SUBSYSTEM_MAP:
+        if entry.name not in SUBSYSTEM_MAP and entry.name not in HOST_ONLY_SUBSYSTEMS:
             errors.append(
                 f"New C++ subsystem 'include/zsdk/{entry.name}' has no mapping in "
                 "tools/check_bindings.py (add C ABI + Lua binding)."

@@ -61,6 +61,8 @@ public:
     int32_t  Write(const void* buffer, uint32_t bytes);
     Result   Seek(SeekOrigin origin, int32_t offset);
     uint32_t GetSize() const;
+    /** @brief Pushes buffered writes to storage (PC: fflush; BREW IFile writes are unbuffered, no-op). */
+    void     Flush();
     void     Close();
 
 private:
@@ -83,6 +85,18 @@ public:
     bool   Exists(const char* path) const;
     Result Remove(const char* path);
     Result MkDir(const char* path);
+
+    /**
+     * @brief Renames @p srcPath to @p dstPath (same volume). Fails if @p dstPath exists on BREW,
+     *        so callers replacing a file should Remove() the destination first.
+     */
+    Result Rename(const char* srcPath, const char* dstPath);
+
+    /**
+     * @brief Free bytes on the volume (IFILEMGR_GetFreeSpace); 0 on error. Check before saving.
+     * @param outTotal Optional: receives the total size in bytes.
+     */
+    uint32_t GetFreeBytes(uint32_t* outTotal = nullptr) const;
 
     /**
      * @brief Enumerates files or subdirectories in @p dirPath without heap allocations.

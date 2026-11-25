@@ -46,6 +46,14 @@ static int l_fs_new(lua_State* L) {
 
 static int l_fs_exists(lua_State* L) { lua_pushboolean(L, zsdk_fs_exists(check_fs(L, 1), luaL_checkstring(L, 2))); return 1; }
 static int l_fs_remove(lua_State* L) { lua_pushinteger(L, (lua_Integer)zsdk_fs_remove(check_fs(L, 1), luaL_checkstring(L, 2))); return 1; }
+static int l_fs_rename(lua_State* L) { lua_pushinteger(L, (lua_Integer)zsdk_fs_rename(check_fs(L, 1), luaL_checkstring(L, 2), luaL_checkstring(L, 3))); return 1; }
+static int l_fs_free_bytes(lua_State* L) {
+    uint32_t total = 0;
+    uint32_t free_bytes = zsdk_fs_get_free_bytes(check_fs(L, 1), &total);
+    lua_pushinteger(L, (lua_Integer)free_bytes);
+    lua_pushinteger(L, (lua_Integer)total);
+    return 2;
+}
 static int l_fs_mkdir(lua_State* L)  { lua_pushinteger(L, (lua_Integer)zsdk_fs_mkdir(check_fs(L, 1), luaL_checkstring(L, 2))); return 1; }
 
 static int l_fs_read_text(lua_State* L) {
@@ -173,6 +181,15 @@ static int l_sg_load_slot(lua_State* L) {
     lua_pushlstring(L, buf, (size_t)read_n);
     return 1;
 }
+static int l_sg_begin_save_slot(lua_State* L) {
+    uint8_t slot = (uint8_t)luaL_checkinteger(L, 2);
+    size_t len = 0;
+    const char* data = luaL_checklstring(L, 3, &len);
+    lua_pushinteger(L, (lua_Integer)zsdk_savegame_begin_save_slot(check_sg(L, 1), slot, data, (uint32_t)len, (uint32_t)luaL_optinteger(L, 4, 1)));
+    return 1;
+}
+static int l_sg_pump_async(lua_State* L) { lua_pushinteger(L, (lua_Integer)zsdk_savegame_pump_async(check_sg(L, 1), (uint32_t)luaL_optinteger(L, 2, 1024))); return 1; }
+static int l_sg_async_status(lua_State* L) { lua_pushinteger(L, (lua_Integer)zsdk_savegame_async_status(check_sg(L, 1))); return 1; }
 static int l_sg_exists_slot(lua_State* L) { lua_pushboolean(L, zsdk_savegame_exists_slot(check_sg(L, 1), (uint8_t)luaL_checkinteger(L, 2))); return 1; }
 static int l_sg_delete_slot(lua_State* L) { lua_pushinteger(L, (lua_Integer)zsdk_savegame_delete_slot(check_sg(L, 1), (uint8_t)luaL_checkinteger(L, 2))); return 1; }
 
@@ -211,10 +228,10 @@ static int l_cache_get(lua_State* L) {
 }
 static int l_cache_clear(lua_State* L) { zsdk_ram_cache_clear(check_cache(L, 1)); return 0; }
 
-static const luaL_Reg kFsMethods[]      = { { "exists", l_fs_exists }, { "remove", l_fs_remove }, { "mkdir", l_fs_mkdir }, { "read_text", l_fs_read_text }, { "open", l_fs_open }, { "__gc", l_fs_gc }, { NULL, NULL } };
+static const luaL_Reg kFsMethods[]      = { { "exists", l_fs_exists }, { "remove", l_fs_remove }, { "mkdir", l_fs_mkdir }, { "rename", l_fs_rename }, { "free_bytes", l_fs_free_bytes }, { "read_text", l_fs_read_text }, { "open", l_fs_open }, { "__gc", l_fs_gc }, { NULL, NULL } };
 static const luaL_Reg kFileMethods[]    = { { "is_open", l_file_is_open }, { "read", l_file_read }, { "write", l_file_write }, { "seek", l_file_seek }, { "get_size", l_file_get_size }, { "close", l_file_close }, { "__gc", l_file_gc }, { NULL, NULL } };
 static const luaL_Reg kStorageMethods[] = { { "write", l_storage_write }, { "read", l_storage_read }, { "remove", l_storage_remove }, { "__gc", l_storage_gc }, { NULL, NULL } };
-static const luaL_Reg kSgMethods[]      = { { "save_slot", l_sg_save_slot }, { "load_slot", l_sg_load_slot }, { "exists_slot", l_sg_exists_slot }, { "delete_slot", l_sg_delete_slot }, { "__gc", l_sg_gc }, { NULL, NULL } };
+static const luaL_Reg kSgMethods[]      = { { "save_slot", l_sg_save_slot }, { "load_slot", l_sg_load_slot }, { "begin_save_slot", l_sg_begin_save_slot }, { "pump_async", l_sg_pump_async }, { "async_status", l_sg_async_status }, { "exists_slot", l_sg_exists_slot }, { "delete_slot", l_sg_delete_slot }, { "__gc", l_sg_gc }, { NULL, NULL } };
 static const luaL_Reg kCacheMethods[]   = { { "put", l_cache_put }, { "get", l_cache_get }, { "clear", l_cache_clear }, { "__gc", l_cache_gc }, { NULL, NULL } };
 
 static const luaL_Reg kFsModule[] = {

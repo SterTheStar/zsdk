@@ -74,6 +74,13 @@ public:
      */
     Result SetRenderResolution(int32_t renderWidth, int32_t renderHeight);
 
+    /**
+     * @brief True if @p name (e.g. "GL_OES_draw_texture") is in GL_EXTENSIONS. Needs a current
+     *        context. Titles on this platform probe extensions before enabling a path
+     *        (draw_texture blits, ATITC textures, FBOs) and must fall back when one is absent.
+     */
+    bool HasExtension(const char* name) const;
+
     /** @brief Native display surface width and height in pixels. */
     int32_t GetWidth() const;
     int32_t GetHeight() const;

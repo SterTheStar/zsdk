@@ -54,14 +54,19 @@ public:
                             TextureFilter filter = TextureFilter::Linear);
 
     /**
-     * @brief Loads an `.atitc` file buffer (Zeebo Developer Guide 8.2.2),
-     *        stripping the 20-byte ATITC_HEADER before uploading via CreateCompressed().
+     * @brief Creates a texture from an in-memory ATITC file (header + 4x4-block data), the
+     *        Adreno 130's native compressed format (GL_ATI_texture_compression_atitc).
+     *
+     * Header (5 x uint32, little endian): signature 0xCCC40002, width, height, flags
+     * (1 = RGB, 2 = RGBA, 4 = tiled), dataOffset. Tiled files are rejected (NotSupported).
+     * Check GLContext::HasExtension("GL_ATI_texture_compression_atitc") first and fall back
+     * to Create() when it returns false.
      */
-    Result CreateFromAtitc(const void* fileBytes, uint32_t fileSizeBytes,
+    Result CreateFromAtitc(const void* fileData, uint32_t fileSize,
                            TextureFilter filter = TextureFilter::Linear);
 
     /**
-     * @brief Updates a sub-rectangle of an existing texture without reallocating VRAM.
+     * @brief Updates a sub-rectangle of an existing texture without reallocating VRAM (uncompressed textures only).
      * @return Result::NotInitialized if the texture is not created/was destroyed,
      *         Result::InvalidArg if pixelData is null or width/height is zero.
      */
