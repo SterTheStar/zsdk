@@ -250,7 +250,29 @@ static int l_sg_read_user_file(lua_State* L) {
 static int l_sg_exists_user_file(lua_State* L) { lua_pushboolean(L, zsdk_savegame_exists_user_file(check_sg(L, 1), luaL_checkstring(L, 2))); return 1; }
 static int l_sg_delete_user_file(lua_State* L) { lua_pushinteger(L, (lua_Integer)zsdk_savegame_delete_user_file(check_sg(L, 1), luaL_checkstring(L, 2))); return 1; }
 
-static const luaL_Reg kFsMethods[]      = { { "exists", l_fs_exists }, { "remove", l_fs_remove }, { "mkdir", l_fs_mkdir }, { "rename", l_fs_rename }, { "free_bytes", l_fs_free_bytes }, { "read_text", l_fs_read_text }, { "open", l_fs_open }, { "__gc", l_fs_gc }, { NULL, NULL } };
+typedef struct { lua_State* L; int count; } ZsdkLuaDirCtx;
+static int l_fs_dir_cb(const char* name, uint32_t size_bytes, int is_dir, void* ud) {
+    ZsdkLuaDirCtx* ctx = (ZsdkLuaDirCtx*)ud;
+    ctx->count += 1;
+    lua_newtable(ctx->L);
+    lua_pushstring(ctx->L, name ? name : ""); lua_setfield(ctx->L, -2, "name");
+    lua_pushinteger(ctx->L, (lua_Integer)size_bytes); lua_setfield(ctx->L, -2, "size");
+    lua_pushboolean(ctx->L, is_dir); lua_setfield(ctx->L, -2, "is_dir");
+    lua_rawseti(ctx->L, -2, ctx->count);
+    return 1;
+}
+static int l_fs_list_dir(lua_State* L) {
+    zsdk_fs_t* f = check_fs(L, 1);
+    const char* path = luaL_checkstring(L, 2);
+    int dirs_only = lua_toboolean(L, 3);
+    lua_newtable(L);
+    ZsdkLuaDirCtx ctx = { L, 0 };
+    zsdk_result_t r = zsdk_fs_enumerate_dir(f, path, dirs_only, l_fs_dir_cb, &ctx);
+    if (r != ZSDK_C_OK) { lua_pop(L, 1); lua_pushnil(L); lua_pushinteger(L, (lua_Integer)r); return 2; }
+    return 1;
+}
+
+static const luaL_Reg kFsMethods[]      = { { "exists", l_fs_exists }, { "remove", l_fs_remove }, { "mkdir", l_fs_mkdir }, { "rename", l_fs_rename }, { "free_bytes", l_fs_free_bytes }, { "read_text", l_fs_read_text }, { "open", l_fs_open }, { "list_dir", l_fs_list_dir }, { "__gc", l_fs_gc }, { NULL, NULL } };
 static const luaL_Reg kFileMethods[]    = { { "is_open", l_file_is_open }, { "read", l_file_read }, { "write", l_file_write }, { "seek", l_file_seek }, { "get_size", l_file_get_size }, { "close", l_file_close }, { "__gc", l_file_gc }, { NULL, NULL } };
 static const luaL_Reg kStorageMethods[] = { { "write", l_storage_write }, { "read", l_storage_read }, { "remove", l_storage_remove }, { "__gc", l_storage_gc }, { NULL, NULL } };
 static const luaL_Reg kSgMethods[]      = { { "save_slot", l_sg_save_slot }, { "load_slot", l_sg_load_slot }, { "begin_save_slot", l_sg_begin_save_slot }, { "pump_async", l_sg_pump_async }, { "async_status", l_sg_async_status }, { "exists_slot", l_sg_exists_slot }, { "delete_slot", l_sg_delete_slot }, { "is_using_sd_card", l_sg_is_using_sd }, { "write_user_file", l_sg_write_user_file }, { "read_user_file", l_sg_read_user_file }, { "exists_user_file", l_sg_exists_user_file }, { "delete_user_file", l_sg_delete_user_file }, { "__gc", l_sg_gc }, { NULL, NULL } };

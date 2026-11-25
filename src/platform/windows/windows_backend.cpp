@@ -912,6 +912,7 @@ Result FileSystem::ReadAllBytes(const char* path, void** outBuf, uint32_t& outSi
     *outBuf = b; outSize = sz; return Result::Ok;
 }
 void FileSystem::FreeBuffer(void* buf) { debug::MemoryTracker::Free(debug::MemorySubsystem::Filesystem, buf); }
+Result FileSystem::EnumerateDirectory(const char*, bool, EnumerateDirCallbackFn, void*) { return Result::NotSupported; }
 
 struct UnzipStream::Impl { int dummy; };
 UnzipStream::UnzipStream() : m_impl(nullptr) {}
@@ -1174,6 +1175,7 @@ void NetworkManager::Shutdown() {}
 NetworkState NetworkManager::GetState() const { return NetworkState::Connected; }
 bool NetworkManager::IsWifiAvailable() const { return true; }
 uint32_t NetworkManager::GetLocalIpAddress() const { return 0x7F000001u; }
+Result NetworkManager::ResolveHost(const char*, DnsResolveCallback, void*) { return Result::NotSupported; }
 void NetworkManager::CancelDns() {}
 
 struct BluetoothManager::Impl { int dummy; };
@@ -1214,6 +1216,9 @@ Result Hmac::Compute(void*, HashAlgorithm algo, const void*, uint32_t, const voi
     if (!outMac || macBufferBytes < need) return Result::InvalidArg;
     memset(outMac, 0, need);
     if (outMacBytes) *outMacBytes = need;
+    return Result::NotSupported;
+}
+Result Rsa::ModExp(void*, const void*, uint32_t, const void*, uint32_t, const void*, uint32_t, void*, uint32_t, uint32_t*) {
     return Result::NotSupported;
 }
 } // namespace security

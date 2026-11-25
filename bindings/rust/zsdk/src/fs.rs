@@ -68,6 +68,9 @@ impl FileSystem {
         check(res)?;
         Ok(File { raw, _fs: ::core::marker::PhantomData })
     }
+    pub unsafe fn enumerate_dir_raw(&mut self, dir_path: &CStr, dirs_only: bool, cb: zsdk_fs_dir_cb_t, user_data: *mut c_void) -> Result<()> {
+        check(zsdk_fs_enumerate_dir(self.raw, dir_path.as_ptr(), dirs_only as i32, cb, user_data))
+    }
 }
 impl Drop for FileSystem {
     fn drop(&mut self) {

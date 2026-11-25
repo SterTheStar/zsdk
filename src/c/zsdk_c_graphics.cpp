@@ -493,4 +493,64 @@ void zsdk_batch_draw_rotated(zsdk_sprite_batch_t* batch, const zsdk_texture_t* t
     }
 }
 
+zsdk_result_t zsdk_gl_set_surface_scale(zsdk_gl_context_t* ctx, int32_t sx, int32_t sy, int32_t sw, int32_t sh,
+                                        int32_t dx, int32_t dy, int32_t dw, int32_t dh, int enable) {
+    if (!ctx) return ZSDK_C_ERR_INVALID_ARG;
+    zsdk::Rect src{sx, sy, sw, sh};
+    zsdk::Rect dst{dx, dy, dw, dh};
+    return zsdk::c_abi::ToCResult(ctx->gl.SetSurfaceScale(src, dst, enable != 0));
+}
+
+zsdk_result_t zsdk_texture_create_compressed(zsdk_texture_t* tex, uint16_t w, uint16_t h, uint32_t gl_internal_fmt,
+                                             uint32_t image_size, const void* data, zsdk_tex_filter_t filter) {
+    return tex ? zsdk::c_abi::ToCResult(tex->tex.CreateCompressed(w, h, gl_internal_fmt, image_size, data, static_cast<zsdk::graphics::TextureFilter>(filter))) : ZSDK_C_ERR_INVALID_ARG;
+}
+
+zsdk_result_t zsdk_texture_copy_from_framebuffer(zsdk_texture_t* tex, int32_t x, int32_t y, uint16_t w, uint16_t h, zsdk_tex_filter_t filter) {
+    return tex ? zsdk::c_abi::ToCResult(tex->tex.CopyFromFramebuffer(x, y, w, h, static_cast<zsdk::graphics::TextureFilter>(filter))) : ZSDK_C_ERR_INVALID_ARG;
+}
+
+zsdk_result_t zsdk_texture_read_framebuffer(int32_t x, int32_t y, uint16_t w, uint16_t h, zsdk_tex_format_t fmt, void* out_pixels) {
+    return zsdk::c_abi::ToCResult(zsdk::graphics::Texture::ReadFramebuffer(x, y, w, h, static_cast<zsdk::graphics::TextureFormat>(fmt), out_pixels));
+}
+
+void zsdk_mesh_unbind(int is_index_buffer) {
+    zsdk::graphics::MeshBuffer::Unbind(is_index_buffer ? zsdk::graphics::BufferType::Index : zsdk::graphics::BufferType::Vertex);
+}
+
+void zsdk_render_set_perspective_correction_fast(int fast) { zsdk::graphics::Renderer::SetPerspectiveCorrectionFast(fast != 0); }
+void zsdk_render_set_stencil_func(uint8_t func, int32_t ref_val, uint32_t mask) {
+    zsdk::graphics::Renderer::SetStencilFunc(static_cast<zsdk::graphics::CompareFunc>(func), ref_val, mask);
+}
+void zsdk_render_set_stencil_op(uint8_t fail, uint8_t zfail, uint8_t zpass) {
+    zsdk::graphics::Renderer::SetStencilOp(static_cast<zsdk::graphics::StencilOp>(fail), static_cast<zsdk::graphics::StencilOp>(zfail), static_cast<zsdk::graphics::StencilOp>(zpass));
+}
+void zsdk_render_set_clip_plane(uint8_t index, int enabled, float a, float b, float c, float d) {
+    zsdk::graphics::Renderer::SetClipPlane(index, enabled != 0, a, b, c, d);
+}
+void zsdk_render_set_texture_env_mode(uint8_t mode) { zsdk::graphics::Renderer::SetTextureEnvMode(static_cast<zsdk::graphics::TexEnvMode>(mode)); }
+void zsdk_render_reset_texture_matrix(void) { zsdk::graphics::Renderer::ResetTextureMatrix(); }
+void zsdk_render_translate_texture(float u, float v) { zsdk::graphics::Renderer::TranslateTexture(u, v); }
+void zsdk_render_scale_texture(float su, float sv) { zsdk::graphics::Renderer::ScaleTexture(su, sv); }
+void zsdk_render_set_point_sprites(int enabled) { zsdk::graphics::Renderer::SetPointSpritesEnabled(enabled != 0); }
+void zsdk_render_set_matrix_palette(int enabled) { zsdk::graphics::Renderer::SetMatrixPaletteEnabled(enabled != 0); }
+void zsdk_render_get_safe_area(int32_t vw, int32_t vh, int32_t margin_px, int32_t* out_x, int32_t* out_y, int32_t* out_w, int32_t* out_h) {
+    zsdk::Rect r = zsdk::graphics::Renderer::GetSafeAreaRect(vw, vh, margin_px);
+    if (out_x) *out_x = r.x;
+    if (out_y) *out_y = r.y;
+    if (out_w) *out_w = r.width;
+    if (out_h) *out_h = r.height;
+}
+void zsdk_render_draw_billboard_3d(const zsdk_texture_t* tex,
+                                   float wx, float wy, float wz, float w, float h,
+                                   float rx, float ry, float rz, float ux, float uy, float uz,
+                                   float u0, float v0, float u1, float v1,
+                                   uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    if (!tex) return;
+    zsdk::graphics::Renderer::DrawBillboard3D(
+        tex->tex, zsdk::Vec3{wx, wy, wz}, w, h,
+        zsdk::Vec3{rx, ry, rz}, zsdk::Vec3{ux, uy, uz},
+        u0, v0, u1, v1, zsdk::Color::Rgba(r, g, b, a));
+}
+
 } /* extern "C" */

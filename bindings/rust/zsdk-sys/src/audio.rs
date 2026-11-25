@@ -46,6 +46,7 @@ extern "C" {
     pub fn zsdk_media_create() -> *mut zsdk_media_stream_t;
     pub fn zsdk_media_destroy(stream: *mut zsdk_media_stream_t);
     pub fn zsdk_media_load_file(stream: *mut zsdk_media_stream_t, platform_ctx: *mut c_void, file_path: *const c_char) -> zsdk_result_t;
+    pub fn zsdk_media_load_memory(stream: *mut zsdk_media_stream_t, platform_ctx: *mut c_void, data: *const c_void, size_bytes: u32, media_format: u8) -> zsdk_result_t;
     pub fn zsdk_media_unload(stream: *mut zsdk_media_stream_t);
     pub fn zsdk_media_play(stream: *mut zsdk_media_stream_t) -> zsdk_result_t;
     pub fn zsdk_media_stop(stream: *mut zsdk_media_stream_t) -> zsdk_result_t;

@@ -21,6 +21,9 @@ impl NetworkManager {
     pub fn is_available(&self) -> bool { unsafe { zsdk_net_is_available(self.raw) != 0 } }
     pub fn local_ip(&self) -> u32 { unsafe { zsdk_net_get_local_ip(self.raw) } }
     pub fn cancel_dns(&mut self) { unsafe { zsdk_net_cancel_dns(self.raw); } }
+    pub unsafe fn resolve_host_raw(&mut self, hostname: &::core::ffi::CStr, cb: zsdk_dns_cb_t, user_data: *mut c_void) -> Result<()> {
+        check(zsdk_net_resolve_host(self.raw, hostname.as_ptr(), cb, user_data))
+    }
 }
 impl Drop for NetworkManager {
     fn drop(&mut self) {

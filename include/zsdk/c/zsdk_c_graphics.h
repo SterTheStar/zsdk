@@ -210,6 +210,30 @@ ZSDK_C_API void            zsdk_batch_draw_rotated(zsdk_sprite_batch_t* batch, c
                                                    float cx, float cy, float w, float h, float angle_rad,
                                                    float u0, float v0, float u1, float v1,
                                                    uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+ZSDK_C_API zsdk_result_t   zsdk_gl_set_surface_scale(zsdk_gl_context_t* ctx, int32_t sx, int32_t sy, int32_t sw, int32_t sh,
+                                                     int32_t dx, int32_t dy, int32_t dw, int32_t dh, int enable);
+ZSDK_C_API zsdk_result_t   zsdk_texture_create_compressed(zsdk_texture_t* tex, uint16_t w, uint16_t h, uint32_t gl_internal_fmt,
+                                                          uint32_t image_size, const void* data, zsdk_tex_filter_t filter);
+ZSDK_C_API zsdk_result_t   zsdk_texture_copy_from_framebuffer(zsdk_texture_t* tex, int32_t x, int32_t y, uint16_t w, uint16_t h, zsdk_tex_filter_t filter);
+ZSDK_C_API zsdk_result_t   zsdk_texture_read_framebuffer(int32_t x, int32_t y, uint16_t w, uint16_t h, zsdk_tex_format_t fmt, void* out_pixels);
+ZSDK_C_API void            zsdk_mesh_unbind(int is_index_buffer);
+ZSDK_C_API void            zsdk_render_set_perspective_correction_fast(int fast);
+ZSDK_C_API void            zsdk_render_set_stencil_func(uint8_t func, int32_t ref_val, uint32_t mask);
+ZSDK_C_API void            zsdk_render_set_stencil_op(uint8_t fail, uint8_t zfail, uint8_t zpass);
+ZSDK_C_API void            zsdk_render_set_clip_plane(uint8_t index, int enabled, float a, float b, float c, float d);
+ZSDK_C_API void            zsdk_render_set_texture_env_mode(uint8_t mode);
+ZSDK_C_API void            zsdk_render_reset_texture_matrix(void);
+ZSDK_C_API void            zsdk_render_translate_texture(float u, float v);
+ZSDK_C_API void            zsdk_render_scale_texture(float su, float sv);
+ZSDK_C_API void            zsdk_render_set_point_sprites(int enabled);
+ZSDK_C_API void            zsdk_render_set_matrix_palette(int enabled);
+ZSDK_C_API void            zsdk_render_get_safe_area(int32_t vw, int32_t vh, int32_t margin_px,
+                                                     int32_t* out_x, int32_t* out_y, int32_t* out_w, int32_t* out_h);
+ZSDK_C_API void            zsdk_render_draw_billboard_3d(const zsdk_texture_t* tex,
+                                                         float wx, float wy, float wz, float w, float h,
+                                                         float rx, float ry, float rz, float ux, float uy, float uz,
+                                                         float u0, float v0, float u1, float v1,
+                                                         uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
 ZSDK_C_EXTERN_END
 

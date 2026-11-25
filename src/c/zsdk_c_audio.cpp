@@ -143,6 +143,11 @@ zsdk_result_t zsdk_media_load_file(zsdk_media_stream_t* stream, void* platform_c
     return zsdk::c_abi::ToCResult(stream->stream.LoadFromFile(platform_ctx, file_path));
 }
 
+zsdk_result_t zsdk_media_load_memory(zsdk_media_stream_t* stream, void* platform_ctx, const void* data, uint32_t size_bytes, uint8_t media_format) {
+    if (!stream) return ZSDK_C_ERR_INVALID_ARG;
+    return zsdk::c_abi::ToCResult(stream->stream.LoadFromMemory(platform_ctx, data, size_bytes, static_cast<zsdk::audio::MediaFormat>(media_format)));
+}
+
 void zsdk_media_unload(zsdk_media_stream_t* stream) {
     if (stream) stream->stream.Unload();
 }

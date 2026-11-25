@@ -42,6 +42,9 @@ impl GLContext {
     pub fn set_surface_rotate(&mut self, rot90: bool, h_mirror: bool, v_mirror: bool, enabled: bool) -> Result<()> {
         check(unsafe { zsdk_gl_set_surface_rotate(self.raw, rot90 as i32, h_mirror as i32, v_mirror as i32, enabled as i32) })
     }
+    pub fn set_surface_scale(&mut self, src: [i32; 4], dst: [i32; 4], enable: bool) -> Result<()> {
+        check(unsafe { zsdk_gl_set_surface_scale(self.raw, src[0], src[1], src[2], src[3], dst[0], dst[1], dst[2], dst[3], enable as i32) })
+    }
 }
 impl Drop for GLContext {
     fn drop(&mut self) {
@@ -71,6 +74,15 @@ impl Texture {
     pub fn height(&self) -> u16 { unsafe { zsdk_texture_get_height(self.raw) } }
     pub fn gl_id(&self) -> u32 { unsafe { zsdk_texture_get_gl_id(self.raw) } }
     pub fn vram_bytes(&self) -> u32 { unsafe { zsdk_texture_get_vram_bytes(self.raw) } }
+    pub fn create_compressed(&mut self, w: u16, h: u16, gl_internal_fmt: u32, data: &[u8], filter: TexFilter) -> Result<()> {
+        check(unsafe { zsdk_texture_create_compressed(self.raw, w, h, gl_internal_fmt, data.len() as u32, data.as_ptr() as *const _, filter) })
+    }
+    pub fn copy_from_framebuffer(&mut self, x: i32, y: i32, w: u16, h: u16, filter: TexFilter) -> Result<()> {
+        check(unsafe { zsdk_texture_copy_from_framebuffer(self.raw, x, y, w, h, filter) })
+    }
+    pub unsafe fn read_framebuffer(x: i32, y: i32, w: u16, h: u16, fmt: TexFormat, out_pixels: *mut c_void) -> Result<()> {
+        check(zsdk_texture_read_framebuffer(x, y, w, h, fmt, out_pixels))
+    }
     pub fn as_raw(&self) -> *const zsdk_texture_t { self.raw }
 }
 impl Drop for Texture {
@@ -94,6 +106,7 @@ impl MeshBuffer {
     pub fn release(&mut self) { unsafe { zsdk_mesh_release(self.raw); } }
     pub fn is_valid(&self) -> bool { unsafe { zsdk_mesh_is_valid(self.raw) != 0 } }
     pub fn size_bytes(&self) -> u32 { unsafe { zsdk_mesh_get_size_bytes(self.raw) } }
+    pub fn unbind(is_index_buffer: bool) { unsafe { zsdk_mesh_unbind(is_index_buffer as i32); } }
     pub fn as_raw(&self) -> *const zsdk_mesh_buffer_t { self.raw }
 }
 impl Drop for MeshBuffer {
@@ -183,6 +196,30 @@ pub mod renderer {
     #[inline] pub fn mult_matrix(mat16: &[f32; 16]) { unsafe { zsdk_render_mult_matrix(mat16.as_ptr()); } }
     #[inline] pub fn set_frustum(left: f32, right: f32, bottom: f32, top: f32, near_z: f32, far_z: f32) {
         unsafe { zsdk_render_set_frustum(left, right, bottom, top, near_z, far_z); }
+    }
+    #[inline] pub fn set_perspective_correction_fast(fast: bool) { unsafe { zsdk_render_set_perspective_correction_fast(fast as i32); } }
+    #[inline] pub fn set_stencil_func(func: u8, ref_val: i32, mask: u32) { unsafe { zsdk_render_set_stencil_func(func, ref_val, mask); } }
+    #[inline] pub fn set_stencil_op(fail: u8, zfail: u8, zpass: u8) { unsafe { zsdk_render_set_stencil_op(fail, zfail, zpass); } }
+    #[inline] pub fn set_clip_plane(index: u8, enabled: bool, plane: [f32; 4]) { unsafe { zsdk_render_set_clip_plane(index, enabled as i32, plane[0], plane[1], plane[2], plane[3]); } }
+    #[inline] pub fn set_texture_env_mode(mode: u8) { unsafe { zsdk_render_set_texture_env_mode(mode); } }
+    #[inline] pub fn reset_texture_matrix() { unsafe { zsdk_render_reset_texture_matrix(); } }
+    #[inline] pub fn translate_texture(u: f32, v: f32) { unsafe { zsdk_render_translate_texture(u, v); } }
+    #[inline] pub fn scale_texture(su: f32, sv: f32) { unsafe { zsdk_render_scale_texture(su, sv); } }
+    #[inline] pub fn set_point_sprites(enabled: bool) { unsafe { zsdk_render_set_point_sprites(enabled as i32); } }
+    #[inline] pub fn set_matrix_palette(enabled: bool) { unsafe { zsdk_render_set_matrix_palette(enabled as i32); } }
+    #[inline] pub fn safe_area(vw: i32, vh: i32, margin_px: i32) -> [i32; 4] {
+        let (mut x, mut y, mut w, mut h) = (0, 0, 0, 0);
+        unsafe { zsdk_render_get_safe_area(vw, vh, margin_px, &mut x, &mut y, &mut w, &mut h); }
+        [x, y, w, h]
+    }
+    #[inline] pub fn draw_billboard_3d(tex: &Texture, world_pos: [f32; 3], w: f32, h: f32, cam_right: [f32; 3], cam_up: [f32; 3], uv: [f32; 4], rgba: [u8; 4]) {
+        unsafe {
+            zsdk_render_draw_billboard_3d(
+                tex.as_raw(), world_pos[0], world_pos[1], world_pos[2], w, h,
+                cam_right[0], cam_right[1], cam_right[2], cam_up[0], cam_up[1], cam_up[2],
+                uv[0], uv[1], uv[2], uv[3], rgba[0], rgba[1], rgba[2], rgba[3],
+            );
+        }
     }
 }
 

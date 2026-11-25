@@ -372,6 +372,72 @@ static int l_gfx_set_frustum(lua_State* L) {
                             (float)luaL_checknumber(L, 4), (float)luaL_checknumber(L, 5), (float)luaL_checknumber(L, 6));
     return 0;
 }
+static int l_gl_set_surface_scale(lua_State* L) {
+    lua_pushinteger(L, (lua_Integer)zsdk_gl_set_surface_scale(
+        check_gl(L, 1), (int32_t)luaL_checkinteger(L, 2), (int32_t)luaL_checkinteger(L, 3),
+        (int32_t)luaL_checkinteger(L, 4), (int32_t)luaL_checkinteger(L, 5),
+        (int32_t)luaL_checkinteger(L, 6), (int32_t)luaL_checkinteger(L, 7),
+        (int32_t)luaL_checkinteger(L, 8), (int32_t)luaL_checkinteger(L, 9), lua_toboolean(L, 10)));
+    return 1;
+}
+static int l_tex_create_compressed(lua_State* L) {
+    size_t len = 0; const char* data = luaL_checklstring(L, 5, &len);
+    lua_pushinteger(L, (lua_Integer)zsdk_texture_create_compressed(
+        check_tex(L, 1), (uint16_t)luaL_checkinteger(L, 2), (uint16_t)luaL_checkinteger(L, 3),
+        (uint32_t)luaL_checkinteger(L, 4), (uint32_t)len, data, (zsdk_tex_filter_t)luaL_optinteger(L, 6, 1)));
+    return 1;
+}
+static int l_tex_copy_fb(lua_State* L) {
+    lua_pushinteger(L, (lua_Integer)zsdk_texture_copy_from_framebuffer(
+        check_tex(L, 1), (int32_t)luaL_checkinteger(L, 2), (int32_t)luaL_checkinteger(L, 3),
+        (uint16_t)luaL_checkinteger(L, 4), (uint16_t)luaL_checkinteger(L, 5), (zsdk_tex_filter_t)luaL_optinteger(L, 6, 1)));
+    return 1;
+}
+static int l_gfx_read_fb(lua_State* L) {
+    int32_t x = (int32_t)luaL_checkinteger(L, 1), y = (int32_t)luaL_checkinteger(L, 2);
+    uint16_t w = (uint16_t)luaL_checkinteger(L, 3), h = (uint16_t)luaL_checkinteger(L, 4);
+    zsdk_tex_format_t fmt = (zsdk_tex_format_t)luaL_optinteger(L, 5, 5);
+    uint32_t bytes = (uint32_t)w * (uint32_t)h * 4u;
+    void* buf = lua_newuserdata(L, bytes);
+    zsdk_result_t r = zsdk_texture_read_framebuffer(x, y, w, h, fmt, buf);
+    if (r != ZSDK_C_OK) { lua_pushnil(L); lua_pushinteger(L, (lua_Integer)r); return 2; }
+    lua_pushlstring(L, (const char*)buf, (size_t)bytes);
+    return 1;
+}
+static int l_gfx_mesh_unbind(lua_State* L) { zsdk_mesh_unbind(lua_toboolean(L, 1)); return 0; }
+static int l_gfx_set_persp_fast(lua_State* L) { zsdk_render_set_perspective_correction_fast(lua_toboolean(L, 1)); return 0; }
+static int l_gfx_set_stencil_func(lua_State* L) { zsdk_render_set_stencil_func((uint8_t)luaL_checkinteger(L, 1), (int32_t)luaL_checkinteger(L, 2), (uint32_t)luaL_checkinteger(L, 3)); return 0; }
+static int l_gfx_set_stencil_op(lua_State* L) { zsdk_render_set_stencil_op((uint8_t)luaL_checkinteger(L, 1), (uint8_t)luaL_checkinteger(L, 2), (uint8_t)luaL_checkinteger(L, 3)); return 0; }
+static int l_gfx_set_clip_plane(lua_State* L) {
+    zsdk_render_set_clip_plane((uint8_t)luaL_checkinteger(L, 1), lua_toboolean(L, 2),
+                               (float)luaL_optnumber(L, 3, 0.0), (float)luaL_optnumber(L, 4, 0.0),
+                               (float)luaL_optnumber(L, 5, 0.0), (float)luaL_optnumber(L, 6, 0.0));
+    return 0;
+}
+static int l_gfx_set_tex_env_mode(lua_State* L) { zsdk_render_set_texture_env_mode((uint8_t)luaL_checkinteger(L, 1)); return 0; }
+static int l_gfx_reset_tex_mat(lua_State* L) { (void)L; zsdk_render_reset_texture_matrix(); return 0; }
+static int l_gfx_trans_tex(lua_State* L) { zsdk_render_translate_texture((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2)); return 0; }
+static int l_gfx_scale_tex(lua_State* L) { zsdk_render_scale_texture((float)luaL_checknumber(L, 1), (float)luaL_checknumber(L, 2)); return 0; }
+static int l_gfx_set_point_sprites(lua_State* L) { zsdk_render_set_point_sprites(lua_toboolean(L, 1)); return 0; }
+static int l_gfx_set_mat_palette(lua_State* L) { zsdk_render_set_matrix_palette(lua_toboolean(L, 1)); return 0; }
+static int l_gfx_safe_area(lua_State* L) {
+    int32_t x = 0, y = 0, w = 0, h = 0;
+    zsdk_render_get_safe_area((int32_t)luaL_checkinteger(L, 1), (int32_t)luaL_checkinteger(L, 2), (int32_t)luaL_optinteger(L, 3, 8), &x, &y, &w, &h);
+    lua_pushinteger(L, x); lua_pushinteger(L, y); lua_pushinteger(L, w); lua_pushinteger(L, h);
+    return 4;
+}
+static int l_gfx_draw_billboard(lua_State* L) {
+    zsdk_render_draw_billboard_3d(check_tex(L, 1),
+        (float)luaL_checknumber(L, 2), (float)luaL_checknumber(L, 3), (float)luaL_checknumber(L, 4),
+        (float)luaL_checknumber(L, 5), (float)luaL_checknumber(L, 6),
+        (float)luaL_checknumber(L, 7), (float)luaL_checknumber(L, 8), (float)luaL_checknumber(L, 9),
+        (float)luaL_checknumber(L, 10), (float)luaL_checknumber(L, 11), (float)luaL_checknumber(L, 12),
+        (float)luaL_optnumber(L, 13, 0.0), (float)luaL_optnumber(L, 14, 0.0),
+        (float)luaL_optnumber(L, 15, 1.0), (float)luaL_optnumber(L, 16, 1.0),
+        (uint8_t)luaL_optinteger(L, 17, 255), (uint8_t)luaL_optinteger(L, 18, 255),
+        (uint8_t)luaL_optinteger(L, 19, 255), (uint8_t)luaL_optinteger(L, 20, 255));
+    return 0;
+}
 
 static int l_gfx_draw_colored_mesh(lua_State* L) {
     typedef struct { float x, y, z; uint8_t r, g, b, a; } ColorVtx;
@@ -407,8 +473,8 @@ static int l_gfx_draw_colored_mesh(lua_State* L) {
     return 0;
 }
 
-static const luaL_Reg kGlMethods[]      = { { "make_current", l_gl_make_current }, { "swap_buffers", l_gl_swap_buffers }, { "has_extension", l_gl_has_extension }, { "set_swap_interval", l_gl_set_swap_interval }, { "size", l_gl_size }, { "render_size", l_gl_render_size }, { "set_render_resolution", l_gl_set_render_res }, { "power_level", l_gl_power_level }, { "enable_surface_scale", l_gl_enable_scale }, { "set_surface_rotate", l_gl_set_rotate }, { "__gc", l_gl_gc }, { NULL, NULL } };
-static const luaL_Reg kTexMethods[]     = { { "init_2d", l_tex_init_2d }, { "from_atitc", l_tex_from_atitc }, { "update_sub_image", l_tex_update_sub }, { "bind", l_tex_bind }, { "set_wrap", l_tex_set_wrap }, { "is_valid", l_tex_is_valid }, { "gl_id", l_tex_gl_id }, { "size", l_tex_size }, { "vram_bytes", l_tex_vram_bytes }, { "__gc", l_tex_gc }, { NULL, NULL } };
+static const luaL_Reg kGlMethods[]      = { { "make_current", l_gl_make_current }, { "swap_buffers", l_gl_swap_buffers }, { "has_extension", l_gl_has_extension }, { "set_swap_interval", l_gl_set_swap_interval }, { "size", l_gl_size }, { "render_size", l_gl_render_size }, { "set_render_resolution", l_gl_set_render_res }, { "power_level", l_gl_power_level }, { "enable_surface_scale", l_gl_enable_scale }, { "set_surface_scale", l_gl_set_surface_scale }, { "set_surface_rotate", l_gl_set_rotate }, { "__gc", l_gl_gc }, { NULL, NULL } };
+static const luaL_Reg kTexMethods[]     = { { "init_2d", l_tex_init_2d }, { "create_compressed", l_tex_create_compressed }, { "from_atitc", l_tex_from_atitc }, { "update_sub_image", l_tex_update_sub }, { "copy_from_framebuffer", l_tex_copy_fb }, { "bind", l_tex_bind }, { "set_wrap", l_tex_set_wrap }, { "is_valid", l_tex_is_valid }, { "gl_id", l_tex_gl_id }, { "size", l_tex_size }, { "vram_bytes", l_tex_vram_bytes }, { "__gc", l_tex_gc }, { NULL, NULL } };
 static const luaL_Reg kMeshMethods[]    = { { "init", l_mesh_init }, { "update", l_mesh_update }, { "release", l_mesh_release }, { "is_valid", l_mesh_is_valid }, { "size_bytes", l_mesh_size_bytes }, { "__gc", l_mesh_gc }, { NULL, NULL } };
 static const luaL_Reg kBatchMethods[]   = { { "begin", l_batch_begin }, { "begin_virtual", l_batch_begin_virtual }, { "finish", l_batch_end }, { "flush", l_batch_flush }, { "draw_rect", l_batch_draw_rect }, { "draw_quad", l_batch_draw_quad }, { "draw_rotated", l_batch_draw_rotated }, { "__gc", l_batch_gc }, { NULL, NULL } };
 static const luaL_Reg kFrustumMethods[] = { { "extract_camera", l_frustum_extract_camera }, { "extract_view_proj", l_frustum_extract_vp }, { "test_sphere", l_frustum_test_sphere }, { "test_aabb", l_frustum_test_aabb }, { "__gc", l_frustum_gc }, { NULL, NULL } };
@@ -472,6 +538,20 @@ static const luaL_Reg kGfxFuncs[] = {
     { "load_matrix",           l_gfx_load_matrix          },
     { "mult_matrix",           l_gfx_mult_matrix          },
     { "set_frustum",           l_gfx_set_frustum          },
+    { "read_framebuffer",      l_gfx_read_fb              },
+    { "mesh_unbind",           l_gfx_mesh_unbind          },
+    { "set_perspective_fast",  l_gfx_set_persp_fast       },
+    { "set_stencil_func",      l_gfx_set_stencil_func     },
+    { "set_stencil_op",        l_gfx_set_stencil_op       },
+    { "set_clip_plane",        l_gfx_set_clip_plane       },
+    { "set_texture_env_mode",  l_gfx_set_tex_env_mode     },
+    { "reset_texture_matrix",  l_gfx_reset_tex_mat        },
+    { "translate_texture",     l_gfx_trans_tex            },
+    { "scale_texture",         l_gfx_scale_tex            },
+    { "set_point_sprites",     l_gfx_set_point_sprites    },
+    { "set_matrix_palette",    l_gfx_set_mat_palette      },
+    { "get_safe_area",         l_gfx_safe_area            },
+    { "draw_billboard_3d",     l_gfx_draw_billboard       },
     { NULL,                    NULL                       }
 };
 

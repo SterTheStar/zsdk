@@ -59,6 +59,10 @@ ZSDK_C_API zsdk_result_t  zsdk_http_post(zsdk_http_t* http, const char* url, con
                                          const void* body, uint32_t body_bytes, zsdk_http_cb_t cb, void* user_data);
 ZSDK_C_API void           zsdk_http_cancel_pending(zsdk_http_t* http);
 
+typedef void (*zsdk_dns_cb_t)(zsdk_result_t status, uint32_t ipv4_host_order, void* user_data);
+ZSDK_C_API zsdk_result_t  zsdk_net_resolve_host(zsdk_net_mgr_t* mgr, const char* hostname,
+                                                zsdk_dns_cb_t cb, void* user_data);
+
 ZSDK_C_EXTERN_END
 
 #endif /* ZSDK_C_NET_H */

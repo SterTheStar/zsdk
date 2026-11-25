@@ -285,4 +285,22 @@ zsdk_result_t zsdk_savegame_delete_user_file(zsdk_savegame_t* sg, const char* fi
     return zsdk::c_abi::ToCResult(sg->sg.DeleteUserFile(filename));
 }
 
+namespace {
+struct ZsdkCDirBridge {
+    zsdk_fs_dir_cb_t cb;
+    void*            userData;
+};
+bool EnumDirThunk(const zsdk::fs::FileEntry& entry, void* ud) {
+    auto* b = static_cast<ZsdkCDirBridge*>(ud);
+    return b && b->cb ? (b->cb(entry.name, entry.size, entry.isDirectory ? 1 : 0, b->userData) != 0) : false;
+}
+} // namespace
+
+zsdk_result_t zsdk_fs_enumerate_dir(zsdk_fs_t* fs, const char* dir_path, int dirs_only,
+                                    zsdk_fs_dir_cb_t cb, void* user_data) {
+    if (!fs || !cb) return ZSDK_C_ERR_INVALID_ARG;
+    ZsdkCDirBridge bridge{cb, user_data};
+    return zsdk::c_abi::ToCResult(fs->fs.EnumerateDirectory(dir_path, dirs_only != 0, EnumDirThunk, &bridge));
+}
+
 } /* extern "C" */

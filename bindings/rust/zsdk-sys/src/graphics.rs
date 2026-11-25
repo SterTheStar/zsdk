@@ -178,4 +178,21 @@ extern "C" {
     pub fn zsdk_render_mult_matrix(mat16: *const f32);
     pub fn zsdk_render_set_frustum(left: f32, right: f32, bottom: f32, top: f32, near_z: f32, far_z: f32);
     pub fn zsdk_batch_draw_rotated(batch: *mut zsdk_sprite_batch_t, tex: *const zsdk_texture_t, cx: f32, cy: f32, w: f32, h: f32, angle_rad: f32, u0: f32, v0: f32, u1: f32, v1: f32, r: u8, g: u8, b: u8, a: u8);
+    pub fn zsdk_gl_set_surface_scale(ctx: *mut zsdk_gl_context_t, sx: i32, sy: i32, sw: i32, sh: i32, dx: i32, dy: i32, dw: i32, dh: i32, enable: c_int) -> zsdk_result_t;
+    pub fn zsdk_texture_create_compressed(tex: *mut zsdk_texture_t, w: u16, h: u16, gl_internal_fmt: u32, image_size: u32, data: *const c_void, filter: zsdk_tex_filter_t) -> zsdk_result_t;
+    pub fn zsdk_texture_copy_from_framebuffer(tex: *mut zsdk_texture_t, x: i32, y: i32, w: u16, h: u16, filter: zsdk_tex_filter_t) -> zsdk_result_t;
+    pub fn zsdk_texture_read_framebuffer(x: i32, y: i32, w: u16, h: u16, fmt: zsdk_tex_format_t, out_pixels: *mut c_void) -> zsdk_result_t;
+    pub fn zsdk_mesh_unbind(is_index_buffer: c_int);
+    pub fn zsdk_render_set_perspective_correction_fast(fast: c_int);
+    pub fn zsdk_render_set_stencil_func(func: u8, ref_val: i32, mask: u32);
+    pub fn zsdk_render_set_stencil_op(fail: u8, zfail: u8, zpass: u8);
+    pub fn zsdk_render_set_clip_plane(index: u8, enabled: c_int, a: f32, b: f32, c: f32, d: f32);
+    pub fn zsdk_render_set_texture_env_mode(mode: u8);
+    pub fn zsdk_render_reset_texture_matrix();
+    pub fn zsdk_render_translate_texture(u: f32, v: f32);
+    pub fn zsdk_render_scale_texture(su: f32, sv: f32);
+    pub fn zsdk_render_set_point_sprites(enabled: c_int);
+    pub fn zsdk_render_set_matrix_palette(enabled: c_int);
+    pub fn zsdk_render_get_safe_area(vw: i32, vh: i32, margin_px: i32, out_x: *mut i32, out_y: *mut i32, out_w: *mut i32, out_h: *mut i32);
+    pub fn zsdk_render_draw_billboard_3d(tex: *const zsdk_texture_t, wx: f32, wy: f32, wz: f32, w: f32, h: f32, rx: f32, ry: f32, rz: f32, ux: f32, uy: f32, uz: f32, u0: f32, v0: f32, u1: f32, v1: f32, r: u8, g: u8, b: u8, a: u8);
 }

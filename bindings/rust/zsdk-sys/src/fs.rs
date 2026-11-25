@@ -81,4 +81,7 @@ extern "C" {
     pub fn zsdk_savegame_read_user_file(sg: *mut zsdk_savegame_t, filename: *const c_char, out_buf: *mut c_void, max_bytes: u32, out_read: *mut u32) -> zsdk_result_t;
     pub fn zsdk_savegame_exists_user_file(sg: *const zsdk_savegame_t, filename: *const c_char) -> c_int;
     pub fn zsdk_savegame_delete_user_file(sg: *mut zsdk_savegame_t, filename: *const c_char) -> zsdk_result_t;
+    pub fn zsdk_fs_enumerate_dir(fs: *mut zsdk_fs_t, dir_path: *const c_char, dirs_only: c_int, cb: zsdk_fs_dir_cb_t, user_data: *mut c_void) -> zsdk_result_t;
 }
+
+pub type zsdk_fs_dir_cb_t = Option<unsafe extern "C" fn(name: *const c_char, size_bytes: u32, is_dir: c_int, user_data: *mut c_void) -> c_int>;

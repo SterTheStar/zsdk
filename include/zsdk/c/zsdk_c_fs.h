@@ -93,6 +93,10 @@ ZSDK_C_API zsdk_result_t     zsdk_savegame_read_user_file(zsdk_savegame_t* sg, c
 ZSDK_C_API int               zsdk_savegame_exists_user_file(const zsdk_savegame_t* sg, const char* filename);
 ZSDK_C_API zsdk_result_t     zsdk_savegame_delete_user_file(zsdk_savegame_t* sg, const char* filename);
 
+typedef int (*zsdk_fs_dir_cb_t)(const char* name, uint32_t size_bytes, int is_dir, void* user_data);
+ZSDK_C_API zsdk_result_t     zsdk_fs_enumerate_dir(zsdk_fs_t* fs, const char* dir_path, int dirs_only,
+                                                   zsdk_fs_dir_cb_t cb, void* user_data);
+
 ZSDK_C_EXTERN_END
 
 #endif /* ZSDK_C_FS_H */

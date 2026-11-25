@@ -84,6 +84,9 @@ impl MediaStream {
     }
 
     pub fn load_file(&mut self, platform_ctx: *mut c_void, path: &CStr) -> Result<()> { check(unsafe { zsdk_media_load_file(self.raw, platform_ctx, path.as_ptr()) }) }
+    pub fn load_memory(&mut self, platform_ctx: *mut c_void, data: &[u8], media_format: u8) -> Result<()> {
+        check(unsafe { zsdk_media_load_memory(self.raw, platform_ctx, data.as_ptr() as *const _, data.len() as u32, media_format) })
+    }
     pub fn unload(&mut self) { unsafe { zsdk_media_unload(self.raw); } }
     pub fn play(&mut self) -> Result<()> { check(unsafe { zsdk_media_play(self.raw) }) }
     pub fn stop(&mut self) -> Result<()> { check(unsafe { zsdk_media_stop(self.raw) }) }

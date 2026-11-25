@@ -37,3 +37,17 @@ pub fn check_license(platform_ctx: *mut c_void) -> Result<(bool, bool, u32)> {
     check(unsafe { zsdk_license_check(platform_ctx, &mut valid, &mut expired, &mut days) })?;
     Ok((valid != 0, expired != 0, days))
 }
+
+pub fn rsa_mod_exp(platform_ctx: *mut c_void, modulus: &[u8], exponent: &[u8], in_data: &[u8], out_buf: &mut [u8]) -> Result<u32> {
+    let mut written = 0u32;
+    check(unsafe {
+        zsdk_rsa_mod_exp(
+            platform_ctx,
+            modulus.as_ptr() as *const _, modulus.len() as u32,
+            exponent.as_ptr() as *const _, exponent.len() as u32,
+            in_data.as_ptr() as *const _, in_data.len() as u32,
+            out_buf.as_mut_ptr() as *mut _, out_buf.len() as u32, &mut written,
+        )
+    })?;
+    Ok(written)
+}

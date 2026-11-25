@@ -47,4 +47,14 @@ zsdk_result_t zsdk_license_check(void* platform_ctx, int* out_valid,
     return zsdk::c_abi::ToCResult(r);
 }
 
+zsdk_result_t zsdk_rsa_mod_exp(void* platform_ctx,
+                               const void* modulus, uint32_t modulus_bytes,
+                               const void* exponent, uint32_t exponent_bytes,
+                               const void* in_data, uint32_t in_bytes,
+                               void* out_data, uint32_t out_buf_bytes, uint32_t* out_written) {
+    return zsdk::c_abi::ToCResult(zsdk::security::Rsa::ModExp(
+        platform_ctx, modulus, modulus_bytes, exponent, exponent_bytes,
+        in_data, in_bytes, out_data, out_buf_bytes, out_written));
+}
+
 } /* extern "C" */

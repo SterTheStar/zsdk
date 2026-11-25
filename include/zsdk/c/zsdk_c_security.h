@@ -30,6 +30,12 @@ ZSDK_C_API zsdk_result_t zsdk_hmac_compute(void* platform_ctx, zsdk_hash_algo_t 
 ZSDK_C_API zsdk_result_t zsdk_license_check(void* platform_ctx, int* out_valid,
                                             int* out_expired, uint32_t* out_remaining_days);
 
+ZSDK_C_API zsdk_result_t zsdk_rsa_mod_exp(void* platform_ctx,
+                                          const void* modulus, uint32_t modulus_bytes,
+                                          const void* exponent, uint32_t exponent_bytes,
+                                          const void* in_data, uint32_t in_bytes,
+                                          void* out_data, uint32_t out_buf_bytes, uint32_t* out_written);
+
 ZSDK_C_EXTERN_END
 
 #endif /* ZSDK_C_SECURITY_H */

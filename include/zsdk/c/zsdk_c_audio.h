@@ -51,6 +51,7 @@ ZSDK_C_API uint8_t           zsdk_pcm_mixer_get_master_volume(const zsdk_pcm_mix
 ZSDK_C_API zsdk_media_stream_t* zsdk_media_create(void);
 ZSDK_C_API void                 zsdk_media_destroy(zsdk_media_stream_t* stream);
 ZSDK_C_API zsdk_result_t        zsdk_media_load_file(zsdk_media_stream_t* stream, void* platform_ctx, const char* file_path);
+ZSDK_C_API zsdk_result_t        zsdk_media_load_memory(zsdk_media_stream_t* stream, void* platform_ctx, const void* data, uint32_t size_bytes, uint8_t media_format);
 ZSDK_C_API void                 zsdk_media_unload(zsdk_media_stream_t* stream);
 ZSDK_C_API zsdk_result_t        zsdk_media_play(zsdk_media_stream_t* stream);
 ZSDK_C_API zsdk_result_t        zsdk_media_stop(zsdk_media_stream_t* stream);

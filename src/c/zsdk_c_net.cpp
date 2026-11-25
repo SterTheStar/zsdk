@@ -141,4 +141,28 @@ void zsdk_http_cancel_pending(zsdk_http_t* http) {
     if (http) http->http.CancelPending();
 }
 
+namespace {
+struct ZsdkCDnsBridge {
+    zsdk_dns_cb_t cb;
+    void*         userData;
+};
+void DnsThunk(zsdk::Result status, const uint32_t* ipv4Addrs, uint32_t addrCount, void* ud) {
+    auto* b = static_cast<ZsdkCDnsBridge*>(ud);
+    uint32_t firstIp = (ipv4Addrs && addrCount > 0u) ? ipv4Addrs[0] : 0u;
+    if (b && b->cb) b->cb(zsdk::c_abi::ToCResult(status), firstIp, b->userData);
+    delete b;
+}
+} // namespace
+
+zsdk_result_t zsdk_net_resolve_host(zsdk_net_mgr_t* mgr, const char* hostname,
+                                    zsdk_dns_cb_t cb, void* user_data) {
+    if (!mgr || !hostname || !cb) return ZSDK_C_ERR_INVALID_ARG;
+    auto* bridge = new ZsdkCDnsBridge{cb, user_data};
+    zsdk::Result r = mgr->mgr.ResolveHost(hostname, DnsThunk, bridge);
+    if (zsdk::Failed(r)) {
+        delete bridge;
+    }
+    return zsdk::c_abi::ToCResult(r);
+}
+
 } /* extern "C" */

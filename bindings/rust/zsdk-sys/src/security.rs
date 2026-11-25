@@ -39,4 +39,11 @@ extern "C" {
         out_expired: *mut c_int,
         out_remaining_days: *mut u32,
     ) -> zsdk_result_t;
+    pub fn zsdk_rsa_mod_exp(
+        platform_ctx: *mut c_void,
+        modulus: *const c_void, modulus_bytes: u32,
+        exponent: *const c_void, exponent_bytes: u32,
+        in_data: *const c_void, in_bytes: u32,
+        out_data: *mut c_void, out_buf_bytes: u32, out_written: *mut u32,
+    ) -> zsdk_result_t;
 }

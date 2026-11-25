@@ -54,4 +54,7 @@ extern "C" {
     pub fn zsdk_http_set_max_response_bytes(http: *mut zsdk_http_t, max_bytes: u32);
     pub fn zsdk_http_post(http: *mut zsdk_http_t, url: *const c_char, content_type: *const c_char, body: *const c_void, body_bytes: u32, cb: zsdk_http_cb_t, user_data: *mut c_void) -> zsdk_result_t;
     pub fn zsdk_http_cancel_pending(http: *mut zsdk_http_t);
+    pub fn zsdk_net_resolve_host(mgr: *mut zsdk_net_mgr_t, hostname: *const c_char, cb: zsdk_dns_cb_t, user_data: *mut c_void) -> zsdk_result_t;
 }
+
+pub type zsdk_dns_cb_t = Option<unsafe extern "C" fn(status: zsdk_result_t, ipv4_host_order: u32, user_data: *mut c_void)>;

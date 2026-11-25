@@ -203,6 +203,13 @@ static const luaL_Reg kAudioMethods[] = {
 static int l_mixer_get_output_rate(lua_State* L) { lua_pushinteger(L, (lua_Integer)zsdk_pcm_mixer_get_output_rate(check_mixer(L, 1))); return 1; }
 static int l_mixer_get_master_volume(lua_State* L) { lua_pushinteger(L, (lua_Integer)zsdk_pcm_mixer_get_master_volume(check_mixer(L, 1))); return 1; }
 static int l_media_is_loaded(lua_State* L) { lua_pushboolean(L, zsdk_media_is_loaded(((zsdk_lua_media_ud*)luaL_checkudata(L, 1, ZSDK_LUA_MEDIA_MT))->ptr)); return 1; }
+static int l_media_load_memory(lua_State* L) {
+    size_t len = 0; const char* data = luaL_checklstring(L, 3, &len);
+    lua_pushinteger(L, (lua_Integer)zsdk_media_load_memory(
+        ((zsdk_lua_media_ud*)luaL_checkudata(L, 1, ZSDK_LUA_MEDIA_MT))->ptr,
+        lua_touserdata(L, 2), data, (uint32_t)len, (uint8_t)luaL_optinteger(L, 4, 0)));
+    return 1;
+}
 static int l_sfx_play_memory(lua_State* L) {
     size_t len = 0;
     const char* data = luaL_checklstring(L, 2, &len);
@@ -229,6 +236,7 @@ static const luaL_Reg kMixerMethods[] = {
 
 static const luaL_Reg kMediaMethods[] = {
     { "load_file",   l_media_load_file   },
+    { "load_memory", l_media_load_memory },
     { "unload",      l_media_unload      },
     { "play",        l_media_play        },
     { "stop",        l_media_stop        },

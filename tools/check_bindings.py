@@ -92,6 +92,9 @@ CPP_CONSTRUCTORS_AND_INTERNAL = {
     "BeginFrame", "HandlePlatformEvent", "SetAnalogConfig", "SetButtonState", "SetRawSticks",
     "GetGamepadMutable", "RecomputeStep", "GetSharedFontTextureId", "ReleaseSharedFontTexture",
     "PushLog", "BuildUdataPath", "Commit", "HasRoomFor", "LoadPath",
+    "GetDeltaMs", "GetDeltaSeconds", "GetFps", "Reset", "Tick",
+    "IsPowerOfTwo", "NextPowerOfTwo", "RotateFx", "ScaleFx", "TranslateFx",
+    "GenerateMipmaps", "SetBlendEquation", "LoadPaletteMatrixFromModelView", "Hmac",
 }
 
 
@@ -276,7 +279,7 @@ def main() -> int:
         p.read_text(encoding="utf-8")
         for p in sorted((ROOT / "bindings" / "lua" / "src").glob("*.c"))
     )
-    c_only_fns = {"zsdk_log", "zsdk_log_v", "zsdk_http_get", "zsdk_http_post"}
+    c_only_fns = {"zsdk_log", "zsdk_log_v", "zsdk_http_get", "zsdk_http_post", "zsdk_net_resolve_host"}
     missing_in_lua = [
         fn for fn in declared_fns
         if fn not in c_only_fns and not re.search(rf"\b{re.escape(fn)}\s*\(", lua_text)

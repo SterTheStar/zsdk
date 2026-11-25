@@ -81,6 +81,20 @@ static int l_sec_check_license(lua_State* L) {
     return 4;
 }
 
+static int l_sec_rsa_mod_exp(lua_State* L) {
+    void* ctx = lua_touserdata(L, 1);
+    size_t ml = 0, el = 0, dl = 0;
+    const char* mod = luaL_checklstring(L, 2, &ml);
+    const char* exp = luaL_checklstring(L, 3, &el);
+    const char* dat = luaL_checklstring(L, 4, &dl);
+    uint8_t out[512];
+    uint32_t written = 0;
+    zsdk_result_t r = zsdk_rsa_mod_exp(ctx, mod, (uint32_t)ml, exp, (uint32_t)el, dat, (uint32_t)dl, out, sizeof(out), &written);
+    if (r != ZSDK_C_OK) { lua_pushnil(L); lua_pushinteger(L, (lua_Integer)r); return 2; }
+    lua_pushlstring(L, (const char*)out, (size_t)written);
+    return 1;
+}
+
 static const luaL_Reg kSecFuncs[] = {
     { "random_u32",    l_sec_random_u32    },
     { "random_bytes",  l_sec_random_bytes  },
@@ -88,6 +102,8 @@ static const luaL_Reg kSecFuncs[] = {
     { "hash_sha1",     l_sec_hash_sha1     },
     { "hmac_md5",      l_sec_hmac_md5      },
     { "hmac_sha1",     l_sec_hmac_sha1     },
+    { "check_license", l_sec_check_license },
+    { "rsa_mod_exp",   l_sec_rsa_mod_exp   },
     { "check_license", l_sec_check_license },
     { NULL,            NULL                }
 };
