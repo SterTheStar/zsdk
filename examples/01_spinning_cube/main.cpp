@@ -204,14 +204,14 @@ public:
             if (p1.IsDown(zsdk::input::GamepadButton::DPadDown))  panY -= 1.0f;
 
             m_camPanX += panX * 16.0f * dt;
-            m_camPanY -= panY * 16.0f * dt;
+            m_camPanY += panY * 16.0f * dt;
             if (m_camPanX >  40.0f) m_camPanX =  40.0f;
             if (m_camPanX < -40.0f) m_camPanX = -40.0f;
             if (m_camPanY >  30.0f) m_camPanY =  30.0f;
             if (m_camPanY < -30.0f) m_camPanY = -30.0f;
 
             const zsdk::Vec2 rStick = p1.GetRightStick();
-            m_camZoomOffset += rStick.y * 20.0f * dt;
+            m_camZoomOffset -= rStick.y * 20.0f * dt;
             if (p1.IsDown(zsdk::input::GamepadButton::ShoulderLeft))  m_camZoomOffset -= 14.0f * dt;
             if (p1.IsDown(zsdk::input::GamepadButton::ShoulderRight)) m_camZoomOffset += 14.0f * dt;
             if (m_camZoomOffset < -30.0f) m_camZoomOffset = -30.0f;

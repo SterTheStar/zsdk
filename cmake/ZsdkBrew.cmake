@@ -169,18 +169,20 @@ function(zsdk_add_lua_app TARGET_NAME)
     if(ARG_SCRIPT)
         get_filename_component(_SCRIPT_ABS "${ARG_SCRIPT}" ABSOLUTE)
         if(ZSDK_BUILD_ZEEBO)
-            add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        "${_SCRIPT_ABS}"
-                        "$<TARGET_FILE_DIR:${TARGET_NAME}>/mod/${TARGET_NAME}/main.lua"
-            )
+            set(_SCRIPT_DEST "${CMAKE_BINARY_DIR}/apps/${TARGET_NAME}/mod/${TARGET_NAME}/main.lua")
         else()
-            add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        "${_SCRIPT_ABS}"
-                        "$<TARGET_FILE_DIR:${TARGET_NAME}>/main.lua"
-            )
+            set(_SCRIPT_DEST "${CMAKE_BINARY_DIR}/apps/${TARGET_NAME}/main.lua")
         endif()
+        add_custom_command(
+            OUTPUT "${_SCRIPT_DEST}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<PATH:GET_PARENT_PATH,${_SCRIPT_DEST}>"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_SCRIPT_ABS}" "${_SCRIPT_DEST}"
+            DEPENDS "${_SCRIPT_ABS}"
+            COMMENT "Copying ${TARGET_NAME} Lua script (${_SCRIPT_ABS})"
+            VERBATIM
+        )
+        add_custom_target(${TARGET_NAME}_script ALL DEPENDS "${_SCRIPT_DEST}")
+        add_dependencies(${TARGET_NAME} ${TARGET_NAME}_script)
     endif()
 endfunction()
 

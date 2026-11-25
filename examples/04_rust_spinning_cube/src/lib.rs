@@ -476,11 +476,11 @@ pub unsafe extern "C" fn zsdk_c_app_update(delta_ms: u32, input: *const zsdk_inp
         if zsdk_input_is_down(input, 0, ZsdkButton::DPadDown)  != 0 { pan_y -= 1.0; }
 
         st.cam_pan_x = clampf(st.cam_pan_x + pan_x * 16.0 * dt, -40.0, 40.0);
-        st.cam_pan_y = clampf(st.cam_pan_y - pan_y * 16.0 * dt, -30.0, 30.0);
+        st.cam_pan_y = clampf(st.cam_pan_y + pan_y * 16.0 * dt, -30.0, 30.0);
 
         let (mut _rx, mut ry) = (0.0f32, 0.0f32);
         zsdk_input_right_stick(input, 0, &mut _rx, &mut ry);
-        st.cam_zoom_offset += ry * 20.0 * dt;
+        st.cam_zoom_offset -= ry * 20.0 * dt;
         if zsdk_input_is_down(input, 0, ZsdkButton::ShoulderLeft)  != 0 { st.cam_zoom_offset -= 14.0 * dt; }
         if zsdk_input_is_down(input, 0, ZsdkButton::ShoulderRight) != 0 { st.cam_zoom_offset += 14.0 * dt; }
         st.cam_zoom_offset = clampf(st.cam_zoom_offset, -30.0, 50.0);

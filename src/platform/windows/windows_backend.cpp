@@ -532,12 +532,9 @@ void InputManager::Update(uint32_t deltaTimeMs) {
                 }
             }
 
-            auto negateAxis = [](SHORT v) -> int16_t {
-                return (v <= -32767) ? static_cast<int16_t>(32767) : static_cast<int16_t>(-v);
-            };
             ZeeboInputBridge::SetSticks(m_gamepads[i],
-                                        xs.Gamepad.sThumbLX, negateAxis(xs.Gamepad.sThumbLY),
-                                        xs.Gamepad.sThumbRX, negateAxis(xs.Gamepad.sThumbRY));
+                                        xs.Gamepad.sThumbLX, xs.Gamepad.sThumbLY,
+                                        xs.Gamepad.sThumbRX, xs.Gamepad.sThumbRY);
         }
     }
 

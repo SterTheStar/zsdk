@@ -73,6 +73,8 @@ public:
         g_luaHostGl = &m_gl;
         lua_pushcfunction(m_L, l_host_set_swap_interval);
         lua_setglobal(m_L, "zsdk_set_swap_interval");
+        lua_pushlightuserdata(m_L, app->GetNativePlatformContext());
+        lua_setglobal(m_L, "zsdk_platform_context");
 
         if (luaL_loadbuffer(m_L, static_cast<const char*>(scriptBuf), scriptSize, scriptPath) != LUA_OK ||
             lua_pcall(m_L, 0, 0, 0) != LUA_OK) {
@@ -89,7 +91,8 @@ public:
         if (lua_isfunction(m_L, -1)) {
             lua_pushinteger(m_L, m_gl.GetWidth());
             lua_pushinteger(m_L, m_gl.GetHeight());
-            if (lua_pcall(m_L, 2, 0, 0) != LUA_OK) {
+            lua_pushlightuserdata(m_L, app->GetNativePlatformContext());
+            if (lua_pcall(m_L, 3, 0, 0) != LUA_OK) {
                 ZSDK_LOG_ERROR("LUA", "zsdk_on_init: %s", lua_tostring(m_L, -1));
                 lua_pop(m_L, 1);
             }

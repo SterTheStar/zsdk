@@ -378,7 +378,7 @@ void zsdk_c_app_update(uint32_t delta_ms, const zsdk_input_t* input) {
         if (zsdk_input_is_down(input, 0u, ZSDK_BTN_DPAD_DOWN))  panY -= 1.0f;
 
         g_camPanX += panX * 16.0f * dt;
-        g_camPanY -= panY * 16.0f * dt;
+        g_camPanY += panY * 16.0f * dt;
         if (g_camPanX >  40.0f) g_camPanX =  40.0f;
         if (g_camPanX < -40.0f) g_camPanX = -40.0f;
         if (g_camPanY >  30.0f) g_camPanY =  30.0f;
@@ -386,7 +386,7 @@ void zsdk_c_app_update(uint32_t delta_ms, const zsdk_input_t* input) {
 
         float rx = 0.0f, ry = 0.0f;
         zsdk_input_right_stick(input, 0u, &rx, &ry);
-        g_camZoomOffset += ry * 20.0f * dt;
+        g_camZoomOffset -= ry * 20.0f * dt;
         if (zsdk_input_is_down(input, 0u, ZSDK_BTN_SHOULDER_LEFT))  g_camZoomOffset -= 14.0f * dt;
         if (zsdk_input_is_down(input, 0u, ZSDK_BTN_SHOULDER_RIGHT)) g_camZoomOffset += 14.0f * dt;
         if (g_camZoomOffset < -30.0f) g_camZoomOffset = -30.0f;

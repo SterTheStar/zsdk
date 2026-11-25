@@ -299,11 +299,15 @@ void InputManager::Update(uint32_t deltaTimeMs) {
             }
         }
 
-        /* Read analog thumbsticks */
+        /* Read analog thumbsticks (HID Y is top-down: invert to match +Y = up, -Y = down) */
         if (slot.hasThumbsticks && slot.thumbMapping) {
             AEEHIDThumbstickValues sticks;
             if (AEEHIDThumbstick_GetPositionState(slot.device, slot.thumbMapping, &sticks) == AEE_SUCCESS) {
-                pad.SetRawSticks(sticks.sLeftX, sticks.sLeftY, sticks.sRightX, sticks.sRightY);
+                auto negateAxis = [](int16 v) -> int16_t {
+                    return (v <= -32767) ? static_cast<int16_t>(32767) : static_cast<int16_t>(-v);
+                };
+                pad.SetRawSticks(sticks.sLeftX, negateAxis(sticks.sLeftY),
+                                 sticks.sRightX, negateAxis(sticks.sRightY));
             }
         }
 

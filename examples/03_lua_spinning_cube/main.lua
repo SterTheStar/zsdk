@@ -146,8 +146,12 @@ local function adjust_menu_item(dir)
                 settings.frustumCull,
                 settings.faceCull
             )
-            saveMgr:save_slot(0, blob, SAVE_VERSION)
-            log.info("CUBE_LUA", "Saved settings to udata.")
+            local res = saveMgr:save_slot(0, blob, SAVE_VERSION)
+            if res == 0 then
+                log.info("CUBE_LUA", "Saved settings to udata.")
+            else
+                log.warn("CUBE_LUA", "Failed to save udata.")
+            end
         end
     elseif menuCursor == 10 then
         core.request_quit()
@@ -263,14 +267,14 @@ local function render_menu(w, h)
     batch:finish()
 end
 
-function zsdk_on_init(w, h)
+function zsdk_on_init(w, h, platform_ctx)
     batch = gfx.new_sprite_batch(64)
     frustum = gfx.new_frustum()
     gfx.configure_light(0, 6.0, 8.0, 10.0, 64, 64, 80, 255, 242, 242, 230, 255, 204, 204, 204, 255)
 
-    saveMgr = fs.new_savegame()
-    local res, blob = saveMgr:load_slot(0, 16, SAVE_VERSION)
-    if res == zsdk.OK and blob and #blob == 7 then
+    saveMgr = fs.new_savegame(platform_ctx or zsdk_platform_context)
+    local blob = saveMgr:load_slot(0, SAVE_VERSION)
+    if blob and #blob == 7 then
         local b1, b2, b3, b4, b5, b6, b7 = string.byte(blob, 1, 7)
         settings.lighting       = b1
         settings.fpsMode        = b2
@@ -311,14 +315,14 @@ function zsdk_on_update(delta_ms, input)
         if input:is_down(0, inp.BTN_DPAD_DOWN)  then panY = panY - 1.0 end
 
         camPanX = camPanX + panX * 16.0 * dt
-        camPanY = camPanY - panY * 16.0 * dt
+        camPanY = camPanY + panY * 16.0 * dt
         if camPanX >  40.0 then camPanX =  40.0 end
         if camPanX < -40.0 then camPanX = -40.0 end
         if camPanY >  30.0 then camPanY =  30.0 end
         if camPanY < -30.0 then camPanY = -30.0 end
 
         local _, ry = input:right_stick(0)
-        camZoomOffset = camZoomOffset + ry * 20.0 * dt
+        camZoomOffset = camZoomOffset - ry * 20.0 * dt
         if input:is_down(0, inp.BTN_SHOULDER_LEFT)  then camZoomOffset = camZoomOffset - 14.0 * dt end
         if input:is_down(0, inp.BTN_SHOULDER_RIGHT) then camZoomOffset = camZoomOffset + 14.0 * dt end
         if camZoomOffset < -30.0 then camZoomOffset = -30.0 end
