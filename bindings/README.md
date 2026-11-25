@@ -64,7 +64,20 @@ zsdk.log.warn("AI", "Pathfinding lento")
 zsdk.log.error("FS", "Arquivo nao encontrado")
 ```
 
-## Expandindo para Rust (ou outras linguagens)
-1. Crie `bindings/rust/zsdk-sys/` usando `bindgen` apontando diretamente para `include/zsdk/c/zsdk_c.h`.
-2. Linke `zsdk` (`libzsdk.a`).
-3. Como toda a ABI pública em `include/zsdk/c/` usa apenas tipos C99 (`uint32_t`, `const char*`, `enum`), não há mangling C++ nem exceções cruzando a fronteira FFI.
+## Rust (`#![no_std]`)
+Os bindings em **Rust (`#![no_std]`)** estão completos em `bindings/rust/`:
+* **`bindings/rust/zsdk-sys/`** — FFI `extern "C"` sobre `include/zsdk/c/*.h` (230/231 funções; apenas `zsdk_log_v` usa `va_list`).
+* **`bindings/rust/zsdk/`** — Wrappers seguros `#![no_std]` com `Result<T, Error>` e `Drop` automático para todos os 8 subsistemas (`log`, `core_sys`, `input` + `KeyboardMouse`/`VirtualKeyboard`, `audio` + `PcmMixer`/`MediaStream`/`Sfx`, `graphics` + `GLContext`/`Texture`/`MeshBuffer`/`SpriteBatch`/`Frustum`/`renderer`, `fs` + `File`/`LocalStorage`/`SaveGameManager`/`RamCache`, `net` + `NetworkManager`/`Socket`/`HttpClient`, `security`).
+* **`examples/04_rust_spinning_cube/`** — Exemplo completo `#![no_std]` (`staticlib`) demonstrando `GLContext`, `InputManager`, `renderer` 2D/3D e `log`.
+* **`bindings/rust/zeebo-armv5te.json`** — Target spec Rust para **Zeebo (ARMv5TE soft-float EABI)**.
+
+Para verificar/compilar o workspace Rust e o exemplo:
+```bash
+cargo check --manifest-path bindings/rust/Cargo.toml
+cargo build --manifest-path examples/04_rust_spinning_cube/Cargo.toml --release
+```
+
+Para linkar contra a biblioteca estática `zsdk` compilada pelo CMake:
+```bash
+ZSDK_LINK_ZSDK=1 cargo build --manifest-path bindings/rust/Cargo.toml --release
+```

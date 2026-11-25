@@ -1,0 +1,9 @@
+[package]
+name = "zsdk-sys"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Low-level no_std C99 ABI FFI bindings for ZSDK (Zeebo / BREW Platform Abstraction Layer)"
+build = "build.rs"
+
+[dependencies]

@@ -4,6 +4,8 @@ build_*/
 cmake-build-*/
 CMakeCache.txt
 CMakeFiles/
+target/
+Cargo.lock
 
 # Compiled objects & binaries
 *.o

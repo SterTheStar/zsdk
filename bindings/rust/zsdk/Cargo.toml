@@ -1,0 +1,9 @@
+[package]
+name = "zsdk"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Safe no_std ergonomic Rust bindings for ZSDK (Zeebo / BREW Platform Abstraction Layer)"
+
+[dependencies]
+zsdk-sys = { path = "../zsdk-sys" }
