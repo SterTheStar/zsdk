@@ -71,14 +71,14 @@ function zsdk_on_update(dt_ms, input)
 
         if input:is_down(0, zsdk.input.BTN_DPAD_LEFT)  then lx = lx - 1.0 end
         if input:is_down(0, zsdk.input.BTN_DPAD_RIGHT) then lx = lx + 1.0 end
-        if input:is_down(0, zsdk.input.BTN_DPAD_UP)    then ly = ly + 1.0 end
-        if input:is_down(0, zsdk.input.BTN_DPAD_DOWN)  then ly = ly - 1.0 end
+        if input:is_down(0, zsdk.input.BTN_DPAD_UP)    then ly = ly - 1.0 end
+        if input:is_down(0, zsdk.input.BTN_DPAD_DOWN)  then ly = ly + 1.0 end
 
         pan_x = clamp(pan_x + lx * 4.0 * dt, -6.0, 6.0)
-        pan_y = clamp(pan_y + ly * 4.0 * dt, -4.0, 4.0)
+        pan_y = clamp(pan_y - ly * 4.0 * dt, -4.0, 4.0)
         angle_y = (angle_y + rx * 120.0 * dt) % 360.0
 
-        local zoom = ry * 6.0
+        local zoom = -ry * 6.0
         if input:is_down(0, zsdk.input.BTN_SHOULDER_LEFT)  then zoom = zoom - 6.0 end
         if input:is_down(0, zsdk.input.BTN_SHOULDER_RIGHT) then zoom = zoom + 6.0 end
         cam_dist = clamp(cam_dist + zoom * dt, 2.2, 20.0)
@@ -98,6 +98,9 @@ function zsdk_on_render(width, height)
     local aspect = (height > 0) and (width / height) or 1.333
 
     zsdk.graphics.set_viewport(0, 0, width, height)
+    zsdk.graphics.set_depth_test(true)
+    zsdk.graphics.set_cull_face(true)
+    zsdk.graphics.set_blend_mode(zsdk.graphics.BLEND_OPAQUE)
     zsdk.graphics.clear(20, 24, 34, 255, true, false)
 
     zsdk.graphics.set_perspective(45.0, aspect, 0.1, 50.0)

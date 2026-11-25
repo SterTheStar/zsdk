@@ -101,15 +101,15 @@ void cube_c_update(float dt_sec, const zsdk_input_t* input) {
 
         if (zsdk_input_is_down(input, 0u, ZSDK_BTN_DPAD_LEFT))  lx -= 1.0f;
         if (zsdk_input_is_down(input, 0u, ZSDK_BTN_DPAD_RIGHT)) lx += 1.0f;
-        if (zsdk_input_is_down(input, 0u, ZSDK_BTN_DPAD_UP))    ly += 1.0f;
-        if (zsdk_input_is_down(input, 0u, ZSDK_BTN_DPAD_DOWN))  ly -= 1.0f;
+        if (zsdk_input_is_down(input, 0u, ZSDK_BTN_DPAD_UP))    ly -= 1.0f;
+        if (zsdk_input_is_down(input, 0u, ZSDK_BTN_DPAD_DOWN))  ly += 1.0f;
 
         g_panX = clampf(g_panX + lx * 4.0f * dt_sec, -6.0f, 6.0f);
-        g_panY = clampf(g_panY + ly * 4.0f * dt_sec, -4.0f, 4.0f);
+        g_panY = clampf(g_panY - ly * 4.0f * dt_sec, -4.0f, 4.0f);
 
         g_angleY += rx * 120.0f * dt_sec;
 
-        float zoom = ry * 6.0f;
+        float zoom = -ry * 6.0f;
         if (zsdk_input_is_down(input, 0u, ZSDK_BTN_SHOULDER_LEFT))  zoom -= 6.0f;
         if (zsdk_input_is_down(input, 0u, ZSDK_BTN_SHOULDER_RIGHT)) zoom += 6.0f;
         g_camDist = clampf(g_camDist + zoom * dt_sec, 2.2f, 20.0f);
@@ -136,6 +136,9 @@ void cube_c_render(int32_t* out_width, int32_t* out_height) {
     float aspect = (h > 0) ? ((float)w / (float)h) : 1.333f;
 
     zsdk_render_set_viewport(0, 0, w, h);
+    zsdk_render_set_depth_test(1);
+    zsdk_render_set_cull_face(1);
+    zsdk_render_set_blend_mode(ZSDK_BLEND_OPAQUE);
     zsdk_render_clear(20, 24, 34, 255, 1, 0);
 
     zsdk_render_set_perspective(45.0f, aspect, 0.1f, 50.0f);
