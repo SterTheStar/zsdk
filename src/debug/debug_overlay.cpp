@@ -190,7 +190,7 @@ void DebugOverlay::Update(const input::InputManager& input, float deltaTimeMs) {
 }
 
 void DebugOverlay::Render(int32_t viewportWidth, int32_t viewportHeight) {
-    if (!g_overlay.initialized || viewportWidth <= 0 || viewportHeight <= 0) {
+    if (!g_overlay.initialized || !g_overlay.visible || viewportWidth <= 0 || viewportHeight <= 0) {
         return;
     }
 
@@ -220,27 +220,6 @@ void DebugOverlay::Render(int32_t viewportWidth, int32_t viewportHeight) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glEnableClientState(GL_VERTEX_ARRAY);
-
-    if (!g_overlay.visible) {
-        /* Small, unobtrusive hint in the top-right corner */
-        const float hintScale = 0.75f;
-        const float hintW = 78.0f;
-        const float hintH = 12.0f;
-        const float hintX = static_cast<float>(viewportWidth) - hintW - 6.0f;
-        const float hintY = 6.0f;
-        DrawSolidRect(hintX, hintY, hintW, hintH, 10, 12, 18, 170);
-        DrawTextLine(hintX + 4.0f, hintY + 3.0f, hintScale, "START+DN:DBG", 160, 220, 255, 220);
-
-        glDisable(GL_TEXTURE_2D);
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glDisable(GL_BLEND);
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
-        glMatrixMode(GL_MODELVIEW);
-        glPopMatrix();
-        graphics::Renderer::ResetStateCache();
-        return;
-    }
 
     MemorySnapshot mem;
     MemoryTracker::GetSnapshot(mem);
