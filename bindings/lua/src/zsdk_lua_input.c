@@ -11,6 +11,7 @@
 
 typedef struct zsdk_lua_input_ud {
     zsdk_input_t* ptr;
+    int           owned;
 } zsdk_lua_input_ud;
 
 static zsdk_input_t* check_input(lua_State* L, int idx) {
@@ -20,12 +21,20 @@ static zsdk_input_t* check_input(lua_State* L, int idx) {
 
 static int l_input_gc(lua_State* L) {
     zsdk_lua_input_ud* ud = (zsdk_lua_input_ud*)luaL_checkudata(L, 1, ZSDK_LUA_INPUT_MT);
-    if (ud->ptr) {
+    if (ud->ptr && ud->owned) {
         zsdk_input_shutdown(ud->ptr);
         zsdk_input_destroy(ud->ptr);
-        ud->ptr = NULL;
     }
+    ud->ptr = NULL;
     return 0;
+}
+
+void zsdk_lua_push_input_view(lua_State* L, void* zsdk_input_ptr) {
+    zsdk_lua_input_ud* ud = (zsdk_lua_input_ud*)lua_newuserdata(L, sizeof(*ud));
+    ud->ptr   = (zsdk_input_t*)zsdk_input_ptr;
+    ud->owned = 0;
+    luaL_getmetatable(L, ZSDK_LUA_INPUT_MT);
+    lua_setmetatable(L, -2);
 }
 
 static int l_input_new(lua_State* L) {
@@ -37,7 +46,8 @@ static int l_input_new(lua_State* L) {
         return luaL_error(L, "zsdk.input.new: init failed");
     }
     zsdk_lua_input_ud* ud = (zsdk_lua_input_ud*)lua_newuserdata(L, sizeof(*ud));
-    ud->ptr = inp;
+    ud->ptr   = inp;
+    ud->owned = 1;
     luaL_getmetatable(L, ZSDK_LUA_INPUT_MT);
     lua_setmetatable(L, -2);
     return 1;

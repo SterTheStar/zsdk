@@ -9,7 +9,7 @@ option(ZSDK_ENABLE_DEBUG_OVERLAY "Enable in-game OpenGL ES Debug & RAM/VRAM Over
 option(ZSDK_ENABLE_LOGGING "Enable ZSDK_LOG_INFO and ZSDK_LOG_WARN logging" ON)
 option(ZSDK_BUILD_ZEEBO "Build for Zeebo / Qualcomm BREW 4.0.2" ON)
 option(ZSDK_BUILD_EXAMPLES "Build ZSDK sample applications" ON)
-option(ZSDK_BUILD_LUA_BINDINGS "Build modular Lua C bindings (requires ZSDK_LUA_INCLUDE_DIR)" OFF)
+option(ZSDK_BUILD_LUA_BINDINGS "Build modular Lua C bindings" ON)
 option(ZSDK_ENABLE_TESTS "Enable C ABI self-verification tests and bindings parity check" ON)
 
 set(BREW_SDK_ROOT "C:/Users/Esther/AppData/Local/Programs/brew-sdk" CACHE PATH "Path to BREW/Zeebo SDK")
@@ -127,6 +127,11 @@ if(ZSDK_BUILD_EXAMPLES)
             examples/02_c_spinning_cube/cube_c.c
         MIF_CLASS_ID 0x01099002
         MIF_APP_NAME "ZSDK_C_Cube"
+    )
+    zsdk_add_lua_app(03_lua_spinning_cube
+        SCRIPT examples/03_lua_spinning_cube/main.lua
+        MIF_CLASS_ID 0x01099003
+        MIF_APP_NAME "ZSDK_Lua_Cube"
     )
 endif()
 

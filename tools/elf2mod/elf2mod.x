@@ -71,10 +71,6 @@ SECTIONS
   . = ALIGN(32 / 8);
 
   PROVIDE_HIDDEN (__exidx_start = .);
-  .ARM.exidx :
-  {
-    *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-  } 
   PROVIDE_HIDDEN (__exidx_end = .);
   . = ALIGN(32 / 8);
 
@@ -152,5 +148,5 @@ SECTIONS
   
   /DISCARD/ : {*(.stack)} : NONE            /* Leave out the stack */
   
-  /DISCARD/ : {*(.stab* .comment*)} : NONE  /* Leave out stabs debug */
+  /DISCARD/ : {*(.stab* .comment* .ARM.exidx* .gnu.linkonce.armexidx.* .ARM.extab*)} : NONE  /* Leave out stabs debug & unwind */
 }

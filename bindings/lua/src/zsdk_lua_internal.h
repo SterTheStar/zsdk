@@ -20,4 +20,12 @@ static void zsdk_lua_register_funcs(lua_State* L, const luaL_Reg* funcs) {
 #endif
 }
 
+static size_t zsdk_lua_rawlen(lua_State* L, int idx) {
+#if LUA_VERSION_NUM >= 502
+    return lua_rawlen(L, idx);
+#else
+    return lua_objlen(L, idx);
+#endif
+}
+
 #endif /* ZSDK_LUA_INTERNAL_H */

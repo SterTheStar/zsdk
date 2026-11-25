@@ -1156,6 +1156,7 @@ Result NetworkManager::Initialize(void*) { return Result::Ok; }
 void NetworkManager::Shutdown() {}
 NetworkState NetworkManager::GetState() const { return NetworkState::Connected; }
 bool NetworkManager::IsWifiAvailable() const { return true; }
+uint32_t NetworkManager::GetLocalIpAddress() const { return 0x7F000001u; }
 
 struct BluetoothManager::Impl { int dummy; };
 BluetoothManager::BluetoothManager() : m_impl(nullptr) {}
@@ -1182,6 +1183,20 @@ uint32_t Random::GetUInt32(void* ctx) {
 Result LicenseManager::CheckLicense(void*, LicenseStatus& outStatus) {
     outStatus = LicenseStatus{true, false, 999u};
     return Result::Ok;
+}
+Result Hash::Compute(void*, HashAlgorithm algo, const void*, uint32_t, void* outDigest, uint32_t digestBufferBytes, uint32_t* outDigestBytes) {
+    const uint32_t need = (algo == HashAlgorithm::Md5) ? 16u : 20u;
+    if (!outDigest || digestBufferBytes < need) return Result::InvalidArg;
+    memset(outDigest, 0, need);
+    if (outDigestBytes) *outDigestBytes = need;
+    return Result::NotSupported;
+}
+Result Hmac::Compute(void*, HashAlgorithm algo, const void*, uint32_t, const void*, uint32_t, void* outMac, uint32_t macBufferBytes, uint32_t* outMacBytes) {
+    const uint32_t need = (algo == HashAlgorithm::Md5) ? 16u : 20u;
+    if (!outMac || macBufferBytes < need) return Result::InvalidArg;
+    memset(outMac, 0, need);
+    if (outMacBytes) *outMacBytes = need;
+    return Result::NotSupported;
 }
 } // namespace security
 

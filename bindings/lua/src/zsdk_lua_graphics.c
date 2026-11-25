@@ -244,8 +244,8 @@ static int l_gfx_draw_colored_mesh(lua_State* L) {
     uint16_t indices[kMaxIndices];
     luaL_checktype(L, 1, LUA_TTABLE);
     luaL_checktype(L, 2, LUA_TTABLE);
-    int vcount = (int)lua_objlen(L, 1);
-    int icount = (int)lua_objlen(L, 2);
+    int vcount = (int)zsdk_lua_rawlen(L, 1);
+    int icount = (int)zsdk_lua_rawlen(L, 2);
     if (vcount <= 0 || vcount > kMaxVerts || icount <= 0 || icount > kMaxIndices) {
         return luaL_error(L, "draw_colored_mesh: vertex/index count out of range");
     }

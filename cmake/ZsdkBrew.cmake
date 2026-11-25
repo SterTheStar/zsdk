@@ -35,7 +35,10 @@ function(zsdk_add_brew_app TARGET_NAME)
         )
 
         add_executable(${TARGET_NAME} ${ARG_SOURCES} ${BREW_CRT_SOURCES})
-        set_target_properties(${TARGET_NAME} PROPERTIES SUFFIX ".elf")
+        set_target_properties(${TARGET_NAME} PROPERTIES
+            SUFFIX ".elf"
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/apps/${TARGET_NAME}"
+        )
 
         target_include_directories(${TARGET_NAME} PRIVATE
             "${BREW_SDK_ROOT}/platform_402/BREW 4.0.2 SP19/sdk/inc"
@@ -102,7 +105,7 @@ function(zsdk_add_brew_app TARGET_NAME)
             set(ZSDK_MIF_VERSION "1.0.0")
         endif()
 
-        set(ZSDK_GENERATED_CIF "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.cif")
+        set(ZSDK_GENERATED_CIF "${CMAKE_BINARY_DIR}/apps/${TARGET_NAME}/${TARGET_NAME}.cif")
         configure_file(
             "${ZSDK_ROOT_DIR}/tools/mif/zsdk_template.mif.in"
             "${ZSDK_GENERATED_CIF}"
@@ -135,6 +138,48 @@ function(zsdk_add_brew_app TARGET_NAME)
         endif()
     else()
         add_executable(${TARGET_NAME} ${ARG_SOURCES})
+        set_target_properties(${TARGET_NAME} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/apps/${TARGET_NAME}"
+        )
         target_link_libraries(${TARGET_NAME} PRIVATE zsdk opengl32 user32 gdi32 winmm)
+    endif()
+endfunction()
+
+# Builds a pure-Lua ZSDK application using the built-in zsdk_lua_host.cpp (no C/C++ boilerplate needed).
+function(zsdk_add_lua_app TARGET_NAME)
+    cmake_parse_arguments(ARG "" "SCRIPT;MIF_CLASS_ID;MIF_APP_NAME;MIF_COMPANY;MIF_COPYRIGHT;MIF_VERSION" "" ${ARGN})
+    if(NOT TARGET zsdk_lua)
+        return()
+    endif()
+
+    zsdk_add_brew_app(${TARGET_NAME}
+        SOURCES "${ZSDK_ROOT_DIR}/bindings/lua/host/zsdk_lua_host.cpp"
+        MIF_CLASS_ID "${ARG_MIF_CLASS_ID}"
+        MIF_APP_NAME "${ARG_MIF_APP_NAME}"
+        MIF_COMPANY "${ARG_MIF_COMPANY}"
+        MIF_COPYRIGHT "${ARG_MIF_COPYRIGHT}"
+        MIF_VERSION "${ARG_MIF_VERSION}"
+    )
+
+    if(ARG_MIF_APP_NAME)
+        target_compile_definitions(${TARGET_NAME} PRIVATE ZSDK_LUA_APP_NAME="${ARG_MIF_APP_NAME}")
+    endif()
+    target_link_libraries(${TARGET_NAME} PRIVATE zsdk_lua)
+
+    if(ARG_SCRIPT)
+        get_filename_component(_SCRIPT_ABS "${ARG_SCRIPT}" ABSOLUTE)
+        if(ZSDK_BUILD_ZEEBO)
+            add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        "${_SCRIPT_ABS}"
+                        "$<TARGET_FILE_DIR:${TARGET_NAME}>/mod/${TARGET_NAME}/main.lua"
+            )
+        else()
+            add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        "${_SCRIPT_ABS}"
+                        "$<TARGET_FILE_DIR:${TARGET_NAME}>/main.lua"
+            )
+        endif()
     endif()
 endfunction()
