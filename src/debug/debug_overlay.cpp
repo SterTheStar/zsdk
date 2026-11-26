@@ -27,6 +27,8 @@ namespace debug {
 
 namespace {
 
+static const uint32_t kFrameHistSize = 44u;
+
 struct OverlayState {
     bool     initialized;
     bool     visible;
@@ -39,6 +41,10 @@ struct OverlayState {
     uint32_t lastFrameDrawCalls;
     uint32_t vertices;
     uint32_t lastFrameVertices;
+
+    float    frameHistory[kFrameHistSize];
+    uint32_t frameHistHead;
+    uint32_t frameHistCount;
 
     char     logLines[ZSDK_DEBUG_LOG_CAPACITY][ZSDK_DEBUG_LOG_LINE_LEN];
     uint32_t logHead;
@@ -61,6 +67,50 @@ void DrawSolidRect(float x, float y, float w, float h, uint8_t r, uint8_t g, uin
               static_cast<GLfloat>(b) * inv, static_cast<GLfloat>(a) * inv);
     glVertexPointer(2, GL_FLOAT, 0, verts);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+void DrawFrametimeGraph(float gx, float gy, float gw, float gh) {
+    DrawSolidRect(gx, gy, gw, gh, 0, 0, 0, 100);
+
+    const float maxMs = 50.0f;
+    const float baseX = gx + 1.0f;
+    const float baseY = gy + gh - 1.0f;
+    const float innerW = gw - 2.0f;
+    const float innerH = gh - 2.0f;
+
+    /* 16.7ms (60fps) and 33.3ms (30fps) faint reference lines */
+    const float ref60Y = baseY - (16.67f / maxMs) * innerH;
+    const float ref30Y = baseY - (33.33f / maxMs) * innerH;
+    DrawSolidRect(baseX, ref60Y, innerW, 1.0f, 255, 255, 255, 24);
+    DrawSolidRect(baseX, ref30Y, innerW, 1.0f, 255, 255, 255, 36);
+
+    const float step = innerW / static_cast<float>(kFrameHistSize);
+    const uint32_t count = g_overlay.frameHistCount;
+    const uint32_t startSlot = (kFrameHistSize > count) ? (kFrameHistSize - count) : 0u;
+
+    for (uint32_t i = 0u; i < count; ++i) {
+        const uint32_t idx = (g_overlay.frameHistHead + kFrameHistSize - count + i) % kFrameHistSize;
+        float ms = g_overlay.frameHistory[idx];
+        if (ms < 0.0f) ms = 0.0f;
+        if (ms > maxMs) ms = maxMs;
+        float bh = (ms / maxMs) * innerH;
+        if (bh < 1.0f) bh = 1.0f;
+
+        uint8_t br = 90u,  bg = 185u, bb = 125u;
+        uint8_t cr = 165u, cg = 235u, cb = 185u;
+        if (ms > 44.0f) {
+            br = 210u; bg = 80u;  bb = 75u;
+            cr = 250u; cg = 140u; cb = 135u;
+        } else if (ms > 35.0f) {
+            br = 215u; bg = 165u; bb = 65u;
+            cr = 250u; cg = 210u; cb = 120u;
+        }
+
+        const float bx = baseX + static_cast<float>(startSlot + i) * step;
+        const float bw = (step >= 1.0f) ? step : 1.0f;
+        DrawSolidRect(bx, baseY - bh, bw, bh, br, bg, bb, 220);
+        DrawSolidRect(bx, baseY - bh, bw, 1.0f, cr, cg, cb, 255);
+    }
 }
 
 void DrawTextLine(float startX, float startY, float scale, const char* text,
@@ -186,6 +236,14 @@ void DebugOverlay::Update(const input::InputManager& input, float deltaTimeMs) {
         g_overlay.frameTimeMs = deltaTimeMs;
         g_overlay.fps = 1000.0f / deltaTimeMs;
     }
+    const float sampleMs = (rawDt > 0u) ? static_cast<float>(rawDt) : deltaTimeMs;
+    if (sampleMs > 0.0f) {
+        g_overlay.frameHistory[g_overlay.frameHistHead] = sampleMs;
+        g_overlay.frameHistHead = (g_overlay.frameHistHead + 1u) % kFrameHistSize;
+        if (g_overlay.frameHistCount < kFrameHistSize) {
+            ++g_overlay.frameHistCount;
+        }
+    }
     g_overlay.lastFrameDrawCalls = g_overlay.drawCalls;
     g_overlay.drawCalls = 0u;
     g_overlay.lastFrameVertices = g_overlay.vertices;
@@ -239,56 +297,125 @@ void DebugOverlay::Render(int32_t viewportWidth, int32_t viewportHeight) {
     const float panelY = 8.0f;
     const float maxW = static_cast<float>(viewportWidth) - 16.0f;
     const float panelW = (maxW > 320.0f) ? 320.0f : maxW;
-    const uint32_t maxVisualLines = (viewportHeight < 300) ? 6u : 8u;
+    const uint32_t maxVisualLines = (viewportHeight < 300) ? 4u : 6u;
     const float lineStep = 10.0f;
-    const float logsStartY = panelY + 52.0f;
-    const float panelH = 52.0f + static_cast<float>(maxVisualLines) * lineStep + 6.0f;
+    const float logsStartY = panelY + 72.0f;
+    const float panelH = 72.0f + static_cast<float>(maxVisualLines) * lineStep + 5.0f;
 
-    /* Translucent dark backdrop */
-    DrawSolidRect(panelX, panelY, panelW, panelH, 10, 12, 18, 210);
+    /* Clean flat dark backdrop */
+    DrawSolidRect(panelX, panelY, panelW, panelH, 8, 10, 14, 196);
 
+    const float pad = 7.0f;
+    const float innerW = panelW - pad * 2.0f;
     char line[ZSDK_DEBUG_LOG_LINE_LEN];
-    ZSDK_SNPRINTF(line, sizeof(line), "FPS:%u.%u (%u.%ums) Drw:%u Vtx:%u",
-                  fps10 / 10u, fps10 % 10u, ft10 / 10u, ft10 % 10u,
-                  g_overlay.lastFrameDrawCalls,
-                  g_overlay.lastFrameVertices);
-    DrawTextLine(panelX + 6.0f, panelY + 6.0f, 1.0f, line, 120, 230, 255, 255);
 
-    ZSDK_SNPRINTF(line, sizeof(line), "MEM:%uK/%uM (%u.%u%%) Peak:%uK",
+    uint8_t fpsR = 235u, fpsG = 240u, fpsB = 245u;
+    if (g_overlay.fps < 28.0f) {
+        fpsR = 235u; fpsG = 95u; fpsB = 90u;
+    } else if (g_overlay.fps < 55.0f && g_overlay.fps >= 30.0f) {
+        fpsR = 120u; fpsG = 225u; fpsB = 155u;
+    }
+
+    /* Top row (panelY + 6 .. panelY + 30, 24px tall) */
+    ZSDK_SNPRINTF(line, sizeof(line), "%u.%u", fps10 / 10u, fps10 % 10u);
+    DrawTextLine(panelX + pad, panelY + 10.0f, 2.0f, line, fpsR, fpsG, fpsB, 255);
+
+    const float fpsNumW = static_cast<float>((fps10 >= 1000u) ? 5u : ((fps10 >= 100u) ? 4u : 3u)) * 16.0f;
+    const float metaX = panelX + pad + fpsNumW + 4.0f;
+    ZSDK_SNPRINTF(line, sizeof(line), "FPS %u.%ums", ft10 / 10u, ft10 % 10u);
+    DrawTextLine(metaX, panelY + 9.0f, 1.0f, line, 175, 185, 198, 255);
+
+    ZSDK_SNPRINTF(line, sizeof(line), "D:%u V:%u",
+                  g_overlay.lastFrameDrawCalls, g_overlay.lastFrameVertices);
+    DrawTextLine(metaX, panelY + 19.0f, 1.0f, line, 140, 152, 168, 255);
+
+    const float graphW = (innerW > 220.0f) ? 134.0f : (innerW * 0.42f);
+    if (graphW >= 48.0f && metaX + 76.0f < panelX + panelW - pad - graphW) {
+        DrawFrametimeGraph(panelX + panelW - pad - graphW, panelY + 6.0f, graphW, 24.0f);
+    }
+
+    /* Memory section */
+    ZSDK_SNPRINTF(line, sizeof(line), "MEM %uK/%uM (%u.%u%%) PK:%uK",
                   totalUsed / 1024u, budgetMb, usedPct10 / 10u, usedPct10 % 10u,
                   mem.peakRamBytes / 1024u);
-    DrawTextLine(panelX + 6.0f, panelY + 17.0f, 1.0f, line, 255, 255, 255, 255);
+    DrawTextLine(panelX + pad, panelY + 35.0f, 1.0f, line, 232, 236, 242, 255);
 
-    /* Budget progress bar */
-    const float barX = panelX + 6.0f;
-    const float barY = panelY + 28.0f;
-    const float barW = panelW - 12.0f;
-    const float barH = 5.0f;
-    DrawSolidRect(barX, barY, barW, barH, 40, 45, 55, 255);
-    const float fillRatio = (usedPct10 > 1000u) ? 1.0f : (static_cast<float>(usedPct10) / 1000.0f);
-    const uint8_t barR = (usedPct10 > 850u) ? 235u : ((usedPct10 > 650u) ? 240u : 70u);
-    const uint8_t barG = (usedPct10 > 850u) ? 60u  : ((usedPct10 > 650u) ? 190u : 210u);
-    DrawSolidRect(barX, barY, barW * fillRatio, barH, barR, barG, 80, 255);
+    const float barX = panelX + pad;
+    const float barY = panelY + 46.0f;
+    const float barW = innerW;
+    const float barH = 4.0f;
+    DrawSolidRect(barX, barY, barW, barH, 255, 255, 255, 26);
 
-    ZSDK_SNPRINTF(line, sizeof(line), "VRAM:%uK C:%uK G:%uK A:%uK F:%uK",
-                  mem.totalVramBytes / 1024u,
-                  mem.subsystems[0].currentBytes / 1024u,
-                  mem.subsystems[1].currentBytes / 1024u,
-                  mem.subsystems[2].currentBytes / 1024u,
-                  mem.subsystems[3].currentBytes / 1024u);
-    DrawTextLine(panelX + 6.0f, panelY + 37.0f, 1.0f, line, 190, 220, 190, 255);
+    /* Color-coded stacked segments: VRAM, Core, Gfx, Audio, FS, Other */
+    struct MemSeg {
+        uint32_t bytes;
+        uint8_t  r, g, b;
+        char     tag;
+    };
+    const uint32_t trackedSubs = mem.subsystems[0].currentBytes + mem.subsystems[1].currentBytes +
+                                 mem.subsystems[2].currentBytes + mem.subsystems[3].currentBytes;
+    const uint32_t otherBytes  = (mem.totalRamBytes > trackedSubs) ? (mem.totalRamBytes - trackedSubs) : 0u;
+    const MemSeg segs[6] = {
+        { mem.totalVramBytes,             170u, 140u, 235u, 'V' }, /* VRAM: violet */
+        { mem.subsystems[0].currentBytes, 100u, 180u, 240u, 'C' }, /* Core: blue */
+        { mem.subsystems[1].currentBytes,  95u, 200u, 140u, 'G' }, /* Gfx: green */
+        { mem.subsystems[2].currentBytes, 235u, 185u,  85u, 'A' }, /* Audio: amber */
+        { mem.subsystems[3].currentBytes, 230u, 120u, 110u, 'F' }, /* FS: coral */
+        { otherBytes,                     150u, 160u, 175u, 'O' }  /* Other: slate */
+    };
+
+    if (mem.budgetBytes > 0u) {
+        float curX = barX;
+        const float barEnd = barX + barW;
+        for (int s = 0; s < 6; ++s) {
+            if (segs[s].bytes == 0u || curX >= barEnd) {
+                continue;
+            }
+            float segW = barW * (static_cast<float>(segs[s].bytes) / static_cast<float>(mem.budgetBytes));
+            if (segW < 2.0f) {
+                segW = 2.0f;
+            }
+            if (curX + segW > barEnd) {
+                segW = barEnd - curX;
+            }
+            DrawSolidRect(curX, barY, segW, barH, segs[s].r, segs[s].g, segs[s].b, 255);
+            curX += segW;
+        }
+    }
+
+    float legX = panelX + pad;
+    const float legY = panelY + 54.0f;
+    for (int s = 0; s < 5; ++s) {
+        if (s == 0) {
+            ZSDK_SNPRINTF(line, sizeof(line), "VRAM:%uK", segs[s].bytes / 1024u);
+        } else {
+            ZSDK_SNPRINTF(line, sizeof(line), "%c:%uK", segs[s].tag, segs[s].bytes / 1024u);
+        }
+        DrawTextLine(legX, legY, 1.0f, line, segs[s].r, segs[s].g, segs[s].b, 255);
+        uint32_t len = 0u;
+        while (line[len] != '\0') {
+            ++len;
+        }
+        legX += static_cast<float>(len) * 8.0f + ((s == 0) ? 10.0f : 6.0f);
+    }
+
+    /* Subtle hairline above logs */
+    DrawSolidRect(panelX + pad, panelY + 67.0f, innerW, 1.0f, 255, 255, 255, 22);
 
     /* Wrap recent logs into at most 2 visual lines per entry (truncate remainder with "..."). */
-    uint32_t maxChars = (barW >= 24.0f) ? static_cast<uint32_t>(barW / 8.0f) : 3u;
+    uint32_t maxChars = (innerW >= 24.0f) ? static_cast<uint32_t>(innerW / 8.0f) : 3u;
     if (maxChars >= ZSDK_DEBUG_LOG_LINE_LEN) {
         maxChars = ZSDK_DEBUG_LOG_LINE_LEN - 1u;
     }
 
     static char wrappedLines[8][ZSDK_DEBUG_LOG_LINE_LEN];
+    static uint8_t wrappedKind[8];
     uint32_t visualCount = 0u;
     for (uint32_t age = 0u; age < g_overlay.logCount && visualCount < maxVisualLines; ++age) {
         const uint32_t idx = (g_overlay.logHead + ZSDK_DEBUG_LOG_CAPACITY - 1u - age) % ZSDK_DEBUG_LOG_CAPACITY;
         const char* src = g_overlay.logLines[idx];
+        const uint8_t kind = (src[0] == '[' && src[1] == 'E') ? 2u
+                           : ((src[0] == '[' && src[1] == 'W') ? 1u : 0u);
         uint32_t len = 0u;
         while (src[len] != '\0' && len < ZSDK_DEBUG_LOG_LINE_LEN - 1u) {
             ++len;
@@ -299,6 +426,7 @@ void DebugOverlay::Render(int32_t viewportWidth, int32_t viewportHeight) {
                 wrappedLines[visualCount][c] = src[c];
             }
             wrappedLines[visualCount][len] = '\0';
+            wrappedKind[visualCount] = kind;
             ++visualCount;
         } else {
             uint32_t split = maxChars;
@@ -329,11 +457,13 @@ void DebugOverlay::Render(int32_t viewportWidth, int32_t viewportHeight) {
                     wrappedLines[visualCount][keep + 2u] = '.';
                     wrappedLines[visualCount][keep + 3u] = '\0';
                 }
+                wrappedKind[visualCount] = kind;
                 ++visualCount;
                 for (uint32_t c = 0u; c < split; ++c) {
                     wrappedLines[visualCount][c] = src[c];
                 }
                 wrappedLines[visualCount][split] = '\0';
+                wrappedKind[visualCount] = kind;
                 ++visualCount;
             } else {
                 const uint32_t keep = (maxChars > 3u) ? (maxChars - 3u) : 0u;
@@ -344,15 +474,20 @@ void DebugOverlay::Render(int32_t viewportWidth, int32_t viewportHeight) {
                 wrappedLines[visualCount][keep + 1u] = '.';
                 wrappedLines[visualCount][keep + 2u] = '.';
                 wrappedLines[visualCount][keep + 3u] = '\0';
+                wrappedKind[visualCount] = kind;
                 ++visualCount;
             }
         }
     }
 
     for (uint32_t i = 0u; i < visualCount; ++i) {
-        const char* rowText = wrappedLines[visualCount - 1u - i];
-        DrawTextLine(panelX + 6.0f, logsStartY + static_cast<float>(i) * lineStep,
-                     1.0f, rowText, 220, 220, 220, 255);
+        const uint32_t slot = visualCount - 1u - i;
+        const uint8_t kind = wrappedKind[slot];
+        const uint8_t lr = (kind == 2u) ? 255u : ((kind == 1u) ? 250u : 210u);
+        const uint8_t lg = (kind == 2u) ? 120u : ((kind == 1u) ? 210u : 220u);
+        const uint8_t lb = (kind == 2u) ? 115u : ((kind == 1u) ? 110u : 232u);
+        DrawTextLine(panelX + pad, logsStartY + static_cast<float>(i) * lineStep,
+                     1.0f, wrappedLines[slot], lr, lg, lb, 255);
     }
 
     glDisable(GL_TEXTURE_2D);
