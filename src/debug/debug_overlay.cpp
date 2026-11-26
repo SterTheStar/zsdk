@@ -238,8 +238,11 @@ void DebugOverlay::Render(int32_t viewportWidth, int32_t viewportHeight) {
     const float panelX = 8.0f;
     const float panelY = 8.0f;
     const float maxW = static_cast<float>(viewportWidth) - 16.0f;
-    const float panelW = (maxW > 460.0f) ? 460.0f : maxW;
-    const float panelH = (viewportHeight < 300) ? 130.0f : 152.0f;
+    const float panelW = (maxW > 320.0f) ? 320.0f : maxW;
+    const uint32_t maxVisualLines = (viewportHeight < 300) ? 6u : 8u;
+    const float lineStep = 10.0f;
+    const float logsStartY = panelY + 52.0f;
+    const float panelH = 52.0f + static_cast<float>(maxVisualLines) * lineStep + 6.0f;
 
     /* Translucent dark backdrop */
     DrawSolidRect(panelX, panelY, panelW, panelH, 10, 12, 18, 210);
@@ -249,39 +252,107 @@ void DebugOverlay::Render(int32_t viewportWidth, int32_t viewportHeight) {
                   fps10 / 10u, fps10 % 10u, ft10 / 10u, ft10 % 10u,
                   g_overlay.lastFrameDrawCalls,
                   g_overlay.lastFrameVertices);
-    DrawTextLine(panelX + 8.0f, panelY + 6.0f, 1.0f, line, 120, 230, 255, 255);
+    DrawTextLine(panelX + 6.0f, panelY + 6.0f, 1.0f, line, 120, 230, 255, 255);
 
     ZSDK_SNPRINTF(line, sizeof(line), "MEM:%uK/%uM (%u.%u%%) Peak:%uK",
                   totalUsed / 1024u, budgetMb, usedPct10 / 10u, usedPct10 % 10u,
                   mem.peakRamBytes / 1024u);
-    DrawTextLine(panelX + 8.0f, panelY + 18.0f, 1.0f, line, 255, 255, 255, 255);
+    DrawTextLine(panelX + 6.0f, panelY + 17.0f, 1.0f, line, 255, 255, 255, 255);
 
     /* Budget progress bar */
-    const float barX = panelX + 8.0f;
-    const float barY = panelY + 29.0f;
-    const float barW = panelW - 16.0f;
-    const float barH = 6.0f;
+    const float barX = panelX + 6.0f;
+    const float barY = panelY + 28.0f;
+    const float barW = panelW - 12.0f;
+    const float barH = 5.0f;
     DrawSolidRect(barX, barY, barW, barH, 40, 45, 55, 255);
     const float fillRatio = (usedPct10 > 1000u) ? 1.0f : (static_cast<float>(usedPct10) / 1000.0f);
     const uint8_t barR = (usedPct10 > 850u) ? 235u : ((usedPct10 > 650u) ? 240u : 70u);
     const uint8_t barG = (usedPct10 > 850u) ? 60u  : ((usedPct10 > 650u) ? 190u : 210u);
     DrawSolidRect(barX, barY, barW * fillRatio, barH, barR, barG, 80, 255);
 
-    ZSDK_SNPRINTF(line, sizeof(line), "VRAM:%uK CORE:%uK GFX:%uK AUD:%uK FS:%uK",
+    ZSDK_SNPRINTF(line, sizeof(line), "VRAM:%uK C:%uK G:%uK A:%uK F:%uK",
                   mem.totalVramBytes / 1024u,
                   mem.subsystems[0].currentBytes / 1024u,
                   mem.subsystems[1].currentBytes / 1024u,
                   mem.subsystems[2].currentBytes / 1024u,
                   mem.subsystems[3].currentBytes / 1024u);
-    DrawTextLine(panelX + 8.0f, panelY + 39.0f, 1.0f, line, 190, 220, 190, 255);
+    DrawTextLine(panelX + 6.0f, panelY + 37.0f, 1.0f, line, 190, 220, 190, 255);
 
-    /* Recent logs (up to 6 lines) */
-    const uint32_t maxVisibleLogs = (viewportHeight < 300) ? 5u : 7u;
-    const uint32_t toShow = (g_overlay.logCount < maxVisibleLogs) ? g_overlay.logCount : maxVisibleLogs;
-    for (uint32_t i = 0; i < toShow; ++i) {
-        const uint32_t idx = (g_overlay.logHead + ZSDK_DEBUG_LOG_CAPACITY - toShow + i) % ZSDK_DEBUG_LOG_CAPACITY;
-        DrawTextLine(panelX + 8.0f, panelY + 54.0f + static_cast<float>(i) * 11.0f,
-                     1.0f, g_overlay.logLines[idx], 220, 220, 220, 255);
+    /* Wrap recent logs into at most 2 visual lines per entry (truncate remainder with "..."). */
+    uint32_t maxChars = (barW >= 24.0f) ? static_cast<uint32_t>(barW / 8.0f) : 3u;
+    if (maxChars >= ZSDK_DEBUG_LOG_LINE_LEN) {
+        maxChars = ZSDK_DEBUG_LOG_LINE_LEN - 1u;
+    }
+
+    static char wrappedLines[8][ZSDK_DEBUG_LOG_LINE_LEN];
+    uint32_t visualCount = 0u;
+    for (uint32_t age = 0u; age < g_overlay.logCount && visualCount < maxVisualLines; ++age) {
+        const uint32_t idx = (g_overlay.logHead + ZSDK_DEBUG_LOG_CAPACITY - 1u - age) % ZSDK_DEBUG_LOG_CAPACITY;
+        const char* src = g_overlay.logLines[idx];
+        uint32_t len = 0u;
+        while (src[len] != '\0' && len < ZSDK_DEBUG_LOG_LINE_LEN - 1u) {
+            ++len;
+        }
+
+        if (len <= maxChars) {
+            for (uint32_t c = 0u; c < len; ++c) {
+                wrappedLines[visualCount][c] = src[c];
+            }
+            wrappedLines[visualCount][len] = '\0';
+            ++visualCount;
+        } else {
+            uint32_t split = maxChars;
+            for (uint32_t c = maxChars; c > (maxChars > 10u ? maxChars - 10u : 0u); --c) {
+                if (src[c] == ' ') {
+                    split = c;
+                    break;
+                }
+            }
+            uint32_t nextStart = split;
+            while (nextStart < len && src[nextStart] == ' ') {
+                ++nextStart;
+            }
+            const uint32_t rem = (len > nextStart) ? (len - nextStart) : 0u;
+            if (rem > 0u && visualCount + 2u <= maxVisualLines) {
+                if (rem <= maxChars) {
+                    for (uint32_t c = 0u; c < rem; ++c) {
+                        wrappedLines[visualCount][c] = src[nextStart + c];
+                    }
+                    wrappedLines[visualCount][rem] = '\0';
+                } else {
+                    const uint32_t keep = (maxChars > 3u) ? (maxChars - 3u) : 0u;
+                    for (uint32_t c = 0u; c < keep; ++c) {
+                        wrappedLines[visualCount][c] = src[nextStart + c];
+                    }
+                    wrappedLines[visualCount][keep + 0u] = '.';
+                    wrappedLines[visualCount][keep + 1u] = '.';
+                    wrappedLines[visualCount][keep + 2u] = '.';
+                    wrappedLines[visualCount][keep + 3u] = '\0';
+                }
+                ++visualCount;
+                for (uint32_t c = 0u; c < split; ++c) {
+                    wrappedLines[visualCount][c] = src[c];
+                }
+                wrappedLines[visualCount][split] = '\0';
+                ++visualCount;
+            } else {
+                const uint32_t keep = (maxChars > 3u) ? (maxChars - 3u) : 0u;
+                for (uint32_t c = 0u; c < keep; ++c) {
+                    wrappedLines[visualCount][c] = src[c];
+                }
+                wrappedLines[visualCount][keep + 0u] = '.';
+                wrappedLines[visualCount][keep + 1u] = '.';
+                wrappedLines[visualCount][keep + 2u] = '.';
+                wrappedLines[visualCount][keep + 3u] = '\0';
+                ++visualCount;
+            }
+        }
+    }
+
+    for (uint32_t i = 0u; i < visualCount; ++i) {
+        const char* rowText = wrappedLines[visualCount - 1u - i];
+        DrawTextLine(panelX + 6.0f, logsStartY + static_cast<float>(i) * lineStep,
+                     1.0f, rowText, 220, 220, 220, 255);
     }
 
     glDisable(GL_TEXTURE_2D);
