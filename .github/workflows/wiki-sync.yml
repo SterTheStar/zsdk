@@ -1,0 +1,52 @@
+name: Sync Wiki
+
+# Publica docs/ na GitHub Wiki do repositório onde roda (upstream ou fork).
+# Pré-requisito: Wiki ativada e com ao menos uma página criada pela interface web.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "bindings/README.md"
+      - "tools/docs2wiki.py"
+      - ".github/workflows/wiki-sync.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: wiki
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Gerar páginas
+        run: python tools/docs2wiki.py --out wiki --branch "${{ github.ref_name }}" --clean
+
+      - name: Publicar
+        working-directory: wiki
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898319+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Wiki já está atualizada."
+            exit 0
+          fi
+          git commit -m "docs: sync wiki from ${GITHUB_SHA::7}"
+          git push
