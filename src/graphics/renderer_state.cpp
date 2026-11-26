@@ -265,12 +265,12 @@ void Renderer::BindSkinningBuffers(const MeshBuffer& weightVbo, uint8_t weightsP
     if (s_weight && weightVbo.IsValid() && weightsPerVertex > 0u) {
         weightVbo.Bind();
         glEnableClientState(0x86ADu /* GL_WEIGHT_ARRAY_OES */);
-        s_weight(static_cast<GLint>(weightsPerVertex), GL_FLOAT, 0, nullptr);
+        s_weight(static_cast<GLint>(weightsPerVertex), GL_FLOAT, 0, weightVbo.GetPointerAtOffset(0));
     }
     if (s_idx && indexVbo.IsValid() && indicesPerVertex > 0u) {
         indexVbo.Bind();
         glEnableClientState(0x8844u /* GL_MATRIX_INDEX_ARRAY_OES */);
-        s_idx(static_cast<GLint>(indicesPerVertex), GL_UNSIGNED_BYTE, 0, nullptr);
+        s_idx(static_cast<GLint>(indicesPerVertex), GL_UNSIGNED_BYTE, 0, indexVbo.GetPointerAtOffset(0));
     }
     MeshBuffer::Unbind(BufferType::Vertex);
 #else
@@ -300,7 +300,7 @@ void Renderer::BindPointSizeBuffer(const MeshBuffer& vbo) {
     if (s_fn && vbo.IsValid()) {
         vbo.Bind();
         glEnableClientState(0x8B9Cu /* GL_POINT_SIZE_ARRAY_OES */);
-        s_fn(GL_FLOAT, 0, nullptr);
+        s_fn(GL_FLOAT, 0, vbo.GetPointerAtOffset(0));
         MeshBuffer::Unbind(BufferType::Vertex);
     }
 #else

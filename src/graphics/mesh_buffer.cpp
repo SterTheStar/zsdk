@@ -6,6 +6,7 @@
 #include "zsdk/graphics/mesh_buffer.hpp"
 #include "zsdk/debug/memory_tracker.hpp"
 #include "gl_platform.hpp"
+#include <string.h>
 
 namespace zsdk {
 namespace graphics {
@@ -25,6 +26,7 @@ GLenum ToGlUsage(BufferUsage u) {
 MeshBuffer::MeshBuffer()
     : m_glId(0u)
     , m_sizeBytes(0u)
+    , m_ramData(nullptr)
     , m_type(BufferType::Vertex)
     , m_usage(BufferUsage::Static) {
 }
@@ -37,7 +39,7 @@ Result MeshBuffer::Create(BufferType type, BufferUsage usage, uint32_t sizeBytes
     if (sizeBytes == 0u) {
         return Result::InvalidArg;
     }
-    if (m_glId != 0u) {
+    if (IsValid()) {
         Destroy();
     }
     if (!debug::MemoryTracker::CanAllocateVram(sizeBytes)) {
@@ -47,34 +49,50 @@ Result MeshBuffer::Create(BufferType type, BufferUsage usage, uint32_t sizeBytes
     glutil::DrainErrors();
     GLuint id = 0u;
     glGenBuffers(1, &id);
-    if (id == 0u) {
-        return Result::GraphicsError;
-    }
-
-    const GLenum target = ToGlTarget(type);
-    glBindBuffer(target, id);
-    glBufferData(target, static_cast<GLsizeiptr>(sizeBytes), data, ToGlUsage(usage));
-
-    if (glGetError() != GL_NO_ERROR) {
+    if (id != 0u) {
+        const GLenum target = ToGlTarget(type);
+        glBindBuffer(target, id);
+        glBufferData(target, static_cast<GLsizeiptr>(sizeBytes), data, ToGlUsage(usage));
+        if (glGetError() == GL_NO_ERROR) {
+            m_glId = static_cast<uint32_t>(id);
+            m_sizeBytes = sizeBytes;
+            m_type = type;
+            m_usage = usage;
+            debug::MemoryTracker::RecordVramAlloc(m_sizeBytes);
+            return Result::Ok;
+        }
         glDeleteBuffers(1, &id);
-        return Result::GraphicsError;
+        glutil::DrainErrors();
     }
 
-    m_glId = static_cast<uint32_t>(id);
+    /* Fallback to client-side RAM when hardware VBOs are unavailable (GLES 1.0). */
+    m_ramData = static_cast<uint8_t*>(
+        debug::MemoryTracker::Alloc(debug::MemorySubsystem::Graphics, sizeBytes));
+    if (!m_ramData) {
+        return Result::OutOfMemory;
+    }
+    if (data) {
+        ::memcpy(m_ramData, data, sizeBytes);
+    } else {
+        ::memset(m_ramData, 0, sizeBytes);
+    }
+    m_glId = 0u;
     m_sizeBytes = sizeBytes;
     m_type = type;
     m_usage = usage;
-
-    debug::MemoryTracker::RecordVramAlloc(m_sizeBytes);
     return Result::Ok;
 }
 
 Result MeshBuffer::UpdateData(uint32_t offsetBytes, uint32_t sizeBytes, const void* data) {
-    if (m_glId == 0u) {
+    if (!IsValid()) {
         return Result::NotInitialized;
     }
     if (!data || offsetBytes > m_sizeBytes || sizeBytes > (m_sizeBytes - offsetBytes)) {
         return Result::InvalidArg;
+    }
+    if (m_ramData != nullptr) {
+        ::memcpy(m_ramData + offsetBytes, data, sizeBytes);
+        return Result::Ok;
     }
     glutil::DrainErrors();
     glBindBuffer(ToGlTarget(m_type), static_cast<GLuint>(m_glId));
@@ -89,8 +107,12 @@ void MeshBuffer::Destroy() {
         glDeleteBuffers(1, &id);
         debug::MemoryTracker::RecordVramFree(m_sizeBytes);
         m_glId = 0u;
-        m_sizeBytes = 0u;
     }
+    if (m_ramData != nullptr) {
+        debug::MemoryTracker::Free(debug::MemorySubsystem::Graphics, m_ramData);
+        m_ramData = nullptr;
+    }
+    m_sizeBytes = 0u;
 }
 
 void MeshBuffer::Bind() const {

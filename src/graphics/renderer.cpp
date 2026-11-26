@@ -289,28 +289,28 @@ void Renderer::SetPointSize(float size) {
 void Renderer::BindPositionBuffer(const MeshBuffer& vbo, uint8_t components) {
     glEnableClientState(GL_VERTEX_ARRAY);
     vbo.Bind();
-    glVertexPointer(static_cast<GLint>(components), GL_FLOAT, 0, nullptr);
+    glVertexPointer(static_cast<GLint>(components), GL_FLOAT, 0, vbo.GetPointerAtOffset(0));
     MeshBuffer::Unbind(BufferType::Vertex);
 }
 
 void Renderer::BindNormalBuffer(const MeshBuffer& vbo) {
     glEnableClientState(GL_NORMAL_ARRAY);
     vbo.Bind();
-    glNormalPointer(GL_FLOAT, 0, nullptr);
+    glNormalPointer(GL_FLOAT, 0, vbo.GetPointerAtOffset(0));
     MeshBuffer::Unbind(BufferType::Vertex);
 }
 
 void Renderer::BindColorBuffer(const MeshBuffer& vbo, uint8_t components) {
     glEnableClientState(GL_COLOR_ARRAY);
     vbo.Bind();
-    glColorPointer(static_cast<GLint>(components), GL_UNSIGNED_BYTE, 0, nullptr);
+    glColorPointer(static_cast<GLint>(components), GL_UNSIGNED_BYTE, 0, vbo.GetPointerAtOffset(0));
     MeshBuffer::Unbind(BufferType::Vertex);
 }
 
 void Renderer::BindTexCoordBuffer(const MeshBuffer& vbo, uint8_t components) {
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     vbo.Bind();
-    glTexCoordPointer(static_cast<GLint>(components), GL_FLOAT, 0, nullptr);
+    glTexCoordPointer(static_cast<GLint>(components), GL_FLOAT, 0, vbo.GetPointerAtOffset(0));
     MeshBuffer::Unbind(BufferType::Vertex);
 }
 

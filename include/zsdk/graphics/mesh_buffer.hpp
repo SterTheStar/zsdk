@@ -38,12 +38,20 @@ public:
 
     ZSDK_FORCE_INLINE uint32_t GetNativeId() const { return m_glId; }
     ZSDK_FORCE_INLINE uint32_t GetSizeBytes() const { return m_sizeBytes; }
-    ZSDK_FORCE_INLINE bool     IsValid() const { return m_glId != 0u; }
+    ZSDK_FORCE_INLINE bool     IsValid() const { return m_glId != 0u || m_ramData != nullptr; }
+    ZSDK_FORCE_INLINE bool     IsHardwareVbo() const { return m_glId != 0u; }
+    ZSDK_FORCE_INLINE const uint8_t* GetRamData() const { return m_ramData; }
+    ZSDK_FORCE_INLINE const void* GetPointerAtOffset(int32_t offsetBytes) const {
+        return m_ramData
+            ? static_cast<const void*>(m_ramData + offsetBytes)
+            : reinterpret_cast<const void*>(static_cast<uintptr_t>(offsetBytes));
+    }
 
 private:
-    uint32_t   m_glId;
-    uint32_t   m_sizeBytes;
-    BufferType m_type;
+    uint32_t    m_glId;
+    uint32_t    m_sizeBytes;
+    uint8_t*    m_ramData;
+    BufferType  m_type;
     BufferUsage m_usage;
 };
 

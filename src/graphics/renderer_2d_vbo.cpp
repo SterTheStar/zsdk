@@ -83,10 +83,6 @@ void EnsureRendererFontTexture() {
     }
 }
 
-inline const void* ByteOffsetPtr(int32_t offsetBytes) {
-    return reinterpret_cast<const void*>(static_cast<uintptr_t>(offsetBytes));
-}
-
 } // namespace
 
 void Renderer::BindInterleavedBuffer(const MeshBuffer& vbo, const InterleavedLayout& layout) {
@@ -100,14 +96,14 @@ void Renderer::BindInterleavedBuffer(const MeshBuffer& vbo, const InterleavedLay
     if (layout.posOffset >= 0 && layout.posComponents > 0u) {
         glEnableClientState(GL_VERTEX_ARRAY);
         glVertexPointer(static_cast<GLint>(layout.posComponents), GL_FLOAT,
-                        stride, ByteOffsetPtr(layout.posOffset));
+                        stride, vbo.GetPointerAtOffset(layout.posOffset));
     } else {
         glDisableClientState(GL_VERTEX_ARRAY);
     }
 
     if (layout.normalOffset >= 0) {
         glEnableClientState(GL_NORMAL_ARRAY);
-        glNormalPointer(GL_FLOAT, stride, ByteOffsetPtr(layout.normalOffset));
+        glNormalPointer(GL_FLOAT, stride, vbo.GetPointerAtOffset(layout.normalOffset));
     } else {
         glDisableClientState(GL_NORMAL_ARRAY);
     }
@@ -115,7 +111,7 @@ void Renderer::BindInterleavedBuffer(const MeshBuffer& vbo, const InterleavedLay
     if (layout.colorOffset >= 0 && layout.colorComponents > 0u) {
         glEnableClientState(GL_COLOR_ARRAY);
         glColorPointer(static_cast<GLint>(layout.colorComponents), GL_UNSIGNED_BYTE,
-                       stride, ByteOffsetPtr(layout.colorOffset));
+                       stride, vbo.GetPointerAtOffset(layout.colorOffset));
     } else {
         glDisableClientState(GL_COLOR_ARRAY);
     }
@@ -123,7 +119,7 @@ void Renderer::BindInterleavedBuffer(const MeshBuffer& vbo, const InterleavedLay
     if (layout.uvOffset >= 0 && layout.uvComponents > 0u) {
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
         glTexCoordPointer(static_cast<GLint>(layout.uvComponents), GL_FLOAT,
-                          stride, ByteOffsetPtr(layout.uvOffset));
+                          stride, vbo.GetPointerAtOffset(layout.uvOffset));
     } else {
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     }
