@@ -2,9 +2,9 @@
 
 # ZSDK
 
-**SDK Base Multi-Linguagem para Zeebo & Qualcomm BREW 4.0.2**
+**SDK de plataforma para Zeebo e Qualcomm BREW 4.0.2, com paridade de código em Windows**
 
-Camada de abstração de plataforma (*PAL*) leve, determinística e livre de headers BREW/GL no código do jogo, com suporte nativo a **C++14**, **C99**, **Lua 5.4** e **Rust (`#![no_std]`)**, gerando builds para **Zeebo (`.mod` + `.mif`)** e **Windows (`.exe`)**.
+Camada de abstração leve e determinística que mantém headers BREW e OpenGL fora do código do jogo, com API em **C++14**, **C99**, **Lua 5.4** e **Rust no_std**, gerando `.mod` + `.mif` para o console e `.exe` para o PC.
 
 <p>
   <img src="https://img.shields.io/badge/C%2B%2B-14-00599C?style=flat-square&logo=cplusplus&logoColor=white" alt="C++14" />
@@ -16,75 +16,96 @@ Camada de abstração de plataforma (*PAL*) leve, determinística e livre de hea
   <img src="https://img.shields.io/badge/Target-Zeebo%20%7C%20Windows-1E88E5?style=flat-square" alt="Zeebo | Windows" />
 </p>
 
-[Documentação](./docs/README.md) · [Build & Empacotamento](./docs/01_build_e_empacotamento.md) · [Bindings C / Lua / Rust](./bindings/README.md) · [Exemplos](./examples/)
+[Documentação](./docs/README.md) · [Primeiros passos](./docs/09_primeiros_passos.md) · [Build e empacotamento](./docs/01_build_e_empacotamento.md) · [Bindings](./bindings/README.md) · [Exemplos](./examples/)
 
 </div>
 
-## Visão Geral
+## Visão geral
 
-O **ZSDK** abstrai o hardware do **Zeebo** (ARM11 @ 528 MHz, GPU Qualcomm Q3Dimension, 32 MB RAM/VRAM) mantendo paridade de código-fonte com **Windows** para desenvolvimento e depuração rápida.
+O ZSDK abstrai o hardware do Zeebo (ARM11 a 528 MHz, 32 MB de RAM e VRAM compartilhados, GPU Qualcomm Q3Dimension com OpenGL ES 1.1 de função fixa) mantendo a mesma árvore de código compilando no Windows para desenvolvimento e depuração rápida.
 
-* **Isolamento total:** o código do jogo nunca inclui `IShell`, `IDisplay`, `IHID`, `EGLDisplay` ou headers OpenGL diretamente.
-* **Desempenho determinístico:** sem exceções (`-fno-exceptions`), sem RTTI (`-fno-rtti`), zero alocações por frame nos loops críticos e rastreamento de RAM/VRAM via `MemoryTracker`.
-* **Proteção da NAND:** trava `ZSDK_NAND_WRITE_GUARD` bloqueando escritas fora de `fs:/~/` e `fs:/card0/` (SD Card), com privilégios `.mif` seguros (`0x07AF` + `CARD0_ACCESS`).
-* **ABI C99 única:** `231` funções C estáveis servindo como base comum para **C**, **Lua** e **Rust**, verificadas automaticamente por `tools/check_bindings.py`.
+Quatro propriedades definem o desenho:
 
-## Linguagens & Exemplos
+* **Isolamento de plataforma.** Nenhum header em `include/zsdk/` expõe `IShell`, `IDisplay`, `IHID`, `EGLDisplay` ou `GLenum`. O jogo inclui `zsdk/zsdk.hpp` e mais nada.
+* **Determinismo.** Sem exceções (`-fno-exceptions`), sem RTTI (`-fno-rtti`), sem alocação dinâmica por frame em `InputManager`, `DebugOverlay` e `SaveGameManager`. Todo erro atravessa a API como `zsdk::Result`.
+* **Proteção do console.** A trava `ZSDK_NAND_WRITE_GUARD` recusa escrita, remoção e criação de diretório fora de `fs:/~/` e `fs:/card0/`, e o `.mif` sai com privilégios `0x07AF`.
+* **Uma API, quatro linguagens.** A ABI C99 é a base comum de C, Lua e Rust, com 302 funções verificadas por `tools/check_bindings.py`.
 
-Cada exemplo demonstra a mesma cena 3D (cubo colorido giratório com câmera, sombra e `DebugOverlay`) usando apenas a linguagem-alvo, sem boilerplate C++ no diretório do app:
+## Quick start
 
-| Exemplo | Linguagem | Macro CMake | Ponto de Entrada |
-| :--- | :--- | :--- | :--- |
-| **01: Spinning Cube** | C++14 (`1–1024` cubos, menu, `udata`) | `zsdk_add_brew_app` | [`examples/01_spinning_cube/main.cpp`](./examples/01_spinning_cube/main.cpp) |
-| **02: C Spinning Cube** | C99 puro | `zsdk_add_c_app` | [`examples/02_c_spinning_cube/cube_c.c`](./examples/02_c_spinning_cube/cube_c.c) |
-| **03: Lua Spinning Cube** | Lua 5.4 puro | `zsdk_add_lua_app` | [`examples/03_lua_spinning_cube/main.lua`](./examples/03_lua_spinning_cube/main.lua) |
-| **04: Rust Spinning Cube** | Rust `#![no_std]` | `zsdk_add_rust_app` | [`examples/04_rust_spinning_cube/src/lib.rs`](./examples/04_rust_spinning_cube/src/lib.rs) |
-
-## Módulos & Documentação
-
-| Módulo | Recursos Principais | Guia |
-| :--- | :--- | :--- |
-| **Build & Empacotamento** | CMake (`zsdk_add_{brew,c,lua,rust}_app`), `elf2mod`, `cifc`, `.mod` + `.mif` e MSVC | [01_build_e_empacotamento.md](./docs/01_build_e_empacotamento.md) |
-| **Core & Assíncrono** | `Application`, `ZSDK_IMPLEMENT_APP`, `FpsCap`, `Clock`, `Fixed16`, `Thread`, `SignalBus` | [02_core_e_async.md](./docs/02_core_e_async.md) |
-| **Debug & Profiler** | `MemoryTracker` (RAM por subsistema + VRAM), `Logger` e `DebugOverlay` | [03_debug_e_profiler.md](./docs/03_debug_e_profiler.md) |
-| **Input & Controles** | Z-Pad (`IHID`), hotplug, deadzone, Boomerang, `SetRumble`, XInput e teclado/mouse | [04_input_controles.md](./docs/04_input_controles.md) |
-| **Gráficos 3D & 2D** | `GLContext`, `Renderer` (State Cache), `SpriteBatch2D`, `Frustum`, `Texture`, `MeshBuffer` | [05_graficos_3d_e_2d.md](./docs/05_graficos_3d_e_2d.md) |
-| **Filesystem & SaveGame** | `FileSystem`, `ZSDK_NAND_WRITE_GUARD`, `SaveGameManager` (`udata`/SD + CRC32), `Vfs`, `UnzipStream` | [06_filesystem_e_savegame.md](./docs/06_filesystem_e_savegame.md) |
-| **Áudio, Rede & Segurança** | `AudioEngine`, `PcmMixer`, `MediaStream`, `Socket`, `HttpClient`, `NetworkManager`, Crypto & Licença | [07_audio_rede_seguranca.md](./docs/07_audio_rede_seguranca.md) |
-| **Scripting Lua** | `LuaVM` (Lua 5.4 em sandbox 32-bit), `require` via `Vfs` e `zsdk_lua` | [08_scripting_lua.md](./docs/08_scripting_lua.md) |
-| **C ABI & Bindings** | Headers C99 (`include/zsdk/c/`), bindings Lua (`228/231`) e Rust `zsdk-sys`/`zsdk` (`230/231`) | [bindings/README.md](./bindings/README.md) |
-
-## Quick Start
-
-### Zeebo (`.mod` + `.mif`)
 ```powershell
+cmake -S . -B build_windows -G Ninja -DZSDK_BUILD_ZEEBO=OFF -DZSDK_BUILD_EXAMPLES=ON
+cmake --build build_windows
+.\build_windows\apps\01_spinning_cube\01_spinning_cube.exe
+```
+
+Para o console, compilando com a toolchain ARM e o SDK BREW instalado:
+
+```powershell
+cmake -S . -B build_zeebo -G Ninja `
+  -DCMAKE_SYSTEM_NAME=Generic `
+  -DCMAKE_CXX_COMPILER=arm-none-eabi-g++ `
+  -DCMAKE_C_COMPILER=arm-none-eabi-gcc `
+  -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY `
+  -DZSDK_BUILD_ZEEBO=ON
 cmake --build build_zeebo
 ```
 
-### Windows (`.exe`)
-```powershell
-cmake --build build_windows
-```
+Os pré-requisitos completos, o conteúdo do `.mif` e a lista de opções CMake estão em [docs/01_build_e_empacotamento.md](./docs/01_build_e_empacotamento.md). Para começar do zero, siga o tutorial em [docs/09_primeiros_passos.md](./docs/09_primeiros_passos.md).
 
-### Verificação de Paridade (C / Lua / Rust)
+Verificação de saúde antes de abrir qualquer mudança:
+
 ```powershell
 python tools/check_bindings.py
 ctest --test-dir build_windows --output-on-failure
 ```
 
-> Veja os pré-requisitos completos de toolchain ARM, BREW SDK, Rust e MSVC em [`docs/01_build_e_empacotamento.md`](./docs/01_build_e_empacotamento.md).
+## Documentação
 
-## Estrutura do Projeto
+A documentação segue o Diátaxis: tutorial para aprender, guias por módulo para trabalhar, referência para consultar e explicação para entender.
+
+| Módulo | Guia | Conteúdo principal |
+| :--- | :--- | :--- |
+| **Primeiros passos** | [09_primeiros_passos.md](./docs/09_primeiros_passos.md) | tutorial do clone ao app rodando nas quatro linguagens |
+| **Build e empacotamento** | [01_build_e_empacotamento.md](./docs/01_build_e_empacotamento.md) | toolchain, macros CMake, `elf2mod`, `cifc`, `.mif`, MSVC |
+| **Core e assíncrono** | [02_core_e_async.md](./docs/02_core_e_async.md) | `Application`, `FrameTimer`, `Clock`, ponto fixo, `Thread`, `SignalBus` |
+| **Debug e profiler** | [03_debug_e_profiler.md](./docs/03_debug_e_profiler.md) | `MemoryTracker` de RAM e VRAM, `Logger`, `DebugOverlay` |
+| **Input e controles** | [04_input_controles.md](./docs/04_input_controles.md) | Z-Pad, hotplug, deadzone, rumble, motion, teclado e mouse |
+| **Gráficos 3D e 2D** | [05_graficos_3d_e_2d.md](./docs/05_graficos_3d_e_2d.md) | `GLContext`, `Renderer`, `Frame`, texturas, malhas, sprites |
+| **Filesystem e save** | [06_filesystem_e_savegame.md](./docs/06_filesystem_e_savegame.md) | `FileSystem`, guarda de NAND, `Vfs`, save com CRC32, unzip |
+| **Áudio, rede e segurança** | [07_audio_rede_seguranca.md](./docs/07_audio_rede_seguranca.md) | `AudioEngine`, `PcmMixer`, `Socket`, `HttpClient`, cripto e licença |
+| **Scripting Lua** | [08_scripting_lua.md](./docs/08_scripting_lua.md) | `LuaVM` em sandbox, API exposta, `require`, bytecode |
+| **Arquitetura** | [10_arquitetura_e_portabilidade.md](./docs/10_arquitetura_e_portabilidade.md) | camadas, backends, orçamento de memória, limites |
+| **Referência da API** | [11_referencia_da_api.md](./docs/11_referencia_da_api.md) | mapa de headers, códigos de erro, macros, opções CMake |
+| **Solução de problemas** | [12_solucao_de_problemas.md](./docs/12_solucao_de_problemas.md) | sintoma, causa e correção por área |
+| **Bindings** | [bindings/README.md](./bindings/README.md) | ABI C99, bindings Lua e Rust, paridade verificada |
+
+## Exemplos
+
+Os quatro exemplos desenham a mesma cena, um cubo colorido girando com câmera e overlay de debug, cada um escrito apenas na linguagem alvo.
+
+| Exemplo | Linguagem | Macro CMake | Ponto de entrada |
+| :--- | :--- | :--- | :--- |
+| **01: Spinning Cube** | C++14 (de 1 a 1024 cubos, menu, `udata`) | `zsdk_add_brew_app` | [`examples/01_spinning_cube/main.cpp`](./examples/01_spinning_cube/main.cpp) |
+| **02: C Spinning Cube** | C99 puro | `zsdk_add_c_app` | [`examples/02_c_spinning_cube/cube_c.c`](./examples/02_c_spinning_cube/cube_c.c) |
+| **03: Lua Spinning Cube** | Lua 5.4 puro | `zsdk_add_lua_app` | [`examples/03_lua_spinning_cube/main.lua`](./examples/03_lua_spinning_cube/main.lua) |
+| **04: Rust Spinning Cube** | Rust `#![no_std]` | `zsdk_add_rust_app` | [`examples/04_rust_spinning_cube/src/lib.rs`](./examples/04_rust_spinning_cube/src/lib.rs) |
+
+## Estrutura do projeto
 
 ```text
 ZSDK/
-├── bindings/               # Bindings Lua (zsdk_lua) e Rust #![no_std] (zsdk-sys, zsdk)
-├── cmake/                  # Toolchain BREW ARM & macros zsdk_add_{brew,c,lua,rust}_app
-├── docs/                   # Documentação modularizada em PT-BR
-├── examples/               # 01 (C++), 02 (C99), 03 (Lua), 04 (Rust)
-├── include/zsdk/           # Headers públicos C++14 e ABI C99 (include/zsdk/c/*.h)
-├── src/                    # Núcleo C++, ponte C (src/c/) e backends (zeebo / windows)
-├── tests/                  # Teste de compilação C99 pura (c_abi_smoke_test.c)
-├── third_party/            # brew_crt (AEEModGen, EGL_1x, GLES_1x) e Lua 5.4.7
-└── tools/                  # elf2mod, template .mif (0x07AF) e check_bindings.py
+├── bindings/               bindings Lua (zsdk_lua) e Rust (zsdk-sys, zsdk)
+├── cmake/                  macros zsdk_add_{brew,c,lua,rust}_app em ZsdkBrew.cmake
+├── docs/                   documentação modularizada em PT-BR
+├── examples/               01 (C++), 02 (C99), 03 (Lua), 04 (Rust)
+├── include/zsdk/           headers públicos C++14 e ABI C99 (include/zsdk/c/*.h)
+├── src/                    núcleo C++, ponte C (src/c/) e backends (zeebo, windows)
+├── tests/                  teste de compilação C99 pura
+├── third_party/            brew_crt (AEEModGen, EGL_1x, GLES_1x) e Lua 5.4
+└── tools/                  elf2mod, template .mif, check_bindings.py, docs2wiki.py
 ```
+
+## Estado do projeto
+
+A SDK foi exercitada no emulador e em builds Windows com MinGW-w64. Ela ainda não foi validada em hardware Zeebo real, depende de headers HID que não estão disponíveis para conferir o mapa de botões, e a build com MSVC não foi testada. A lista completa de pendências, com prioridade e impacto, está em [TODO.md](./TODO.md), e o resumo está em [docs/10_arquitetura_e_portabilidade.md](./docs/10_arquitetura_e_portabilidade.md#limites-conhecidos).

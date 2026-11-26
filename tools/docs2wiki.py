@@ -119,7 +119,7 @@ def page_title(src_rel):
 # Grupos da sidebar: (título do grupo, [nomes de página]). Páginas não listadas
 # aqui caem em "Outros" automaticamente.
 SIDEBAR_GROUPS = [
-    ("Primeiros Passos", ["01_build_e_empacotamento"]),
+    ("Começando", ["09_primeiros_passos", "01_build_e_empacotamento"]),
     ("Engine", [
         "02_core_e_async",
         "03_debug_e_profiler",
@@ -129,6 +129,11 @@ SIDEBAR_GROUPS = [
         "07_audio_rede_seguranca",
     ]),
     ("Linguagens", ["08_scripting_lua", "Bindings"]),
+    ("Arquitetura e referência", [
+        "10_arquitetura_e_portabilidade",
+        "11_referencia_da_api",
+        "12_solucao_de_problemas",
+    ]),
 ]
 
 INDEX_ROW_RE = re.compile(r"^\|\s*\*\*(.+?)\*\*\s*\|\s*\[[^\]]*\]\(([^)]+)\)")
