@@ -24,14 +24,21 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/checkout@v4
+      - name: Verificar se a Wiki foi inicializada
+        run: |
+          if ! git ls-remote "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.wiki.git" >/dev/null 2>&1; then
+            echo "::error::A Wiki de ${{ github.repository }} ainda não existe. Ative em Settings > Features > Wikis e crie a primeira página em https://github.com/${{ github.repository }}/wiki, depois rode este workflow de novo."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v5
         with:
           repository: ${{ github.repository }}.wiki
           path: wiki
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.x"
 

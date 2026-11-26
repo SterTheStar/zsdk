@@ -116,13 +116,112 @@ def page_title(src_rel):
     return Path(src_rel).stem
 
 
-def build_sidebar(pages):
-    lines = ["### ZSDK", "", "* [Início](Home)"]
-    for src, name in pages.items():
-        if name == "Home":
+# Grupos da sidebar: (título do grupo, [nomes de página]). Páginas não listadas
+# aqui caem em "Outros" automaticamente.
+SIDEBAR_GROUPS = [
+    ("Primeiros Passos", ["01_build_e_empacotamento"]),
+    ("Engine", [
+        "02_core_e_async",
+        "03_debug_e_profiler",
+        "04_input_controles",
+        "05_graficos_3d_e_2d",
+        "06_filesystem_e_savegame",
+        "07_audio_rede_seguranca",
+    ]),
+    ("Linguagens", ["08_scripting_lua", "Bindings"]),
+]
+
+INDEX_ROW_RE = re.compile(r"^\|\s*\*\*(.+?)\*\*\s*\|\s*\[[^\]]*\]\(([^)]+)\)")
+
+
+def short_titles(pages):
+    """Nomes curtos a partir da coluna "Módulo" do índice em docs/README.md."""
+    titles = {}
+    index = ROOT / "docs/README.md"
+    if not index.is_file():
+        return titles
+    for line in index.read_text(encoding="utf-8").splitlines():
+        m = INDEX_ROW_RE.match(line)
+        if not m:
             continue
-        title = page_title(src).replace("`", "")
-        lines.append(f"* [{title}]({name})")
+        target = posixpath.normpath(posixpath.join("docs", m.group(2).split("#")[0]))
+        if target in pages:
+            titles[pages[target]] = m.group(1).replace("`", "")
+    return titles
+
+
+def clean_heading(text):
+    text = re.sub(r"^\d+\.\s*", "", text)                     # "1. Foo" -> "Foo"
+    short = re.sub(r"\s*\([^)]*\)", "", text).strip()         # remove "(`Classe`)"
+    return (short or text).replace("`", "").strip()
+
+
+def gh_anchor(text, seen):
+    """Reproduz o slug de âncoras do GitHub (incluindo sufixo -1, -2 em duplicatas)."""
+    slug = re.sub(r"[^\w\- ]", "", text.strip().lower()).replace(" ", "-")
+    n = seen.get(slug, 0)
+    seen[slug] = n + 1
+    return slug if n == 0 else f"{slug}-{n}"
+
+
+def sections(src_rel):
+    out, seen, in_fence = [], {}, False
+    for line in (ROOT / src_rel).read_text(encoding="utf-8").splitlines():
+        if FENCE_RE.match(line):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        m = re.match(r"^(#{1,6})\s+(.*?)\s*#*\s*$", line)
+        if not m:
+            continue
+        anchor = gh_anchor(m.group(2), seen)
+        if len(m.group(1)) == 2:
+            out.append((clean_heading(m.group(2)), anchor))
+    return out
+
+
+def build_sidebar(pages, repo, branch):
+    by_name = {name: src for src, name in pages.items()}
+    titles = short_titles(pages)
+
+    def title_of(name):
+        if name in titles:
+            return titles[name]
+        return re.sub(r"^\d+\s*[—-]\s*", "", page_title(by_name[name])).replace("`", "")
+
+    def entry(name):
+        secs = sections(by_name[name])
+        if not secs:
+            return [f"- [{title_of(name)}]({name})"]
+        lines = ["<details>", f"<summary><a href=\"{name}\">{title_of(name)}</a></summary>", ""]
+        lines += [f"- [{t}]({name}#{a})" for t, a in secs]
+        lines += ["", "</details>"]
+        return lines
+
+    lines = ["**[🏠 Início](Home)**", ""]
+    listed = {"Home"}
+    groups = [(g, [n for n in names if n in by_name]) for g, names in SIDEBAR_GROUPS]
+    others = [n for n in by_name if n not in listed and all(n not in ns for _, ns in groups)]
+    if others:
+        groups.append(("Outros", others))
+
+    for group, names in groups:
+        if not names:
+            continue
+        lines += [f"### {group}", ""]
+        for n in names:
+            lines += entry(n)
+        lines.append("")
+
+    base = f"https://github.com/{repo}"
+    lines += [
+        "### Links",
+        "",
+        f"- [Repositório]({base})",
+        f"- [Exemplos]({base}/tree/{branch}/examples)",
+        f"- [Issues]({base}/issues)",
+    ]
     return "\n".join(lines) + "\n"
 
 
@@ -156,7 +255,7 @@ def main():
     for src, name in pages.items():
         (out / f"{name}.md").write_text(convert_file(src, pages, repo, args.branch), encoding="utf-8")
         print(f"{src} -> {name}.md")
-    (out / "_Sidebar.md").write_text(build_sidebar(pages), encoding="utf-8")
+    (out / "_Sidebar.md").write_text(build_sidebar(pages, repo, args.branch), encoding="utf-8")
     (out / "_Footer.md").write_text(build_footer(repo, args.branch), encoding="utf-8")
     print(f"_Sidebar.md, _Footer.md  (links de código -> {repo}@{args.branch})")
 
