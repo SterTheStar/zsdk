@@ -284,7 +284,7 @@ void Renderer::DrawRect2D(float x, float y, float width, float height, const Col
         x + width, y + height
     };
     SetTexture2DEnabled(false);
-    glColor4ub(color.r, color.g, color.b, color.a);
+    SetColor(color);
     glVertexPointer(2, GL_FLOAT, 0, verts);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     debug::DebugOverlay::RecordDrawCall(4u);
@@ -311,7 +311,7 @@ void Renderer::DrawTexturedQuad2D(const Texture& tex, float x, float y, float wi
 
     SetTexture2DEnabled(true);
     tex.Bind(0u);
-    glColor4ub(tint.r, tint.g, tint.b, tint.a);
+    SetColor(tint);
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glVertexPointer(2, GL_FLOAT, 0, verts);
@@ -344,7 +344,7 @@ void Renderer::DrawText2D(float x, float y, float scale, const char* text, const
     SetTexture2DEnabled(true);
     glBindTexture(GL_TEXTURE_2D, g_rendererFontTex);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glColor4ub(color.r, color.g, color.b, color.a);
+    SetColor(color);
 
     const char* p = text;
     while (*p != '\0') {
@@ -429,7 +429,7 @@ void Renderer::DrawBillboard3D(const Texture& tex, const Vec3& worldPos,
     MeshBuffer::Unbind(BufferType::Vertex);
     SetTexture2DEnabled(true);
     tex.Bind(0u);
-    glColor4ub(tint.r, tint.g, tint.b, tint.a);
+    SetColor(tint);
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, verts);

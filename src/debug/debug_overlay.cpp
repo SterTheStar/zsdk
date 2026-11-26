@@ -56,7 +56,9 @@ void DrawSolidRect(float x, float y, float w, float h, uint8_t r, uint8_t g, uin
     };
 
     glDisable(GL_TEXTURE_2D);
-    glColor4ub(r, g, b, a);
+    const GLfloat inv = 1.0f / 255.0f;
+    glColor4f(static_cast<GLfloat>(r) * inv, static_cast<GLfloat>(g) * inv,
+              static_cast<GLfloat>(b) * inv, static_cast<GLfloat>(a) * inv);
     glVertexPointer(2, GL_FLOAT, 0, verts);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
@@ -129,7 +131,9 @@ void DrawTextLine(float startX, float startY, float scale, const char* text,
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, fontTex);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glColor4ub(r, g, b, a);
+    const GLfloat inv = 1.0f / 255.0f;
+    glColor4f(static_cast<GLfloat>(r) * inv, static_cast<GLfloat>(g) * inv,
+              static_cast<GLfloat>(b) * inv, static_cast<GLfloat>(a) * inv);
     glVertexPointer(2, GL_FLOAT, 0, verts);
     glTexCoordPointer(2, GL_FLOAT, 0, uvs);
     glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(charCount * 6u));

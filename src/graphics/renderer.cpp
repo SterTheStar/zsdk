@@ -273,7 +273,9 @@ void Renderer::SetTexture2DEnabled(bool enabled) {
 }
 
 void Renderer::SetColor(const Color& color) {
-    glColor4ub(color.r, color.g, color.b, color.a);
+    const GLfloat inv = 1.0f / 255.0f;
+    glColor4f(static_cast<GLfloat>(color.r) * inv, static_cast<GLfloat>(color.g) * inv,
+              static_cast<GLfloat>(color.b) * inv, static_cast<GLfloat>(color.a) * inv);
 }
 
 void Renderer::SetLineWidth(float width) {
