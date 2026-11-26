@@ -1,6 +1,6 @@
-# 01 Build e empacotamento
+# 02 Build e empacotamento
 
-O ZSDK compila a mesma base C++14 para dois alvos, e a diferença entre eles está no empacotamento: no Zeebo o resultado é um par `.mod` e `.mif` que o BREW carrega, no Windows é um `.exe` comum. Quem escolhe o caminho é a opção `ZSDK_BUILD_ZEEBO`, que troca os fontes do backend, as flags de compilação e o pós-build. As quatro macros de [cmake/ZsdkBrew.cmake](../cmake/ZsdkBrew.cmake) escondem a diferença entre linguagens: cada uma injeta o host certo e deixa o diretório do seu app com apenas o código do jogo. Este capítulo mostra o que cada macro gera, o que precisa existir na máquina antes do primeiro `cmake`, onde cada artefato aparece e por que o pós-build só funciona no Windows. Se você só quer ver algo na tela, comece pelo tutorial em [09 Primeiros passos](./09_primeiros_passos.md).
+O ZSDK compila a mesma base C++14 para dois alvos, e a diferença entre eles está no empacotamento: no Zeebo o resultado é um par `.mod` e `.mif` que o BREW carrega, no Windows é um `.exe` comum. Quem escolhe o caminho é a opção `ZSDK_BUILD_ZEEBO`, que troca os fontes do backend, as flags de compilação e o pós-build. As quatro macros de [cmake/ZsdkBrew.cmake](../cmake/ZsdkBrew.cmake) escondem a diferença entre linguagens: cada uma injeta o host certo e deixa o diretório do seu app com apenas o código do jogo. Este capítulo mostra o que cada macro gera, o que precisa existir na máquina antes do primeiro `cmake`, onde cada artefato aparece e por que o pós-build só funciona no Windows. Se você só quer ver algo na tela, comece pelo tutorial em [01 Primeiros passos](./01_primeiros_passos.md).
 
 ## Visão rápida
 
@@ -257,7 +257,7 @@ Nada disso foi validado no console. O [TODO.md](../TODO.md) diz que as execuçõ
 
 ## Veja também
 
-- [09 Primeiros passos](./09_primeiros_passos.md): o mesmo caminho de build, começando do zero.
+- [01 Primeiros passos](./01_primeiros_passos.md): o mesmo caminho de build, começando do zero.
 - [12 Solução de problemas](./12_solucao_de_problemas.md): sintomas de build e de carga no console, com a causa no código.
 - [Bindings C, Lua e Rust](../bindings/README.md): o que o verificador de paridade compara e como portar uma função.
 - [10 Arquitetura e portabilidade](./10_arquitetura_e_portabilidade.md): por que existem dois backends e quais limites o hardware impõe.

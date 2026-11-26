@@ -1,4 +1,4 @@
-# 08 Scripting Lua
+# 09 Scripting Lua
 
 O ZSDK embarca Lua 5.4.7 para que a lógica do jogo possa ser escrita, ajustada e recompilada sem tocar em C++ e sem recompilar o `.mod` inteiro. Existem duas portas de entrada, e elas resolvem problemas diferentes: o `zsdk::script::LuaVM` embute um `lua_State` em processo com sandbox e teto de memória, e o binding `zsdk_lua` expõe a ABI C99 inteira para um `lua_State` que o próprio jogo criou. Use o `LuaVM` quando quiser script para partes do jogo; use `zsdk_add_lua_app` quando o jogo for todo em Lua. Se o alvo é performance no ARM11, leia as limitações antes de decidir: o Lua é interpretado e o orçamento de quadro é de 16 ms.
 
@@ -15,7 +15,7 @@ O ZSDK embarca Lua 5.4.7 para que a lógica do jogo possa ser escrita, ajustada 
 
 ## Pré-requisitos
 
-`ZSDK_ENABLE_LUA_VM` precisa estar ligado, e é o padrão: ele compila `src/script/lua_vm.cpp` e cria o alvo `zsdk_lua_runtime` a partir de `third_party/lua`. O binding e o host dependem de `ZSDK_BUILD_LUA_BINDINGS`, também ligado por padrão; desligado, `zsdk_lua` não existe, `zsdk_add_lua_app` volta sem criar alvo e o exemplo 03 desaparece do build. Para `require` e `LoadFile` você precisa de um `zsdk::fs::Vfs` inicializado com o contexto de plataforma, coberto em [06 Filesystem e savegame](./06_filesystem_e_savegame.md).
+`ZSDK_ENABLE_LUA_VM` precisa estar ligado, e é o padrão: ele compila `src/script/lua_vm.cpp` e cria o alvo `zsdk_lua_runtime` a partir de `third_party/lua`. O binding e o host dependem de `ZSDK_BUILD_LUA_BINDINGS`, também ligado por padrão; desligado, `zsdk_lua` não existe, `zsdk_add_lua_app` volta sem criar alvo e o exemplo 03 desaparece do build. Para `require` e `LoadFile` você precisa de um `zsdk::fs::Vfs` inicializado com o contexto de plataforma, coberto em [07 Filesystem e savegame](./07_filesystem_e_savegame.md).
 
 ## Conceitos
 
@@ -438,8 +438,8 @@ Nada disso foi medido em hardware Zeebo. O [TODO.md](../TODO.md) registra 14M de
 
 ## Veja também
 
-* [01 Build e empacotamento](./01_build_e_empacotamento.md): `zsdk_add_lua_app`, `ZSDK_ENABLE_LUA_VM` e `ZSDK_LUA_BYTECODE`.
-* [05 Gráficos 3D e 2D](./05_graficos_3d_e_2d.md): o `SpriteBatch2D` e o `Renderer` que o script comanda por `gfx`.
-* [06 Filesystem e savegame](./06_filesystem_e_savegame.md): o `Vfs` de `script:` e o `SaveGameManager` usado por `save.*`.
+* [02 Build e empacotamento](./02_build_e_empacotamento.md): `zsdk_add_lua_app`, `ZSDK_ENABLE_LUA_VM` e `ZSDK_LUA_BYTECODE`.
+* [06 Gráficos 3D e 2D](./06_graficos_3d_e_2d.md): o `SpriteBatch2D` e o `Renderer` que o script comanda por `gfx`.
+* [07 Filesystem e savegame](./07_filesystem_e_savegame.md): o `Vfs` de `script:` e o `SaveGameManager` usado por `save.*`.
 * [bindings/README.md](../bindings/README.md): a ABI C99 que o binding Lua consome e a checagem de paridade.
 * Código: [lua_vm.hpp](../include/zsdk/script/lua_vm.hpp), [lua_vm.cpp](../src/script/lua_vm.cpp), [zsdk_lua.h](../bindings/lua/include/zsdk_lua.h), [zsdk_lua_host.cpp](../bindings/lua/host/zsdk_lua_host.cpp) e [main.lua](../examples/03_lua_spinning_cube/main.lua).

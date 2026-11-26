@@ -1,4 +1,4 @@
-# 06 Filesystem e save
+# 07 Filesystem e save
 
 O console grava saves numa NAND que o jogo só pode tocar dentro do próprio diretório, e o Zeebo Developer Guide limita a 64 KB o conjunto de dados de save. A camada `zsdk::fs` existe para que essas duas restrições não dependam da disciplina de quem escreve o jogo: `FileSystem` fala com o `IFileMgr` do BREW e aplica a trava de escrita, `Vfs` troca caminhos nativos por prefixos portáveis, e `SaveGameManager` grava slots com magic, versão e CRC32 num arquivo temporário que só substitui o antigo quando está completo. Use esses serviços para tudo que precisa sobreviver ao desligamento do console. Não os use para assets que caberiam dentro do `.mod`: ler megabytes da NAND custa frame e ocupa o mesmo heap de 32 MB que as texturas.
 
@@ -435,8 +435,8 @@ Para reduzir o risco, alterne dois slots: grave sempre no slot que não foi lido
 
 ## Veja também
 
-- [01 Build e empacotamento](./01_build_e_empacotamento.md) para o `.mif`, os privilégios e as flags de `config.hpp`.
-- [03 Debug e profiler](./03_debug_e_profiler.md) para o `FileLogSink`, que grava pelo `Vfs` e divide o espaço do save.
-- [07 Áudio, rede e segurança](./07_audio_rede_seguranca.md) para os caminhos de áudio em `fs:/~/audio/`.
+- [02 Build e empacotamento](./02_build_e_empacotamento.md) para o `.mif`, os privilégios e as flags de `config.hpp`.
+- [04 Debug e profiler](./04_debug_e_profiler.md) para o `FileLogSink`, que grava pelo `Vfs` e divide o espaço do save.
+- [08 Áudio, rede e segurança](./08_audio_rede_seguranca.md) para os caminhos de áudio em `fs:/~/audio/`.
 - [10 Arquitetura e portabilidade](./10_arquitetura_e_portabilidade.md) para o orçamento de memória e o estado dos backends.
 - Código: [filesystem.hpp](../include/zsdk/fs/filesystem.hpp), [savegame.cpp](../src/fs/savegame.cpp), [vfs.cpp](../src/fs/vfs.cpp), [zeebo_fs.cpp](../src/platform/zeebo/zeebo_fs.cpp) e as limitações abertas no [TODO.md](../TODO.md).

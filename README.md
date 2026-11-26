@@ -16,7 +16,7 @@ Camada de abstração leve e determinística que mantém headers BREW e OpenGL f
   <img src="https://img.shields.io/badge/Target-Zeebo%20%7C%20Windows-1E88E5?style=flat-square" alt="Zeebo | Windows" />
 </p>
 
-[Documentação](./docs/README.md) · [Primeiros passos](./docs/09_primeiros_passos.md) · [Build e empacotamento](./docs/01_build_e_empacotamento.md) · [Bindings](./bindings/README.md) · [Exemplos](./examples/)
+[Documentação](./docs/README.md) · [Primeiros passos](./docs/01_primeiros_passos.md) · [Build e empacotamento](./docs/02_build_e_empacotamento.md) · [Bindings](./bindings/README.md) · [Exemplos](./examples/)
 
 </div>
 
@@ -51,7 +51,7 @@ cmake -S . -B build_zeebo -G Ninja `
 cmake --build build_zeebo
 ```
 
-Os pré-requisitos completos, o conteúdo do `.mif` e a lista de opções CMake estão em [docs/01_build_e_empacotamento.md](./docs/01_build_e_empacotamento.md). Para começar do zero, siga o tutorial em [docs/09_primeiros_passos.md](./docs/09_primeiros_passos.md).
+Os pré-requisitos completos, o conteúdo do `.mif` e a lista de opções CMake estão em [docs/02_build_e_empacotamento.md](./docs/02_build_e_empacotamento.md). Para começar do zero, siga o tutorial em [docs/01_primeiros_passos.md](./docs/01_primeiros_passos.md).
 
 Verificação de saúde antes de abrir qualquer mudança:
 
@@ -66,15 +66,15 @@ A documentação segue o Diátaxis: tutorial para aprender, guias por módulo pa
 
 | Módulo | Guia | Conteúdo principal |
 | :--- | :--- | :--- |
-| **Primeiros passos** | [09_primeiros_passos.md](./docs/09_primeiros_passos.md) | tutorial do clone ao app rodando nas quatro linguagens |
-| **Build e empacotamento** | [01_build_e_empacotamento.md](./docs/01_build_e_empacotamento.md) | toolchain, macros CMake, `elf2mod`, `cifc`, `.mif`, MSVC |
-| **Core e assíncrono** | [02_core_e_async.md](./docs/02_core_e_async.md) | `Application`, `FrameTimer`, `Clock`, ponto fixo, `Thread`, `SignalBus` |
-| **Debug e profiler** | [03_debug_e_profiler.md](./docs/03_debug_e_profiler.md) | `MemoryTracker` de RAM e VRAM, `Logger`, `DebugOverlay` |
-| **Input e controles** | [04_input_controles.md](./docs/04_input_controles.md) | Z-Pad, hotplug, deadzone, rumble, motion, teclado e mouse |
-| **Gráficos 3D e 2D** | [05_graficos_3d_e_2d.md](./docs/05_graficos_3d_e_2d.md) | `GLContext`, `Renderer`, `Frame`, texturas, malhas, sprites |
-| **Filesystem e save** | [06_filesystem_e_savegame.md](./docs/06_filesystem_e_savegame.md) | `FileSystem`, guarda de NAND, `Vfs`, save com CRC32, unzip |
-| **Áudio, rede e segurança** | [07_audio_rede_seguranca.md](./docs/07_audio_rede_seguranca.md) | `AudioEngine`, `PcmMixer`, `Socket`, `HttpClient`, cripto e licença |
-| **Scripting Lua** | [08_scripting_lua.md](./docs/08_scripting_lua.md) | `LuaVM` em sandbox, API exposta, `require`, bytecode |
+| **Primeiros passos** | [01_primeiros_passos.md](./docs/01_primeiros_passos.md) | tutorial do clone ao app rodando nas quatro linguagens |
+| **Build e empacotamento** | [02_build_e_empacotamento.md](./docs/02_build_e_empacotamento.md) | toolchain, macros CMake, `elf2mod`, `cifc`, `.mif`, MSVC |
+| **Core e assíncrono** | [03_core_e_async.md](./docs/03_core_e_async.md) | `Application`, `FrameTimer`, `Clock`, ponto fixo, `Thread`, `SignalBus` |
+| **Debug e profiler** | [04_debug_e_profiler.md](./docs/04_debug_e_profiler.md) | `MemoryTracker` de RAM e VRAM, `Logger`, `DebugOverlay` |
+| **Input e controles** | [05_input_controles.md](./docs/05_input_controles.md) | Z-Pad, hotplug, deadzone, rumble, motion, teclado e mouse |
+| **Gráficos 3D e 2D** | [06_graficos_3d_e_2d.md](./docs/06_graficos_3d_e_2d.md) | `GLContext`, `Renderer`, `Frame`, texturas, malhas, sprites |
+| **Filesystem e save** | [07_filesystem_e_savegame.md](./docs/07_filesystem_e_savegame.md) | `FileSystem`, guarda de NAND, `Vfs`, save com CRC32, unzip |
+| **Áudio, rede e segurança** | [08_audio_rede_seguranca.md](./docs/08_audio_rede_seguranca.md) | `AudioEngine`, `PcmMixer`, `Socket`, `HttpClient`, cripto e licença |
+| **Scripting Lua** | [09_scripting_lua.md](./docs/09_scripting_lua.md) | `LuaVM` em sandbox, API exposta, `require`, bytecode |
 | **Arquitetura** | [10_arquitetura_e_portabilidade.md](./docs/10_arquitetura_e_portabilidade.md) | camadas, backends, orçamento de memória, limites |
 | **Referência da API** | [11_referencia_da_api.md](./docs/11_referencia_da_api.md) | mapa de headers, códigos de erro, macros, opções CMake |
 | **Solução de problemas** | [12_solucao_de_problemas.md](./docs/12_solucao_de_problemas.md) | sintoma, causa e correção por área |

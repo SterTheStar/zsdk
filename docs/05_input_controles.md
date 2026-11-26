@@ -1,4 +1,4 @@
-# 04 Input e controles
+# 05 Input e controles
 
 A entrada do Zeebo chega por dois canais diferentes, o `IHID` com fila de botões e posição analógica, e os eventos `AVK_*` que o BREW entrega como teclado, e o mesmo botão físico pode aparecer nos dois. O `InputManager` resolve isso com uma API única de polling: cada slot de jogador tem um `GamepadState` atualizado uma vez por frame, com máscara de botões, transições de pressionado e solto, duração de toque, sticks normalizados com deadzone e estado de movimento. No Windows, o mesmo código roda sobre XInput mais teclado, o que permite testar o jogo no PC sem tocar no código de jogo. Use este capítulo quando precisar ler controle, rumble ou teclado; para entrada de texto, prefira o `VirtualKeyboard`, que já converte D-Pad e botões em letras.
 
@@ -400,8 +400,8 @@ A detecção de controle foi exercitada no emulador com e sem pad, mas a remoç�
 
 ## Veja também
 
-- [02 Core e async](./02_core_e_async.md): `Application`, `IAppDelegate` e o laço onde o `InputManager` é atualizado.
-- [03 Debug e profiler](./03_debug_e_profiler.md): o overlay que abre com ombro esquerdo mais D-Pad para baixo.
-- [09 Primeiros passos](./09_primeiros_passos.md): o primeiro app lendo o jogador 1 nas quatro linguagens.
+- [03 Core e async](./03_core_e_async.md): `Application`, `IAppDelegate` e o laço onde o `InputManager` é atualizado.
+- [04 Debug e profiler](./04_debug_e_profiler.md): o overlay que abre com ombro esquerdo mais D-Pad para baixo.
+- [01 Primeiros passos](./01_primeiros_passos.md): o primeiro app lendo o jogador 1 nas quatro linguagens.
 - [11 Referência da API](./11_referencia_da_api.md): mapa de headers e assinaturas resumidas.
 - [input.hpp](../include/zsdk/input/input.hpp), [input_types.hpp](../include/zsdk/input/input_types.hpp) e [zeebo_input.cpp](../src/platform/zeebo/zeebo_input.cpp): o estado, o enum e o mapa de botões completo.

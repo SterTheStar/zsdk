@@ -1,4 +1,4 @@
-# 03 Debug, logs e profiler de memória
+# 04 Debug, logs e profiler de memória
 
 O console entrega 32 MB de RAM e VRAM do mesmo poço e não existe sistema operacional para culpar quando algo estoura; no PC de desenvolvimento, ao contrário, nada impõe teto e o jogo cresce até a máquina reclamar. O `MemoryTracker` fecha essa lacuna: toda alocação feita pela SDK passa por ele, que soma bytes por subsistema, guarda o pico e, no Windows, recusa a alocação que passaria do orçamento configurado. O `Logger` registra o que aconteceu, com nível, tag e destinos plugáveis, sem alocar no heap por linha. O `DebugOverlay` mostra os dois na tela sobre o quadro atual, junto com FPS, tempo de frame e draw calls. Use os três durante o desenvolvimento; em build de release desligue o overlay e o log informativo pelas flags de compilação, porque nenhum deles custa zero.
 
@@ -331,8 +331,8 @@ Com `ZSDK_ENABLE_DEBUG_OVERLAY` em 0 o overlay inteiro compila para funções in
 
 ## Veja também
 
-- [02 Core e async](./02_core_e_async.md): `Application`, `AppConfig` e o laço de frame onde o overlay é chamado.
-- [05 Gráficos 3D e 2D](./05_graficos_3d_e_2d.md): `Renderer`, texturas e VBOs, as alocações que aparecem em `GFX` e em VRAM.
-- [06 Filesystem e savegame](./06_filesystem_e_savegame.md): o `Vfs` usado pelo `FileLogSink` e o filesystem compartilhado com os saves.
+- [03 Core e async](./03_core_e_async.md): `Application`, `AppConfig` e o laço de frame onde o overlay é chamado.
+- [06 Gráficos 3D e 2D](./06_graficos_3d_e_2d.md): `Renderer`, texturas e VBOs, as alocações que aparecem em `GFX` e em VRAM.
+- [07 Filesystem e savegame](./07_filesystem_e_savegame.md): o `Vfs` usado pelo `FileLogSink` e o filesystem compartilhado com os saves.
 - [10 Arquitetura e portabilidade](./10_arquitetura_e_portabilidade.md): o orçamento de 32 MB no desenho geral da SDK.
 - [memory_tracker.hpp](../include/zsdk/debug/memory_tracker.hpp), [logger.hpp](../include/zsdk/debug/logger.hpp) e [debug_overlay.hpp](../include/zsdk/debug/debug_overlay.hpp): os headers completos.

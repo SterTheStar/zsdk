@@ -1,6 +1,6 @@
-# 05 Gráficos 3D e 2D
+# 06 Gráficos 3D e 2D
 
-O ZSDK entrega a GPU do Zeebo por um conjunto pequeno de classes: `GLContext` abre a superfície, `Renderer` traduz estados e transformações de OpenGL ES 1.1, `Texture` e `MeshBuffer` sobem dados com contabilidade de VRAM, e `SpriteBatch2D` desenha o HUD em lote. O problema que isso resolve é o de uma GPU de função fixa, sem shaders: todo o pipeline é estado global, e qualquer chamada redundante custa no ARM11 a 528 MHz. Use este capítulo quando precisar desenhar em 3D, montar um HUD ou subir assets de imagem; para o ciclo de vida do app e o laço de frame, veja [02 Core e assíncrono](./02_core_e_async.md). O capítulo não cobre áudio nem entrada, e o backend Windows não substitui teste no console: nada em gráficos foi validado em hardware Zeebo, apenas no emulador, como registra o [TODO.md](../TODO.md).
+O ZSDK entrega a GPU do Zeebo por um conjunto pequeno de classes: `GLContext` abre a superfície, `Renderer` traduz estados e transformações de OpenGL ES 1.1, `Texture` e `MeshBuffer` sobem dados com contabilidade de VRAM, e `SpriteBatch2D` desenha o HUD em lote. O problema que isso resolve é o de uma GPU de função fixa, sem shaders: todo o pipeline é estado global, e qualquer chamada redundante custa no ARM11 a 528 MHz. Use este capítulo quando precisar desenhar em 3D, montar um HUD ou subir assets de imagem; para o ciclo de vida do app e o laço de frame, veja [03 Core e assíncrono](./03_core_e_async.md). O capítulo não cobre áudio nem entrada, e o backend Windows não substitui teste no console: nada em gráficos foi validado em hardware Zeebo, apenas no emulador, como registra o [TODO.md](../TODO.md).
 
 ## Visão rápida
 
@@ -541,8 +541,8 @@ Extensões precisam de teste antes do uso. `GLContext::HasExtension` faz compara
 
 ## Veja também
 
-- [02 Core e assíncrono](./02_core_e_async.md) para o laço de frame, `FrameTimer` e o `IAppDelegate` que chama `OnRender`.
-- [03 Debug e profiler](./03_debug_e_profiler.md) para o overlay que mostra `D:`, `V:`, RAM e VRAM, e para `SetStrictBudget`.
+- [03 Core e assíncrono](./03_core_e_async.md) para o laço de frame, `FrameTimer` e o `IAppDelegate` que chama `OnRender`.
+- [04 Debug e profiler](./04_debug_e_profiler.md) para o overlay que mostra `D:`, `V:`, RAM e VRAM, e para `SetStrictBudget`.
 - [10 Arquitetura e portabilidade](./10_arquitetura_e_portabilidade.md) para o orçamento de 32 MB e a divisão entre serviço portável e backend.
 - [11 Referência da API](./11_referencia_da_api.md) para o mapa completo de headers e a ABI C99 de gráficos.
 - [examples/01_spinning_cube/main.cpp](../examples/01_spinning_cube/main.cpp) para uma cena completa com 1024 cubos, culling, menu e HUD.

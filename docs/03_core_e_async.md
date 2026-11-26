@@ -1,4 +1,4 @@
-# 02 Core, ciclo de vida, tempo e concorrência
+# 03 Core, ciclo de vida, tempo e concorrência
 
 O núcleo do ZSDK entrega o que todo app do Zeebo precisa antes do primeiro pixel: um ponto de entrada que esconde `AEEClsCreateInstance` e `WinMain`, um laço de quadro com alvo fixo de 30 ou 60 FPS, um relógio monotônico, matemática inteira compatível com o `GLfixed` do OpenGL ES 1.1, threads e callbacks assíncronos sobre o BREW, e consultas de bateria, memória e idioma. Nenhuma dessas assinaturas expõe tipo do BREW, então o mesmo `main.cpp` compila para o console e para o Windows. Use este capítulo ao montar o esqueleto do jogo: o delegate, o alvo de FPS e o tratamento de suspensão são decisões que afetam todos os outros módulos.
 
@@ -19,7 +19,7 @@ O núcleo do ZSDK entrega o que todo app do Zeebo precisa antes do primeiro pixe
 
 ## Pré-requisitos
 
-O build precisa estar funcionando, com `ZSDK_BUILD_ZEEBO` ligado para o console ou desligado para o Windows, como descreve [01 Build e empacotamento](./01_build_e_empacotamento.md). Todo o núcleo chega por `#include "zsdk/zsdk.hpp"`. O CMake já compila a SDK com `-fno-exceptions` e `-fno-rtti` (MSVC usa `/GR- /EHs-c-`), então erro se propaga por `zsdk::Result`, nunca por `throw`.
+O build precisa estar funcionando, com `ZSDK_BUILD_ZEEBO` ligado para o console ou desligado para o Windows, como descreve [02 Build e empacotamento](./02_build_e_empacotamento.md). Todo o núcleo chega por `#include "zsdk/zsdk.hpp"`. O CMake já compila a SDK com `-fno-exceptions` e `-fno-rtti` (MSVC usa `/GR- /EHs-c-`), então erro se propaga por `zsdk::Result`, nunca por `throw`.
 
 ## Conceitos
 
@@ -441,8 +441,8 @@ Nada disso foi validado em hardware Zeebo: os relatórios de FPS vêm do emulado
 
 ## Veja também
 
-* [01 Build e empacotamento](./01_build_e_empacotamento.md): flags de compilação, alvos de 30 e 60 FPS por plataforma e o `.mod`.
-* [03 Debug e profiler](./03_debug_e_profiler.md): o `MemoryTracker` que recebe o orçamento de `AppConfig` e o `DebugOverlay` chamado no laço.
-* [04 Input e controles](./04_input_controles.md): o `InputManager` atualizado antes do `OnUpdate` e o hotplug por trás de `DispatchGamepadChanges`.
+* [02 Build e empacotamento](./02_build_e_empacotamento.md): flags de compilação, alvos de 30 e 60 FPS por plataforma e o `.mod`.
+* [04 Debug e profiler](./04_debug_e_profiler.md): o `MemoryTracker` que recebe o orçamento de `AppConfig` e o `DebugOverlay` chamado no laço.
+* [05 Input e controles](./05_input_controles.md): o `InputManager` atualizado antes do `OnUpdate` e o hotplug por trás de `DispatchGamepadChanges`.
 * [10 Arquitetura e portabilidade](./10_arquitetura_e_portabilidade.md): como os dois backends implementam as mesmas classes.
 * Código: [app.hpp](../include/zsdk/core/app.hpp), [clock.hpp](../include/zsdk/core/clock.hpp), [math_fixed.hpp](../include/zsdk/core/math_fixed.hpp), [zeebo_core.cpp](../src/platform/zeebo/zeebo_core.cpp) e [windows_backend.cpp](../src/platform/windows/windows_backend.cpp).

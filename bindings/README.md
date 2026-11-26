@@ -175,8 +175,8 @@ O verificador é textual e não substitui um teste. Ele garante que a função f
 
 ## Veja também
 
-- [01 Build e empacotamento](../docs/01_build_e_empacotamento.md): as macros que produzem o app C, Lua e Rust.
-- [08 Scripting Lua](../docs/08_scripting_lua.md): o `LuaVM` e o `require` sobre o `Vfs`, que é outro caminho de script.
+- [02 Build e empacotamento](../docs/02_build_e_empacotamento.md): as macros que produzem o app C, Lua e Rust.
+- [09 Scripting Lua](../docs/09_scripting_lua.md): o `LuaVM` e o `require` sobre o `Vfs`, que é outro caminho de script.
 - [11 Referência da API](../docs/11_referencia_da_api.md): mapa de headers e códigos de resultado.
 - [12 Solução de problemas](../docs/12_solucao_de_problemas.md): o que fazer quando o verificador acusa paridade quebrada.
 - [tools/check_bindings.py](../tools/check_bindings.py): a lista de checagens e o dicionário de subsistemas.

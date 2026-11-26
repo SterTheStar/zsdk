@@ -1,6 +1,6 @@
 # 11 Referência da API
 
-Esta página é o mapa da superfície pública da SDK: quais headers existem, o que cada classe e função faz, quais são os códigos de erro e quais macros mudam o comportamento do binário. Ela é para consulta, não para leitura linear. Se você está começando, o caminho é o [tutorial de primeiros passos](./09_primeiros_passos.md); se quer explicação de arquitetura, vá para [10 Arquitetura e portabilidade](./10_arquitetura_e_portabilidade.md).
+Esta página é o mapa da superfície pública da SDK: quais headers existem, o que cada classe e função faz, quais são os códigos de erro e quais macros mudam o comportamento do binário. Ela é para consulta, não para leitura linear. Se você está começando, o caminho é o [tutorial de primeiros passos](./01_primeiros_passos.md); se quer explicação de arquitetura, vá para [10 Arquitetura e portabilidade](./10_arquitetura_e_portabilidade.md).
 
 ## Convenções da API
 
@@ -40,15 +40,15 @@ A tabela abaixo é o índice por domínio. A coluna "Capítulo" aponta para o gu
 
 | Domínio | Headers em `include/zsdk/` | Classes e tipos principais | Capítulo |
 | :--- | :--- | :--- | :--- |
-| Core | `core/app.hpp`, `clock.hpp`, `types.hpp`, `math_fixed.hpp`, `signal.hpp`, `thread.hpp`, `system_info.hpp`, `config.hpp` | `Application`, `IAppDelegate`, `AppConfig`, `FrameTimer`, `Clock`, `Thread`, `Signal`, `SignalBus`, `AsyncCallback`, `SystemInfo`, `Fixed16` | [02](./02_core_e_async.md) |
-| Debug | `debug/memory_tracker.hpp`, `logger.hpp`, `debug_overlay.hpp`, `file_log.hpp`, `embedded_font.hpp` | `MemoryTracker`, `MemorySnapshot`, `Logger`, `DebugOverlay`, `FileLogSink` | [03](./03_debug_e_profiler.md) |
-| Input | `input/input.hpp`, `input_types.hpp`, `keyboard_mouse.hpp`, `virtual_keyboard.hpp` | `InputManager`, `GamepadState`, `AnalogConfig`, `MotionState`, `KeyboardMouseManager`, `VirtualKeyboard` | [04](./04_input_controles.md) |
-| Gráficos | `graphics/gl_context.hpp`, `renderer.hpp`, `renderer_types.hpp`, `vertex_formats.hpp`, `texture.hpp`, `mesh_buffer.hpp`, `frame.hpp`, `frustum.hpp`, `sprite_batch.hpp`, `sprite2d.hpp`, `display2d.hpp`, `image_decoder.hpp` | `GLContext`, `Renderer`, `Frame`, `Texture`, `MeshBuffer`, `SpriteBatch2D`, `SpriteEngine2D`, `Sprite2D`, `Frustum`, `ImageDecoder` | [05](./05_graficos_3d_e_2d.md) |
-| Filesystem | `fs/filesystem.hpp`, `vfs.hpp`, `savegame.hpp`, `database.hpp`, `archive_unzip.hpp`, `ram_cache.hpp`, `local_storage.hpp` | `FileSystem`, `File`, `Vfs`, `SaveGameManager`, `Database`, `UnzipStream`, `RamCache`, `LocalStorage` | [06](./06_filesystem_e_savegame.md) |
-| Áudio | `audio/audio_engine.hpp`, `audio.hpp`, `pcm_mixer.hpp` | `AudioEngine`, `MediaStream`, `SoundEffect`, `PcmMixer`, `Voice` | [07](./07_audio_rede_seguranca.md) |
-| Rede | `net/socket.hpp`, `http_client.hpp`, `network_mgr.hpp`, `bluetooth.hpp` | `Socket`, `HttpClient`, `NetworkManager`, `BluetoothManager` | [07](./07_audio_rede_seguranca.md) |
-| Segurança | `security/crypto.hpp`, `license.hpp` | `Random`, `Hash`, `Hmac`, `Cipher`, `Rsa`, `LicenseManager`, `LicenseStatus` | [07](./07_audio_rede_seguranca.md) |
-| Scripting | `script/lua_vm.hpp` | `LuaVM` | [08](./08_scripting_lua.md) |
+| Core | `core/app.hpp`, `clock.hpp`, `types.hpp`, `math_fixed.hpp`, `signal.hpp`, `thread.hpp`, `system_info.hpp`, `config.hpp` | `Application`, `IAppDelegate`, `AppConfig`, `FrameTimer`, `Clock`, `Thread`, `Signal`, `SignalBus`, `AsyncCallback`, `SystemInfo`, `Fixed16` | [02](./03_core_e_async.md) |
+| Debug | `debug/memory_tracker.hpp`, `logger.hpp`, `debug_overlay.hpp`, `file_log.hpp`, `embedded_font.hpp` | `MemoryTracker`, `MemorySnapshot`, `Logger`, `DebugOverlay`, `FileLogSink` | [03](./04_debug_e_profiler.md) |
+| Input | `input/input.hpp`, `input_types.hpp`, `keyboard_mouse.hpp`, `virtual_keyboard.hpp` | `InputManager`, `GamepadState`, `AnalogConfig`, `MotionState`, `KeyboardMouseManager`, `VirtualKeyboard` | [04](./05_input_controles.md) |
+| Gráficos | `graphics/gl_context.hpp`, `renderer.hpp`, `renderer_types.hpp`, `vertex_formats.hpp`, `texture.hpp`, `mesh_buffer.hpp`, `frame.hpp`, `frustum.hpp`, `sprite_batch.hpp`, `sprite2d.hpp`, `display2d.hpp`, `image_decoder.hpp` | `GLContext`, `Renderer`, `Frame`, `Texture`, `MeshBuffer`, `SpriteBatch2D`, `SpriteEngine2D`, `Sprite2D`, `Frustum`, `ImageDecoder` | [05](./06_graficos_3d_e_2d.md) |
+| Filesystem | `fs/filesystem.hpp`, `vfs.hpp`, `savegame.hpp`, `database.hpp`, `archive_unzip.hpp`, `ram_cache.hpp`, `local_storage.hpp` | `FileSystem`, `File`, `Vfs`, `SaveGameManager`, `Database`, `UnzipStream`, `RamCache`, `LocalStorage` | [06](./07_filesystem_e_savegame.md) |
+| Áudio | `audio/audio_engine.hpp`, `audio.hpp`, `pcm_mixer.hpp` | `AudioEngine`, `MediaStream`, `SoundEffect`, `PcmMixer`, `Voice` | [07](./08_audio_rede_seguranca.md) |
+| Rede | `net/socket.hpp`, `http_client.hpp`, `network_mgr.hpp`, `bluetooth.hpp` | `Socket`, `HttpClient`, `NetworkManager`, `BluetoothManager` | [07](./08_audio_rede_seguranca.md) |
+| Segurança | `security/crypto.hpp`, `license.hpp` | `Random`, `Hash`, `Hmac`, `Cipher`, `Rsa`, `LicenseManager`, `LicenseStatus` | [07](./08_audio_rede_seguranca.md) |
+| Scripting | `script/lua_vm.hpp` | `LuaVM` | [08](./09_scripting_lua.md) |
 | ABI C99 | `c/zsdk_c.h` e os oito headers por módulo | funções `zsdk_*` e handles opacos | [Bindings](../bindings/README.md) |
 
 ### Detalhe por módulo

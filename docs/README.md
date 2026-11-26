@@ -21,7 +21,7 @@ Esta documentação é a fonte da verdade do projeto. A wiki de `docs/` é gerad
 
 ## Para quem esta documentação é
 
-Para quem vai programar um jogo ou ferramenta com a SDK e já sabe C++ ou C. Não ensinamos C++, nem OpenGL, nem o modelo de programação do BREW: explicamos como a SDK cobre essas bases e onde estão os limites do hardware. Se você nunca compilou um `.mod` na vida, comece pelo tutorial em [09 Primeiros passos](./09_primeiros_passos.md), que leva do clone ao app rodando sem exigir conhecimento prévio do console.
+Para quem vai programar um jogo ou ferramenta com a SDK e já sabe C++ ou C. Não ensinamos C++, nem OpenGL, nem o modelo de programação do BREW: explicamos como a SDK cobre essas bases e onde estão os limites do hardware. Se você nunca compilou um `.mod` na vida, comece pelo tutorial em [01 Primeiros passos](./01_primeiros_passos.md), que leva do clone ao app rodando sem exigir conhecimento prévio do console.
 
 ## Quick start
 
@@ -45,7 +45,7 @@ cmake -S . -B build_zeebo -G Ninja `
 cmake --build build_zeebo
 ```
 
-Os artefatos caem em `build_zeebo/apps/<alvo>/`, com o `.elf` na raiz da pasta, o `.mod` em `mod/<alvo>/` e o `.mif` em `mif/`. Os pré-requisitos completos de toolchain, o conteúdo do `.mif` e a lista de opções CMake estão em [01 Build e empacotamento](./01_build_e_empacotamento.md).
+Os artefatos caem em `build_zeebo/apps/<alvo>/`, com o `.elf` na raiz da pasta, o `.mod` em `mod/<alvo>/` e o `.mif` em `mif/`. Os pré-requisitos completos de toolchain, o conteúdo do `.mif` e a lista de opções CMake estão em [02 Build e empacotamento](./02_build_e_empacotamento.md).
 
 Verificação de saúde do repositório, útil antes de abrir qualquer mudança:
 
@@ -60,15 +60,15 @@ A documentação segue a organização do Diátaxis: um tutorial para aprender, 
 
 | Módulo | Guia | Conteúdo principal |
 | :--- | :--- | :--- |
-| **Primeiros passos** | [09_primeiros_passos.md](./09_primeiros_passos.md) | tutorial do zero ao app rodando, nas quatro linguagens |
-| **Build e empacotamento** | [01_build_e_empacotamento.md](./01_build_e_empacotamento.md) | toolchain, CMake, `elf2mod`, `cifc`, `.mod`, `.mif`, build Windows |
-| **Core e assíncrono** | [02_core_e_async.md](./02_core_e_async.md) | `Application`, `FrameTimer`, `Clock`, ponto fixo, `Thread`, `Signal` |
-| **Debug e profiler** | [03_debug_e_profiler.md](./03_debug_e_profiler.md) | `MemoryTracker`, `Logger`, `DebugOverlay`, `FileLogSink` |
-| **Input e controles** | [04_input_controles.md](./04_input_controles.md) | Z-Pad, hotplug, deadzone, rumble, teclado e mouse, teclado virtual |
-| **Gráficos 3D e 2D** | [05_graficos_3d_e_2d.md](./05_graficos_3d_e_2d.md) | `GLContext`, `Renderer`, `Frame`, texturas, malhas, sprites, culling |
-| **Filesystem e save** | [06_filesystem_e_savegame.md](./06_filesystem_e_savegame.md) | `FileSystem`, guarda de NAND, `Vfs`, save com CRC32, database, unzip |
-| **Áudio, rede e segurança** | [07_audio_rede_seguranca.md](./07_audio_rede_seguranca.md) | `AudioEngine`, `PcmMixer`, `Socket`, `HttpClient`, cripto e licença |
-| **Scripting Lua** | [08_scripting_lua.md](./08_scripting_lua.md) | `LuaVM`, sandbox, API exposta, `require`, bytecode |
+| **Primeiros passos** | [01_primeiros_passos.md](./01_primeiros_passos.md) | tutorial do zero ao app rodando, nas quatro linguagens |
+| **Build e empacotamento** | [02_build_e_empacotamento.md](./02_build_e_empacotamento.md) | toolchain, CMake, `elf2mod`, `cifc`, `.mod`, `.mif`, build Windows |
+| **Core e assíncrono** | [03_core_e_async.md](./03_core_e_async.md) | `Application`, `FrameTimer`, `Clock`, ponto fixo, `Thread`, `Signal` |
+| **Debug e profiler** | [04_debug_e_profiler.md](./04_debug_e_profiler.md) | `MemoryTracker`, `Logger`, `DebugOverlay`, `FileLogSink` |
+| **Input e controles** | [05_input_controles.md](./05_input_controles.md) | Z-Pad, hotplug, deadzone, rumble, teclado e mouse, teclado virtual |
+| **Gráficos 3D e 2D** | [06_graficos_3d_e_2d.md](./06_graficos_3d_e_2d.md) | `GLContext`, `Renderer`, `Frame`, texturas, malhas, sprites, culling |
+| **Filesystem e save** | [07_filesystem_e_savegame.md](./07_filesystem_e_savegame.md) | `FileSystem`, guarda de NAND, `Vfs`, save com CRC32, database, unzip |
+| **Áudio, rede e segurança** | [08_audio_rede_seguranca.md](./08_audio_rede_seguranca.md) | `AudioEngine`, `PcmMixer`, `Socket`, `HttpClient`, cripto e licença |
+| **Scripting Lua** | [09_scripting_lua.md](./09_scripting_lua.md) | `LuaVM`, sandbox, API exposta, `require`, bytecode |
 | **Arquitetura e portabilidade** | [10_arquitetura_e_portabilidade.md](./10_arquitetura_e_portabilidade.md) | camadas, backends, orçamento de memória, limites do hardware |
 | **Referência da API** | [11_referencia_da_api.md](./11_referencia_da_api.md) | mapa de headers, códigos de erro, macros e opções CMake |
 | **Solução de problemas** | [12_solucao_de_problemas.md](./12_solucao_de_problemas.md) | sintoma, causa e correção por área |

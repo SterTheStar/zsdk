@@ -1,6 +1,6 @@
 # 10 Arquitetura e portabilidade
 
-O ZSDK existe para resolver um problema específico: escrever um jogo para o Zeebo sem espalhar `IShell`, `IDisplay`, `IHID` e `EGLDisplay` pelo código do jogo, e sem perder a possibilidade de rodar a mesma base de código no Windows durante o desenvolvimento. Tudo no desenho da SDK sai dessa restrição, do orçamento de 32 MB de RAM e VRAM do console e do fato de a GPU implementar OpenGL ES 1.1 de função fixa. Esta página explica como as peças se encaixam e por que cada uma está onde está. Ela não ensina a usar nenhum módulo: para isso existem os capítulos 01 a 09.
+O ZSDK existe para resolver um problema específico: escrever um jogo para o Zeebo sem espalhar `IShell`, `IDisplay`, `IHID` e `EGLDisplay` pelo código do jogo, e sem perder a possibilidade de rodar a mesma base de código no Windows durante o desenvolvimento. Tudo no desenho da SDK sai dessa restrição, do orçamento de 32 MB de RAM e VRAM do console e do fato de a GPU implementar OpenGL ES 1.1 de função fixa. Esta página explica como as peças se encaixam e por que cada uma está onde está. Ela não ensina a usar nenhum módulo: para isso existem os capítulos 02 a 09.
 
 ## Visão rápida
 
@@ -22,19 +22,19 @@ O Zeebo roda um ARM11 a 528 MHz com 32 MB compartilhados entre RAM e VRAM, sobre
 
 Os 32 MB são um teto único: textura, malha, áudio, código carregado e heap do jogo competem pelo mesmo espaço. Por isso o `MemoryTracker` existe desde o primeiro dia e por isso a SDK evita alocação dinâmica em caminho crítico. O próprio binário do app entra nessa conta: o `.mod` do exemplo Lua fica em torno de 398 KB contra 169 KB do exemplo C++, diferença que só o runtime do Lua explica.
 
-O `ZSDK_DEFAULT_MEMORY_LIMIT_BYTES` vale `32 MiB` e serve de referência para a barra do profiler e para o modo de orçamento estrito do `MemoryTracker`. Ver [03 Debug e profiler](./03_debug_e_profiler.md).
+O `ZSDK_DEFAULT_MEMORY_LIMIT_BYTES` vale `32 MiB` e serve de referência para a barra do profiler e para o modo de orçamento estrito do `MemoryTracker`. Ver [04 Debug e profiler](./04_debug_e_profiler.md).
 
 ### Pipeline gráfico de função fixa
 
 A GPU expõe OpenGL ES 1.1, sem shaders programáveis, com matrizes e iluminação por estágio fixo. Isso explica duas decisões que parecem arcaicas e são obrigatórias aqui: a matriz de projeção e a de visão são entregues por `glLoadMatrix` e não por uniform, e os formatos de vértice em [vertex_formats.hpp](../include/zsdk/graphics/vertex_formats.hpp) são fixos (`VertexP3N3C4`, `VertexP3C4U2`, `VertexP3N3U2`) porque não existe layout declarado por shader. Também explica `math_fixed.hpp`: a API aceita `GLfixed` nativamente, então uma SDK que só trabalhasse em `float` pagaria conversão em cada chamada.
 
-O estado da GPU é caro de trocar. O `Renderer` mantém um cache de estado justamente para não reenviar matriz, blend, textura e ponteiro de vértice a cada draw call. Ver [05 Gráficos 3D e 2D](./05_graficos_3d_e_2d.md).
+O estado da GPU é caro de trocar. O `Renderer` mantém um cache de estado justamente para não reenviar matriz, blend, textura e ponteiro de vértice a cada draw call. Ver [06 Gráficos 3D e 2D](./06_graficos_3d_e_2d.md).
 
 ### Armazenamento e a guarda da NAND
 
 O sistema de arquivos do console tem uma NAND de sistema que não pode ser tocada pelo jogo e um diretório privado por aplicativo em `fs:/~/`. A SDK aplica uma trava de compilação, `ZSDK_NAND_WRITE_GUARD`, que recusa escrita, remoção e criação de diretório fora de `fs:/~/` e `fs:/card0/`. Ela existe porque um `Remove` no caminho errado transforma um bug de lógica em console inutilizável.
 
-O cartão SD aparece como `fs:/card0/` e é tratado como destino opcional de save. O `TODO.md` registra que esse caminho não está comprovado em hardware, então trate o save em SD como não suportado até validar no console. Ver [06 Filesystem e SaveGame](./06_filesystem_e_savegame.md).
+O cartão SD aparece como `fs:/card0/` e é tratado como destino opcional de save. O `TODO.md` registra que esse caminho não está comprovado em hardware, então trate o save em SD como não suportado até validar no console. Ver [07 Filesystem e SaveGame](./07_filesystem_e_savegame.md).
 
 ## As camadas da SDK
 
@@ -68,13 +68,13 @@ Três macros aparecem em quase todos os headers e não são decoração.
 
 `ZSDK_ENABLE_DEBUG_OVERLAY` muda o binário, não só o comportamento. Com ela em `0`, o overlay e os logs `INFO` e `WARN` são removidos na compilação, não desligados em tempo de execução. É a diferença entre um release leve e um release que carrega um painel de debug inteiro.
 
-`ZSDK_NAND_WRITE_GUARD` insere a checagem de caminho no `FileSystem`. Desligá-la é possível e documentado no capítulo 06, mas significa assumir a responsabilidade por qualquer escrita no caminho errado.
+`ZSDK_NAND_WRITE_GUARD` insere a checagem de caminho no `FileSystem`. Desligá-la é possível e documentado no capítulo 07, mas significa assumir a responsabilidade por qualquer escrita no caminho errado.
 
 ## Determinismo e custo previsível
 
 O desenho evita três fontes clássicas de variação: exceções (que exigem tabela de unwind e tornam o caminho de erro imprevisível), RTTI (que infla o binário) e alocação por frame nos subsistemas críticos. `InputManager`, `DebugOverlay` e `SaveGameManager` são escritos para não chamar o alocador depois da inicialização.
 
-O controle de frame fica no `FrameTimer` e no `FpsCap` do `Application`: o laço dorme o suficiente para não passar do alvo, o que no console reduz consumo e no Windows mantém o comportamento parecido com o do hardware. O delta entregue a `OnUpdate` é em milissegundos e já vem limitado, para que uma pausa longa do sistema não injete um salto gigante na simulação. Ver [02 Core e assíncrono](./02_core_e_async.md).
+O controle de frame fica no `FrameTimer` e no `FpsCap` do `Application`: o laço dorme o suficiente para não passar do alvo, o que no console reduz consumo e no Windows mantém o comportamento parecido com o do hardware. O delta entregue a `OnUpdate` é em milissegundos e já vem limitado, para que uma pausa longa do sistema não injete um salto gigante na simulação. Ver [03 Core e assíncrono](./03_core_e_async.md).
 
 ## Limites conhecidos
 
@@ -96,8 +96,8 @@ Uma alternativa comum seria fazer os bindings Lua e Rust falarem com uma camada 
 
 ## Veja também
 
-- [01 Build e empacotamento](./01_build_e_empacotamento.md) para transformar essas camadas em `.mod` e `.mif`.
-- [02 Core e assíncrono](./02_core_e_async.md) para o ciclo de vida do `Application` e o laço de frame.
-- [05 Gráficos 3D e 2D](./05_graficos_3d_e_2d.md) para o cache de estado e os formatos de vértice.
-- [06 Filesystem e SaveGame](./06_filesystem_e_savegame.md) para a guarda da NAND em detalhe.
+- [02 Build e empacotamento](./02_build_e_empacotamento.md) para transformar essas camadas em `.mod` e `.mif`.
+- [03 Core e assíncrono](./03_core_e_async.md) para o ciclo de vida do `Application` e o laço de frame.
+- [06 Gráficos 3D e 2D](./06_graficos_3d_e_2d.md) para o cache de estado e os formatos de vértice.
+- [07 Filesystem e SaveGame](./07_filesystem_e_savegame.md) para a guarda da NAND em detalhe.
 - [config.hpp](../include/zsdk/core/config.hpp) e [types.hpp](../include/zsdk/core/types.hpp) como fonte das macros e dos códigos de erro citados aqui.

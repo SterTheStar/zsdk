@@ -1,6 +1,6 @@
-# 07 Áudio, rede e segurança
+# 08 Áudio, rede e segurança
 
-O console fala com o mundo por três caminhos e a SDK trata cada um em um módulo separado. Áudio cobre o que sai pelo decodificador: música em streaming, efeitos curtos e mixagem PCM em software com pitch ao vivo. Rede cobre o que entra e sai por `ISockPort` e `IWeb`, sempre sem bloquear o laço do jogo. Segurança embrulha hash, HMAC, cifra simétrica, RSA e a licença do app sobre `IHashCtx`, `ICipher1`, `IRSA` e `ILicense`. Use este capítulo quando já existe um app rodando e você precisa somar som, sincronizar dados ou proteger um save; para o primeiro contato com a SDK, comece por [02 Core e async](./02_core_e_async.md); se a necessidade é só armazenar dados localmente, o capítulo certo é [06 Filesystem e savegame](./06_filesystem_e_savegame.md).
+O console fala com o mundo por três caminhos e a SDK trata cada um em um módulo separado. Áudio cobre o que sai pelo decodificador: música em streaming, efeitos curtos e mixagem PCM em software com pitch ao vivo. Rede cobre o que entra e sai por `ISockPort` e `IWeb`, sempre sem bloquear o laço do jogo. Segurança embrulha hash, HMAC, cifra simétrica, RSA e a licença do app sobre `IHashCtx`, `ICipher1`, `IRSA` e `ILicense`. Use este capítulo quando já existe um app rodando e você precisa somar som, sincronizar dados ou proteger um save; para o primeiro contato com a SDK, comece por [03 Core e async](./03_core_e_async.md); se a necessidade é só armazenar dados localmente, o capítulo certo é [07 Filesystem e savegame](./07_filesystem_e_savegame.md).
 
 ## Visão rápida
 
@@ -12,7 +12,7 @@ O console fala com o mundo por três caminhos e a SDK trata cada um em um módul
 
 ## Pré-requisitos
 
-Todos os `Initialize` dos três módulos recebem o contexto de plataforma, que é o `IShell*` no Zeebo. Pegue o valor uma vez, no início do app, por `zsdk::Application::GetInstance()->GetNativePlatformContext()`, e guarde. Áudio trabalha com caminhos que o BREW abre direto, então os arquivos ficam no diretório do app ou no cartão; os exemplos usam `fs:/~/audio/`, o mesmo prefixo `home:` que o [Vfs](./06_filesystem_e_savegame.md) monta. Rede exige uma conexão já configurada no console: a SDK consulta o estado, mas não configura a conexão.
+Todos os `Initialize` dos três módulos recebem o contexto de plataforma, que é o `IShell*` no Zeebo. Pegue o valor uma vez, no início do app, por `zsdk::Application::GetInstance()->GetNativePlatformContext()`, e guarde. Áudio trabalha com caminhos que o BREW abre direto, então os arquivos ficam no diretório do app ou no cartão; os exemplos usam `fs:/~/audio/`, o mesmo prefixo `home:` que o [Vfs](./07_filesystem_e_savegame.md) monta. Rede exige uma conexão já configurada no console: a SDK consulta o estado, mas não configura a conexão.
 
 O backend Windows existe para iteração rápida, e a paridade não é total. Antes de confiar numa execução no PC, confira:
 
@@ -444,7 +444,7 @@ Na ABI C99, `zsdk_c_security.h` expõe `zsdk_random_bytes`, `zsdk_random_u32`, `
 
 ## Veja também
 
-- [06 Filesystem e savegame](./06_filesystem_e_savegame.md): onde o checksum deste capítulo entra e o limite de 64 KB do save.
-- [02 Core e async](./02_core_e_async.md): `Thread` para tirar RSA do frame e o laço que bombeia socket.
-- [03 Debug e profiler](./03_debug_e_profiler.md) e [10 Arquitetura e portabilidade](./10_arquitetura_e_portabilidade.md): os subsistemas `Audio` e `Network` do `MemoryTracker` e o que é stub no Windows.
+- [07 Filesystem e savegame](./07_filesystem_e_savegame.md): onde o checksum deste capítulo entra e o limite de 64 KB do save.
+- [03 Core e async](./03_core_e_async.md): `Thread` para tirar RSA do frame e o laço que bombeia socket.
+- [04 Debug e profiler](./04_debug_e_profiler.md) e [10 Arquitetura e portabilidade](./10_arquitetura_e_portabilidade.md): os subsistemas `Audio` e `Network` do `MemoryTracker` e o que é stub no Windows.
 - Código: [audio_engine.hpp](../include/zsdk/audio/audio_engine.hpp), [pcm_mixer.hpp](../include/zsdk/audio/pcm_mixer.hpp), [crypto.hpp](../include/zsdk/security/crypto.hpp) e [TODO.md](../TODO.md), com as limitações ainda não validadas em hardware.

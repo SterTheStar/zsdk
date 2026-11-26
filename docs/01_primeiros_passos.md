@@ -1,4 +1,4 @@
-# 09 Primeiros passos
+# 01 Primeiros passos
 
 Este tutorial leva do clone do repositório até o cubo girando na janela do Windows e, no fim, empacotado em `.mod` e `.mif` para o console. Pelo caminho você lê o `main.cpp` do exemplo, muda uma linha e confere a diferença na tela, e vê o mesmo app escrito em C99, Lua 5.4 e Rust no_std. Cada etapa termina com algo que você consegue verificar antes de seguir para a próxima.
 
@@ -338,13 +338,13 @@ Como não há `std` nem alocação dinâmica, o exemplo 04 guarda tudo em `stati
 
 O cubo é pequeno de propósito. Os assuntos que ele só encosta estão nos guias:
 
-- [01 Build e empacotamento](./01_build_e_empacotamento.md): toolchain ARM, todas as opções CMake, conteúdo do `.mif`, build fora do Windows e as flags de `config.hpp`.
-- [02 Core e assíncrono](./02_core_e_async.md): `Application` a fundo, `FrameTimer`, `Clock`, ponto fixo, threads e sinais, mais o tratamento obrigatório de suspensão e de gamepad.
-- [05 Gráficos 3D e 2D](./05_graficos_3d_e_2d.md): `GLContext`, cache de estado do `Renderer`, malhas, texturas, `SpriteBatch2D` e frustum, que é onde o cubo vira um jogo.
-- [04 Input e controles](./04_input_controles.md) e [03 Debug e profiler](./03_debug_e_profiler.md): deadzone, rumble, teclado e mouse, e o que cada número do overlay significa.
+- [02 Build e empacotamento](./02_build_e_empacotamento.md): toolchain ARM, todas as opções CMake, conteúdo do `.mif`, build fora do Windows e as flags de `config.hpp`.
+- [03 Core e assíncrono](./03_core_e_async.md): `Application` a fundo, `FrameTimer`, `Clock`, ponto fixo, threads e sinais, mais o tratamento obrigatório de suspensão e de gamepad.
+- [06 Gráficos 3D e 2D](./06_graficos_3d_e_2d.md): `GLContext`, cache de estado do `Renderer`, malhas, texturas, `SpriteBatch2D` e frustum, que é onde o cubo vira um jogo.
+- [05 Input e controles](./05_input_controles.md) e [04 Debug e profiler](./04_debug_e_profiler.md): deadzone, rumble, teclado e mouse, e o que cada número do overlay significa.
 - [Arquitetura e portabilidade](./10_arquitetura_e_portabilidade.md) e [Referência da API](./11_referencia_da_api.md): o mapa dos headers e o orçamento de memória do console.
 
-Para escrever fora do C++, comece por [bindings/README.md](../bindings/README.md), que documenta a ABI C99 e a paridade verificada entre C, Lua e Rust, e por [08 Scripting Lua](./08_scripting_lua.md) se o plano for embutir script no jogo em vez de escrever o app inteiro em Lua.
+Para escrever fora do C++, comece por [bindings/README.md](../bindings/README.md), que documenta a ABI C99 e a paridade verificada entre C, Lua e Rust, e por [09 Scripting Lua](./09_scripting_lua.md) se o plano for embutir script no jogo em vez de escrever o app inteiro em Lua.
 
 ## Se algo der errado
 

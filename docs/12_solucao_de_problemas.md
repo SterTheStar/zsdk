@@ -107,12 +107,12 @@ Estes são os limites que o código impõe e que não têm correção pelo usuá
 
 | Sintoma | Causa | Correção |
 | :--- | :--- | :--- |
-| `undefined reference to 'AEEMod_Load'` | alvo criado com `add_executable` em vez da macro, sem `AEEModGen.c` | use `zsdk_add_brew_app`, que soma o CRT e fixa `-e AEEMod_Load` em [01](./01_build_e_empacotamento.md#referência-da-api) |
+| `undefined reference to 'AEEMod_Load'` | alvo criado com `add_executable` em vez da macro, sem `AEEModGen.c` | use `zsdk_add_brew_app`, que soma o CRT e fixa `-e AEEMod_Load` em [01](./02_build_e_empacotamento.md#referência-da-api) |
 | `undefined reference to '_sbrk'`, `'_write'`, `'_close'` | link sem `--specs=nosys.specs` ou sem `glibc_stubs.c` | mantenha as opções padrão da macro; os stubs estão em [glibc_stubs.c](../third_party/brew_crt/glibc_stubs.c) |
 | `unrecognized command-line option '-mlong-calls'` em build x86 | flag ARM aplicada a alvo Windows com GCC | use o `CMakeLists.txt` atual, que só aplica `-mlong-calls` com `ZSDK_BUILD_ZEEBO` |
 | `fatal error: AEEHIDButtons.h: No such file or directory` | headers HID não existem no SDK disponível | bloqueio conhecido; o [TODO.md](../TODO.md) registra que o `MapHidButtonToLogical` nunca foi validado contra o mapeamento real |
 | `fatal error: ../../inc/X.h: No such file` dentro de `AEERSA.h` | include relativo com barras invertidas do Windows | copie o `X.h` para o diretório com o nome literal esperado; a pendência está no [TODO.md](../TODO.md) |
-| `Permission denied` ao executar `elf2mod.exe` | pós-build rodando fora do Windows | empacote à mão com `wine`; veja [01](./01_build_e_empacotamento.md#limites-e-armadilhas) |
+| `Permission denied` ao executar `elf2mod.exe` | pós-build rodando fora do Windows | empacote à mão com `wine`; veja [01](./02_build_e_empacotamento.md#limites-e-armadilhas) |
 | `ZSDK_LUA_BYTECODE is ON, but zsdk_luac was not found` | `zsdk_luac` só é construído fora do alvo Zeebo | gere o utilitário em um build Windows antes, ou desligue o bytecode |
 | app Lua não gera alvo e o build passa | `zsdk_add_lua_app` retornou por falta de `TARGET zsdk_lua` | declare o app depois de `add_subdirectory(bindings/lua)` |
 | build com MSVC falha ou linka com símbolo ausente | caminho nunca validado, backend Windows com stubs | use o cross-compile MinGW-w64, que é o caminho exercitado; MSVC segue aberto no [TODO.md](../TODO.md) |
@@ -122,24 +122,24 @@ Estes são os limites que o código impõe e que não têm correção pelo usuá
 | Sintoma | Causa | Correção |
 | :--- | :--- | :--- |
 | `.mif` começa com `--` em vez de dado binário | `cifc` não encontrado e `.cif` copiado como `.mif` | instale o `cifc` nos dois `HINTS` da macro e confirme a mensagem `via cifc` |
-| app não aparece no menu do console | `.mif` ausente em `/mif/` ou `mod/<alvo>/` no lugar errado | copie o par completo; os caminhos estão em [01](./01_build_e_empacotamento.md#build-para-zeebo) |
+| app não aparece no menu do console | `.mif` ausente em `/mif/` ou `mod/<alvo>/` no lugar errado | copie o par completo; os caminhos estão em [01](./02_build_e_empacotamento.md#build-para-zeebo) |
 | app aparece e não abre, ou abre outro app | dois módulos com o mesmo `appletid` | passe `MIF_CLASS_ID` único; o padrão `0x01099001` é compartilhado por todo app que o omite |
 | app abre mas não grava no cartão SD | falta a dependência `0x0101414E`, `AEECLSID_CARD0_ACCESS` | restaure o bloco `deps` do [template do `.mif`](../tools/mif/zsdk_template.mif.in) |
-| app Lua do console não lê o script | script não foi copiado para `mod/<alvo>/` | o host procura `fs:/~/main.luac` e depois `fs:/~/main.lua`; veja [08](./08_scripting_lua.md) |
+| app Lua do console não lê o script | script não foi copiado para `mod/<alvo>/` | o host procura `fs:/~/main.luac` e depois `fs:/~/main.lua`; veja [08](./09_scripting_lua.md) |
 
 ### Sintomas no console
 
 | Sintoma | Causa | Correção |
 | :--- | :--- | :--- |
-| crash imediato sem log ao entrar na cena | stack de 32 KB estourada por buffer local | mova o buffer para o heap ou para o objeto; o `LUAI_MAXCCALLS=48` existe pelo mesmo motivo em [01](./01_build_e_empacotamento.md#referência-da-api) |
+| crash imediato sem log ao entrar na cena | stack de 32 KB estourada por buffer local | mova o buffer para o heap ou para o objeto; o `LUAI_MAXCCALLS=48` existe pelo mesmo motivo em [01](./02_build_e_empacotamento.md#referência-da-api) |
 | erro Lua `C stack overflow` em script profundo | limite de chamadas C aninhadas do runtime | reduza a recursão do script, não aumente o limite |
-| `NAND guard blocked write: <caminho>` e retorno `-10` | escrita fora de `fs:/~/` e `fs:/card0/` | grave em `fs:/~/udata/` ou desligue o guarda sabendo o que faz; veja [06](./06_filesystem_e_savegame.md) |
+| `NAND guard blocked write: <caminho>` e retorno `-10` | escrita fora de `fs:/~/` e `fs:/card0/` | grave em `fs:/~/udata/` ou desligue o guarda sabendo o que faz; veja [06](./07_filesystem_e_savegame.md) |
 | save antigo some depois de queda de energia | janela entre `Remove` e `Rename` no commit | nada a fazer no app: o `LoadSlot` recupera o `.tmp` completo, e o TODO registra que esse caminho nunca foi testado sob queda real |
 | `CRC mismatch in <arquivo>` ao carregar save | payload gravado incompleto ou versão diferente | trate `-10` como save inválido e ofereça slot novo; o `SaveHeader` usa layout nativo, sem endianness nem padding fixados, então save de outra build pode não ser legível |
-| textura carregada de ATITC sai preta ou não carrega | assinatura, dimensão, flags ou tamanho fora do contrato | confira `0xCCC40002`, dimensões até 2048, sem a flag tiled; o código detalha as rejeições em [05](./05_graficos_3d_e_2d.md) |
+| textura carregada de ATITC sai preta ou não carrega | assinatura, dimensão, flags ou tamanho fora do contrato | confira `0xCCC40002`, dimensões até 2048, sem a flag tiled; o código detalha as rejeições em [05](./06_graficos_3d_e_2d.md) |
 | textura ATITC retorna `-6` | arquivo tiled | converta para linear; `CreateFromAtitc` recusa tiled de propósito |
 | 60 FPS não se sustentam no console | meta medida no emulador, não no hardware | meça no console e reduza draw calls e cubos; o TODO trata a medição como pendente |
-| botões trocados no controle | mapeamento HID sem validação real | trate `GamepadButton` como provisório; veja [04](./04_input_controles.md) e o bloqueio no [TODO.md](../TODO.md) |
+| botões trocados no controle | mapeamento HID sem validação real | trate `GamepadButton` como provisório; veja [04](./05_input_controles.md) e o bloqueio no [TODO.md](../TODO.md) |
 | save no cartão SD não persiste | `fs:/card0/udata` é suposição sem respaldo no guia | use `fs:/~/udata/`, que é o caminho documentado |
 
 ### Sintomas de ferramentas e paridade
@@ -155,8 +155,8 @@ Estes são os limites que o código impõe e que não têm correção pelo usuá
 
 ## Veja também
 
-- [01 Build e empacotamento](./01_build_e_empacotamento.md): toolchain, macros, `.elf`, `.mod` e `.mif`.
+- [02 Build e empacotamento](./02_build_e_empacotamento.md): toolchain, macros, `.elf`, `.mod` e `.mif`.
 - [10 Arquitetura e portabilidade](./10_arquitetura_e_portabilidade.md): o orçamento de memória e os limites do hardware em contexto.
-- [06 Filesystem e save](./06_filesystem_e_savegame.md): o guarda de NAND, o `Vfs` e a recuperação de save.
+- [07 Filesystem e save](./07_filesystem_e_savegame.md): o guarda de NAND, o `Vfs` e a recuperação de save.
 - [Bindings C, Lua e Rust](../bindings/README.md): o contrato da ABI e o verificador de paridade.
 - [TODO.md](../TODO.md): a lista de pendências que sustenta cada limitação citada aqui.
